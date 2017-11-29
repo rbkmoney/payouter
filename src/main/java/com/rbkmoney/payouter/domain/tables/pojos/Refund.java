@@ -25,7 +25,7 @@ import javax.annotation.Generated;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Refund implements Serializable {
 
-    private static final long serialVersionUID = 202407224;
+    private static final long serialVersionUID = -1205829968;
 
     private Long          id;
     private Long          eventId;
@@ -40,7 +40,7 @@ public class Refund implements Serializable {
     private Long          amount;
     private Long          fee;
     private Long          payoutId;
-    private LocalDateTime updateAt;
+    private LocalDateTime succeededAt;
 
     public Refund() {}
 
@@ -58,7 +58,7 @@ public class Refund implements Serializable {
         this.amount = value.amount;
         this.fee = value.fee;
         this.payoutId = value.payoutId;
-        this.updateAt = value.updateAt;
+        this.succeededAt = value.succeededAt;
     }
 
     public Refund(
@@ -75,7 +75,7 @@ public class Refund implements Serializable {
         Long          amount,
         Long          fee,
         Long          payoutId,
-        LocalDateTime updateAt
+        LocalDateTime succeededAt
     ) {
         this.id = id;
         this.eventId = eventId;
@@ -90,7 +90,7 @@ public class Refund implements Serializable {
         this.amount = amount;
         this.fee = fee;
         this.payoutId = payoutId;
-        this.updateAt = updateAt;
+        this.succeededAt = succeededAt;
     }
 
     public Long getId() {
@@ -197,12 +197,12 @@ public class Refund implements Serializable {
         this.payoutId = payoutId;
     }
 
-    public LocalDateTime getUpdateAt() {
-        return this.updateAt;
+    public LocalDateTime getSucceededAt() {
+        return this.succeededAt;
     }
 
-    public void setUpdateAt(LocalDateTime updateAt) {
-        this.updateAt = updateAt;
+    public void setSucceededAt(LocalDateTime succeededAt) {
+        this.succeededAt = succeededAt;
     }
 
     @Override
@@ -292,11 +292,11 @@ public class Refund implements Serializable {
         }
         else if (!payoutId.equals(other.payoutId))
             return false;
-        if (updateAt == null) {
-            if (other.updateAt != null)
+        if (succeededAt == null) {
+            if (other.succeededAt != null)
                 return false;
         }
-        else if (!updateAt.equals(other.updateAt))
+        else if (!succeededAt.equals(other.succeededAt))
             return false;
         return true;
     }
@@ -318,7 +318,7 @@ public class Refund implements Serializable {
         result = prime * result + ((this.amount == null) ? 0 : this.amount.hashCode());
         result = prime * result + ((this.fee == null) ? 0 : this.fee.hashCode());
         result = prime * result + ((this.payoutId == null) ? 0 : this.payoutId.hashCode());
-        result = prime * result + ((this.updateAt == null) ? 0 : this.updateAt.hashCode());
+        result = prime * result + ((this.succeededAt == null) ? 0 : this.succeededAt.hashCode());
         return result;
     }
 
@@ -339,7 +339,7 @@ public class Refund implements Serializable {
         sb.append(", ").append(amount);
         sb.append(", ").append(fee);
         sb.append(", ").append(payoutId);
-        sb.append(", ").append(updateAt);
+        sb.append(", ").append(succeededAt);
 
         sb.append(")");
         return sb.toString();

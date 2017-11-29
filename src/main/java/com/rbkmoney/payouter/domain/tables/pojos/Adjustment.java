@@ -25,7 +25,7 @@ import javax.annotation.Generated;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Adjustment implements Serializable {
 
-    private static final long serialVersionUID = -2123670295;
+    private static final long serialVersionUID = 556237224;
 
     private Long             id;
     private Long             eventId;
@@ -42,7 +42,7 @@ public class Adjustment implements Serializable {
     private Long             newProviderFee;
     private Long             newFee;
     private Long             newExternalFee;
-    private LocalDateTime    updateAt;
+    private LocalDateTime    capturedAt;
     private Long             payoutId;
 
     public Adjustment() {}
@@ -63,7 +63,7 @@ public class Adjustment implements Serializable {
         this.newProviderFee = value.newProviderFee;
         this.newFee = value.newFee;
         this.newExternalFee = value.newExternalFee;
-        this.updateAt = value.updateAt;
+        this.capturedAt = value.capturedAt;
         this.payoutId = value.payoutId;
     }
 
@@ -83,7 +83,7 @@ public class Adjustment implements Serializable {
         Long             newProviderFee,
         Long             newFee,
         Long             newExternalFee,
-        LocalDateTime    updateAt,
+        LocalDateTime    capturedAt,
         Long             payoutId
     ) {
         this.id = id;
@@ -101,7 +101,7 @@ public class Adjustment implements Serializable {
         this.newProviderFee = newProviderFee;
         this.newFee = newFee;
         this.newExternalFee = newExternalFee;
-        this.updateAt = updateAt;
+        this.capturedAt = capturedAt;
         this.payoutId = payoutId;
     }
 
@@ -225,12 +225,12 @@ public class Adjustment implements Serializable {
         this.newExternalFee = newExternalFee;
     }
 
-    public LocalDateTime getUpdateAt() {
-        return this.updateAt;
+    public LocalDateTime getCapturedAt() {
+        return this.capturedAt;
     }
 
-    public void setUpdateAt(LocalDateTime updateAt) {
-        this.updateAt = updateAt;
+    public void setCapturedAt(LocalDateTime capturedAt) {
+        this.capturedAt = capturedAt;
     }
 
     public Long getPayoutId() {
@@ -340,11 +340,11 @@ public class Adjustment implements Serializable {
         }
         else if (!newExternalFee.equals(other.newExternalFee))
             return false;
-        if (updateAt == null) {
-            if (other.updateAt != null)
+        if (capturedAt == null) {
+            if (other.capturedAt != null)
                 return false;
         }
-        else if (!updateAt.equals(other.updateAt))
+        else if (!capturedAt.equals(other.capturedAt))
             return false;
         if (payoutId == null) {
             if (other.payoutId != null)
@@ -374,7 +374,7 @@ public class Adjustment implements Serializable {
         result = prime * result + ((this.newProviderFee == null) ? 0 : this.newProviderFee.hashCode());
         result = prime * result + ((this.newFee == null) ? 0 : this.newFee.hashCode());
         result = prime * result + ((this.newExternalFee == null) ? 0 : this.newExternalFee.hashCode());
-        result = prime * result + ((this.updateAt == null) ? 0 : this.updateAt.hashCode());
+        result = prime * result + ((this.capturedAt == null) ? 0 : this.capturedAt.hashCode());
         result = prime * result + ((this.payoutId == null) ? 0 : this.payoutId.hashCode());
         return result;
     }
@@ -398,7 +398,7 @@ public class Adjustment implements Serializable {
         sb.append(", ").append(newProviderFee);
         sb.append(", ").append(newFee);
         sb.append(", ").append(newExternalFee);
-        sb.append(", ").append(updateAt);
+        sb.append(", ").append(capturedAt);
         sb.append(", ").append(payoutId);
 
         sb.append(")");

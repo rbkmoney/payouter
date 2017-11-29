@@ -37,7 +37,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Adjustment extends TableImpl<AdjustmentRecord> {
 
-    private static final long serialVersionUID = 467404296;
+    private static final long serialVersionUID = 1390369651;
 
     /**
      * The reference instance of <code>sht.adjustment</code>
@@ -95,7 +95,7 @@ public class Adjustment extends TableImpl<AdjustmentRecord> {
     /**
      * The column <code>sht.adjustment.created_at</code>.
      */
-    public final TableField<AdjustmentRecord, LocalDateTime> CREATED_AT = createField("created_at", org.jooq.impl.SQLDataType.LOCALDATETIME.nullable(false).defaultValue(org.jooq.impl.DSL.field("now()", org.jooq.impl.SQLDataType.LOCALDATETIME)), this, "");
+    public final TableField<AdjustmentRecord, LocalDateTime> CREATED_AT = createField("created_at", org.jooq.impl.SQLDataType.LOCALDATETIME.nullable(false), this, "");
 
     /**
      * The column <code>sht.adjustment.domain_revision</code>.
@@ -128,9 +128,9 @@ public class Adjustment extends TableImpl<AdjustmentRecord> {
     public final TableField<AdjustmentRecord, Long> NEW_EXTERNAL_FEE = createField("new_external_fee", org.jooq.impl.SQLDataType.BIGINT.nullable(false), this, "");
 
     /**
-     * The column <code>sht.adjustment.update_at</code>.
+     * The column <code>sht.adjustment.captured_at</code>.
      */
-    public final TableField<AdjustmentRecord, LocalDateTime> UPDATE_AT = createField("update_at", org.jooq.impl.SQLDataType.LOCALDATETIME.nullable(false).defaultValue(org.jooq.impl.DSL.field("now()", org.jooq.impl.SQLDataType.LOCALDATETIME)), this, "");
+    public final TableField<AdjustmentRecord, LocalDateTime> CAPTURED_AT = createField("captured_at", org.jooq.impl.SQLDataType.LOCALDATETIME.nullable(false), this, "");
 
     /**
      * The column <code>sht.adjustment.payout_id</code>.

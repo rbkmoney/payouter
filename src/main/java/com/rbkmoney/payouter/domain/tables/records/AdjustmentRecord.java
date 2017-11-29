@@ -31,7 +31,7 @@ import org.jooq.impl.UpdatableRecordImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class AdjustmentRecord extends UpdatableRecordImpl<AdjustmentRecord> implements Record17<Long, Long, String, String, String, String, String, AdjustmentStatus, LocalDateTime, Long, String, Long, Long, Long, Long, LocalDateTime, Long> {
 
-    private static final long serialVersionUID = -1302901977;
+    private static final long serialVersionUID = 1906140220;
 
     /**
      * Setter for <code>sht.adjustment.id</code>.
@@ -244,16 +244,16 @@ public class AdjustmentRecord extends UpdatableRecordImpl<AdjustmentRecord> impl
     }
 
     /**
-     * Setter for <code>sht.adjustment.update_at</code>.
+     * Setter for <code>sht.adjustment.captured_at</code>.
      */
-    public void setUpdateAt(LocalDateTime value) {
+    public void setCapturedAt(LocalDateTime value) {
         set(15, value);
     }
 
     /**
-     * Getter for <code>sht.adjustment.update_at</code>.
+     * Getter for <code>sht.adjustment.captured_at</code>.
      */
-    public LocalDateTime getUpdateAt() {
+    public LocalDateTime getCapturedAt() {
         return (LocalDateTime) get(15);
     }
 
@@ -428,7 +428,7 @@ public class AdjustmentRecord extends UpdatableRecordImpl<AdjustmentRecord> impl
      */
     @Override
     public Field<LocalDateTime> field16() {
-        return Adjustment.ADJUSTMENT.UPDATE_AT;
+        return Adjustment.ADJUSTMENT.CAPTURED_AT;
     }
 
     /**
@@ -564,7 +564,7 @@ public class AdjustmentRecord extends UpdatableRecordImpl<AdjustmentRecord> impl
      */
     @Override
     public LocalDateTime value16() {
-        return getUpdateAt();
+        return getCapturedAt();
     }
 
     /**
@@ -715,7 +715,7 @@ public class AdjustmentRecord extends UpdatableRecordImpl<AdjustmentRecord> impl
      */
     @Override
     public AdjustmentRecord value16(LocalDateTime value) {
-        setUpdateAt(value);
+        setCapturedAt(value);
         return this;
     }
 
@@ -767,7 +767,7 @@ public class AdjustmentRecord extends UpdatableRecordImpl<AdjustmentRecord> impl
     /**
      * Create a detached, initialised AdjustmentRecord
      */
-    public AdjustmentRecord(Long id, Long eventId, String shopId, String partyId, String invoiceId, String paymentId, String adjustmentId, AdjustmentStatus status, LocalDateTime createdAt, Long domainRevision, String reason, Long newAmount, Long newProviderFee, Long newFee, Long newExternalFee, LocalDateTime updateAt, Long payoutId) {
+    public AdjustmentRecord(Long id, Long eventId, String shopId, String partyId, String invoiceId, String paymentId, String adjustmentId, AdjustmentStatus status, LocalDateTime createdAt, Long domainRevision, String reason, Long newAmount, Long newProviderFee, Long newFee, Long newExternalFee, LocalDateTime capturedAt, Long payoutId) {
         super(Adjustment.ADJUSTMENT);
 
         set(0, id);
@@ -785,7 +785,7 @@ public class AdjustmentRecord extends UpdatableRecordImpl<AdjustmentRecord> impl
         set(12, newProviderFee);
         set(13, newFee);
         set(14, newExternalFee);
-        set(15, updateAt);
+        set(15, capturedAt);
         set(16, payoutId);
     }
 }

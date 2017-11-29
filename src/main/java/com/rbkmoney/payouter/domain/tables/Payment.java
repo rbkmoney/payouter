@@ -37,7 +37,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Payment extends TableImpl<PaymentRecord> {
 
-    private static final long serialVersionUID = -1982061389;
+    private static final long serialVersionUID = -391748387;
 
     /**
      * The reference instance of <code>sht.payment</code>
@@ -128,6 +128,11 @@ public class Payment extends TableImpl<PaymentRecord> {
     public final TableField<PaymentRecord, LocalDateTime> CAPTURED_AT = createField("captured_at", org.jooq.impl.SQLDataType.LOCALDATETIME, this, "");
 
     /**
+     * The column <code>sht.payment.test</code>.
+     */
+    public final TableField<PaymentRecord, Boolean> TEST = createField("test", org.jooq.impl.SQLDataType.BOOLEAN.defaultValue(org.jooq.impl.DSL.field("false", org.jooq.impl.SQLDataType.BOOLEAN)), this, "");
+
+    /**
      * The column <code>sht.payment.created_at</code>.
      */
     public final TableField<PaymentRecord, LocalDateTime> CREATED_AT = createField("created_at", org.jooq.impl.SQLDataType.LOCALDATETIME.nullable(false), this, "");
@@ -140,7 +145,7 @@ public class Payment extends TableImpl<PaymentRecord> {
     /**
      * The column <code>sht.payment.domain_revision</code>.
      */
-    public final TableField<PaymentRecord, Integer> DOMAIN_REVISION = createField("domain_revision", org.jooq.impl.SQLDataType.INTEGER, this, "");
+    public final TableField<PaymentRecord, Long> DOMAIN_REVISION = createField("domain_revision", org.jooq.impl.SQLDataType.BIGINT, this, "");
 
     /**
      * Create a <code>sht.payment</code> table reference

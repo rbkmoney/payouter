@@ -31,7 +31,7 @@ import org.jooq.impl.UpdatableRecordImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class RefundRecord extends UpdatableRecordImpl<RefundRecord> implements Record14<Long, Long, String, String, String, String, String, RefundStatus, LocalDateTime, String, Long, Long, Long, LocalDateTime> {
 
-    private static final long serialVersionUID = 718490669;
+    private static final long serialVersionUID = 33472199;
 
     /**
      * Setter for <code>sht.refund.id</code>.
@@ -216,16 +216,16 @@ public class RefundRecord extends UpdatableRecordImpl<RefundRecord> implements R
     }
 
     /**
-     * Setter for <code>sht.refund.update_at</code>.
+     * Setter for <code>sht.refund.succeeded_at</code>.
      */
-    public void setUpdateAt(LocalDateTime value) {
+    public void setSucceededAt(LocalDateTime value) {
         set(13, value);
     }
 
     /**
-     * Getter for <code>sht.refund.update_at</code>.
+     * Getter for <code>sht.refund.succeeded_at</code>.
      */
-    public LocalDateTime getUpdateAt() {
+    public LocalDateTime getSucceededAt() {
         return (LocalDateTime) get(13);
     }
 
@@ -370,7 +370,7 @@ public class RefundRecord extends UpdatableRecordImpl<RefundRecord> implements R
      */
     @Override
     public Field<LocalDateTime> field14() {
-        return Refund.REFUND.UPDATE_AT;
+        return Refund.REFUND.SUCCEEDED_AT;
     }
 
     /**
@@ -482,7 +482,7 @@ public class RefundRecord extends UpdatableRecordImpl<RefundRecord> implements R
      */
     @Override
     public LocalDateTime value14() {
-        return getUpdateAt();
+        return getSucceededAt();
     }
 
     /**
@@ -607,7 +607,7 @@ public class RefundRecord extends UpdatableRecordImpl<RefundRecord> implements R
      */
     @Override
     public RefundRecord value14(LocalDateTime value) {
-        setUpdateAt(value);
+        setSucceededAt(value);
         return this;
     }
 
@@ -647,7 +647,7 @@ public class RefundRecord extends UpdatableRecordImpl<RefundRecord> implements R
     /**
      * Create a detached, initialised RefundRecord
      */
-    public RefundRecord(Long id, Long eventId, String shopId, String partyId, String invoiceId, String paymentId, String refundId, RefundStatus status, LocalDateTime createdAt, String reason, Long amount, Long fee, Long payoutId, LocalDateTime updateAt) {
+    public RefundRecord(Long id, Long eventId, String shopId, String partyId, String invoiceId, String paymentId, String refundId, RefundStatus status, LocalDateTime createdAt, String reason, Long amount, Long fee, Long payoutId, LocalDateTime succeededAt) {
         super(Refund.REFUND);
 
         set(0, id);
@@ -663,6 +663,6 @@ public class RefundRecord extends UpdatableRecordImpl<RefundRecord> implements R
         set(10, amount);
         set(11, fee);
         set(12, payoutId);
-        set(13, updateAt);
+        set(13, succeededAt);
     }
 }

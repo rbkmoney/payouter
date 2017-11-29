@@ -1,0 +1,12 @@
+server:
+  port: @server.port@
+spring:
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: org.postgresql.Driver
+    url: @db.url@
+    username: @db.user@
+    password: @db.password@
+    hikari:
+      idle-timeout: 30000
+      maximum-pool-size: 3

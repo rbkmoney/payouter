@@ -25,7 +25,7 @@ import javax.annotation.Generated;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Payment implements Serializable {
 
-    private static final long serialVersionUID = -1610136466;
+    private static final long serialVersionUID = -1888682572;
 
     private Long          id;
     private Long          eventId;
@@ -42,9 +42,10 @@ public class Payment implements Serializable {
     private Long          externalFee;
     private String        currencyCode;
     private LocalDateTime capturedAt;
+    private Boolean       test;
     private LocalDateTime createdAt;
     private Integer       terminalId;
-    private Integer       domainRevision;
+    private Long          domainRevision;
 
     public Payment() {}
 
@@ -64,6 +65,7 @@ public class Payment implements Serializable {
         this.externalFee = value.externalFee;
         this.currencyCode = value.currencyCode;
         this.capturedAt = value.capturedAt;
+        this.test = value.test;
         this.createdAt = value.createdAt;
         this.terminalId = value.terminalId;
         this.domainRevision = value.domainRevision;
@@ -85,9 +87,10 @@ public class Payment implements Serializable {
         Long          externalFee,
         String        currencyCode,
         LocalDateTime capturedAt,
+        Boolean       test,
         LocalDateTime createdAt,
         Integer       terminalId,
-        Integer       domainRevision
+        Long          domainRevision
     ) {
         this.id = id;
         this.eventId = eventId;
@@ -104,6 +107,7 @@ public class Payment implements Serializable {
         this.externalFee = externalFee;
         this.currencyCode = currencyCode;
         this.capturedAt = capturedAt;
+        this.test = test;
         this.createdAt = createdAt;
         this.terminalId = terminalId;
         this.domainRevision = domainRevision;
@@ -229,6 +233,14 @@ public class Payment implements Serializable {
         this.capturedAt = capturedAt;
     }
 
+    public Boolean getTest() {
+        return this.test;
+    }
+
+    public void setTest(Boolean test) {
+        this.test = test;
+    }
+
     public LocalDateTime getCreatedAt() {
         return this.createdAt;
     }
@@ -245,11 +257,11 @@ public class Payment implements Serializable {
         this.terminalId = terminalId;
     }
 
-    public Integer getDomainRevision() {
+    public Long getDomainRevision() {
         return this.domainRevision;
     }
 
-    public void setDomainRevision(Integer domainRevision) {
+    public void setDomainRevision(Long domainRevision) {
         this.domainRevision = domainRevision;
     }
 
@@ -352,6 +364,12 @@ public class Payment implements Serializable {
         }
         else if (!capturedAt.equals(other.capturedAt))
             return false;
+        if (test == null) {
+            if (other.test != null)
+                return false;
+        }
+        else if (!test.equals(other.test))
+            return false;
         if (createdAt == null) {
             if (other.createdAt != null)
                 return false;
@@ -392,6 +410,7 @@ public class Payment implements Serializable {
         result = prime * result + ((this.externalFee == null) ? 0 : this.externalFee.hashCode());
         result = prime * result + ((this.currencyCode == null) ? 0 : this.currencyCode.hashCode());
         result = prime * result + ((this.capturedAt == null) ? 0 : this.capturedAt.hashCode());
+        result = prime * result + ((this.test == null) ? 0 : this.test.hashCode());
         result = prime * result + ((this.createdAt == null) ? 0 : this.createdAt.hashCode());
         result = prime * result + ((this.terminalId == null) ? 0 : this.terminalId.hashCode());
         result = prime * result + ((this.domainRevision == null) ? 0 : this.domainRevision.hashCode());
@@ -417,6 +436,7 @@ public class Payment implements Serializable {
         sb.append(", ").append(externalFee);
         sb.append(", ").append(currencyCode);
         sb.append(", ").append(capturedAt);
+        sb.append(", ").append(test);
         sb.append(", ").append(createdAt);
         sb.append(", ").append(terminalId);
         sb.append(", ").append(domainRevision);

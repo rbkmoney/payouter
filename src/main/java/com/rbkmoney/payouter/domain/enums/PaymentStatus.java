@@ -26,9 +26,11 @@ import org.jooq.Schema;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public enum PaymentStatus implements EnumType {
 
-    NEW("NEW"),
+    PENDING("PENDING"),
 
-    CAPTURED("CAPTURED");
+    CAPTURED("CAPTURED"),
+
+    CANCELLED("CANCELLED");
 
     private final String literal;
 
