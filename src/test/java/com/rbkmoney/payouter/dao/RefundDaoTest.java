@@ -46,7 +46,7 @@ public class RefundDaoTest extends AbstractIntegrationTest {
 
     @Test
     public void testIncludeAndExcludeFromPayout() throws DaoException {
-        List<Refund> refunds = randomListOf(10, Refund.class, "payoutId");
+        List<Refund> refunds = randomListOf(10, Refund.class, "reason", "payoutId");
         long payoutId = 1;
 
         refunds.stream().forEach(payment -> refundDao.save(payment));

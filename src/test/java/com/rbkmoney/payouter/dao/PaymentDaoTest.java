@@ -49,7 +49,7 @@ public class PaymentDaoTest extends AbstractIntegrationTest {
 
     @Test
     public void testIncludeAndExcludeFromPayout() throws DaoException {
-        List<Payment> payments = randomListOf(10, Payment.class, "payoutId");
+        List<Payment> payments = randomListOf(10, Payment.class, "payoutId", "externalFee", "capturedAt", "terminalId", "domainRevision");
         long payoutId = 1;
 
         payments.stream().forEach(payment -> paymentDao.save(payment));

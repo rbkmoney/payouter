@@ -33,6 +33,8 @@ ALTER TABLE sht.payment DROP COLUMN payment_status;
 ALTER TABLE sht.payment
   ALTER COLUMN status SET DEFAULT 'PENDING' :: sht.payment_status;
 ALTER TABLE sht.payment ALTER COLUMN status SET NOT NULL;
+-- test not null
+ALTER TABLE sht.payment ALTER COLUMN test SET NOT NULL;
 
 --refactor adjustment table
 --drop unused columns

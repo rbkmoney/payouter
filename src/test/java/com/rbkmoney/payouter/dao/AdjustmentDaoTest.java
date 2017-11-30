@@ -39,7 +39,7 @@ public class AdjustmentDaoTest extends AbstractIntegrationTest {
 
     @Test
     public void testSaveOnlyNonNullValues() throws DaoException {
-        Adjustment adjustment = random(Adjustment.class, getNullColumnNames(ADJUSTMENT));
+        Adjustment adjustment = random(Adjustment.class, "payoutId");
         adjustmentDao.save(adjustment);
     }
 
