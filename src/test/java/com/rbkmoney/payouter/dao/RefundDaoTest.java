@@ -40,13 +40,14 @@ public class RefundDaoTest extends AbstractIntegrationTest {
 
     @Test
     public void testSaveOnlyNonNullValues() throws DaoException {
-        Refund refund = random(Refund.class, getNullColumnNames(REFUND));
+        Refund refund = random(Refund.class, "reason", "payoutId");
         refundDao.save(refund);
+        assertEquals(refund, refundDao.get(refund.getInvoiceId(), refund.getPaymentId(), refund.getRefundId()));
     }
 
     @Test
     public void testIncludeAndExcludeFromPayout() throws DaoException {
-        List<Refund> refunds = randomListOf(10, Refund.class, "reason", "payoutId");
+        List<Refund> refunds = randomListOf(10, Refund.class, "payoutId");
         long payoutId = 1;
 
         refunds.stream().forEach(payment -> refundDao.save(payment));

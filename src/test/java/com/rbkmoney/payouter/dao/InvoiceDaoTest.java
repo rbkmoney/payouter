@@ -22,7 +22,7 @@ public class InvoiceDaoTest extends AbstractIntegrationTest {
         //save again
         invoiceDao.save(invoice.getId(), invoice.getPartyId(), invoice.getShopId());
 
-        assertEquals(invoice, invoiceDao.getInvoice(invoice.getId()));
+        assertEquals(invoice, invoiceDao.get(invoice.getId()));
     }
 
 }

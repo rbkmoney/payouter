@@ -7,6 +7,6 @@ public interface InvoiceDao extends GenericDao {
 
     void save(String invoiceId, String partyId, String shopId) throws DaoException;
 
-    Invoice getInvoice(String invoiceId) throws DaoException;
+    Invoice get(String invoiceId) throws DaoException;
 
 }

@@ -7,16 +7,11 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 
-import java.util.Arrays;
 import java.util.List;
 
-import static com.rbkmoney.payouter.dao.DaoTestUtil.getNullColumnNames;
-import static com.rbkmoney.payouter.domain.Tables.PAYMENT;
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static io.github.benas.randombeans.api.EnhancedRandom.randomListOf;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public class PaymentDaoTest extends AbstractIntegrationTest {
 
@@ -42,14 +37,14 @@ public class PaymentDaoTest extends AbstractIntegrationTest {
 
     @Test
     public void testSaveOnlyNonNullValues() throws DaoException {
-        System.out.println(Arrays.toString(getNullColumnNames(PAYMENT)));
-        Payment payment = random(Payment.class, getNullColumnNames(PAYMENT));
+        Payment payment = random(Payment.class, "payoutId", "externalFee", "capturedAt", "terminalId", "domainRevision");
         paymentDao.save(payment);
+        assertEquals(payment, paymentDao.get(payment.getInvoiceId(), payment.getPaymentId()));
     }
 
     @Test
     public void testIncludeAndExcludeFromPayout() throws DaoException {
-        List<Payment> payments = randomListOf(10, Payment.class, "payoutId", "externalFee", "capturedAt", "terminalId", "domainRevision");
+        List<Payment> payments = randomListOf(10, Payment.class, "payoutId");
         long payoutId = 1;
 
         payments.stream().forEach(payment -> paymentDao.save(payment));

@@ -33,7 +33,7 @@ public class RecordRowMapper<T> implements RowMapper<T> {
             Field field = record.field(columnName);
 
             Object value = getFieldValue(field, resultSet);
-            if (value != null) {
+            if (!resultSet.wasNull()) {
                 record.set(field, value);
             }
         }

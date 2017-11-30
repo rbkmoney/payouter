@@ -41,6 +41,7 @@ public class AdjustmentDaoTest extends AbstractIntegrationTest {
     public void testSaveOnlyNonNullValues() throws DaoException {
         Adjustment adjustment = random(Adjustment.class, "payoutId");
         adjustmentDao.save(adjustment);
+        assertEquals(adjustment, adjustmentDao.get(adjustment.getInvoiceId(), adjustment.getPaymentId(), adjustment.getAdjustmentId()));
     }
 
     @Test

@@ -35,7 +35,7 @@ public class InvoiceDaoImpl extends AbstractGenericDao implements InvoiceDao {
     }
 
     @Override
-    public Invoice getInvoice(String invoiceId) throws DaoException {
+    public Invoice get(String invoiceId) throws DaoException {
         Query query = getDslContext().selectFrom(INVOICE)
                 .where(INVOICE.ID.eq(invoiceId));
         return fetchOne(query, invoiceRowMapper);
