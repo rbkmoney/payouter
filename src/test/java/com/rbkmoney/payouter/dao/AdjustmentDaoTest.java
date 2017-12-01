@@ -9,8 +9,6 @@ import org.springframework.dao.DuplicateKeyException;
 
 import java.util.List;
 
-import static com.rbkmoney.payouter.dao.DaoTestUtil.getNullColumnNames;
-import static com.rbkmoney.payouter.domain.tables.Adjustment.ADJUSTMENT;
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static io.github.benas.randombeans.api.EnhancedRandom.randomListOf;
 import static org.junit.Assert.*;

@@ -7,11 +7,8 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 
-import java.util.Arrays;
 import java.util.List;
 
-import static com.rbkmoney.payouter.dao.DaoTestUtil.getNullColumnNames;
-import static com.rbkmoney.payouter.domain.tables.Refund.REFUND;
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static io.github.benas.randombeans.api.EnhancedRandom.randomListOf;
 import static org.junit.Assert.*;

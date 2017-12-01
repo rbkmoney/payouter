@@ -11,8 +11,6 @@ import org.springframework.dao.DuplicateKeyException;
 
 import java.time.LocalDateTime;
 
-import static com.rbkmoney.payouter.dao.DaoTestUtil.getNullColumnNames;
-import static com.rbkmoney.payouter.domain.Tables.PAYMENT;
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static org.junit.Assert.*;
 
@@ -26,14 +24,7 @@ public class PayoutDaoTest extends AbstractIntegrationTest {
         Payout payout = random(Payout.class, "id");
 
         long payoutId = payoutDao.save(payout);
-
-        //save again
-        try {
-            payoutDao.save(payout);
-            fail();
-        } catch (DaoException ex) {
-            assertTrue(DuplicateKeyException.class.isAssignableFrom(ex.getCause().getClass()));
-        }
+        payout.setId(payoutId);
 
         assertEquals(payout, payoutDao.get(payoutId));
     }
@@ -41,7 +32,6 @@ public class PayoutDaoTest extends AbstractIntegrationTest {
     @Test
     public void testSaveOnlyNonNullValues() throws DaoException {
         Payout payout = new Payout();
-        payout.setId(42L);
         payout.setCreatedAt(LocalDateTime.now());
         payout.setPartyId("kek");
         payout.setShopId("kek");
@@ -49,6 +39,7 @@ public class PayoutDaoTest extends AbstractIntegrationTest {
         payout.setPayoutType(PayoutType.AccountPayout);
 
         long payoutId = payoutDao.save(payout);
+        payout.setId(payoutId);
 
         assertEquals(payout, payoutDao.get(payoutId));
     }

@@ -4,8 +4,6 @@ import com.rbkmoney.payouter.AbstractIntegrationTest;
 import com.rbkmoney.payouter.domain.tables.pojos.PayoutEvent;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.jdbc.JdbcTestUtils;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;

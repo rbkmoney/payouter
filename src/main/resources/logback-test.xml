@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+
+    <root level="info">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+    <logger name="org.springframework.jdbc.core.JdbcTemplate">
+        <level value="info" />
+    </logger>
+
+    <logger name="org.springframework.jdbc.core.StatementCreatorUtils">
+        <level value="info" />
+    </logger>
+
+    <logger name="org.springframework.jdbc.support.JdbcAccessor">
+        <level value="info" />
+    </logger>
+
+</configuration>
