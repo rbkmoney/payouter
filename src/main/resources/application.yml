@@ -15,3 +15,5 @@ service:
     url: http://localhost:8022/accounter
   partyManagement:
     url: http://localhost:8022/v1/processing/partymgmt
+  dominant:
+    url: http://dominant:8022/v1/domain/repository_client
