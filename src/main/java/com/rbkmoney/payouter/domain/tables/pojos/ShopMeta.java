@@ -23,11 +23,12 @@ import javax.annotation.Generated;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class ShopMeta implements Serializable {
 
-    private static final long serialVersionUID = -298910419;
+    private static final long serialVersionUID = -1688008076;
 
     private String        partyId;
     private String        shopId;
     private LocalDateTime wtime;
+    private LocalDateTime lastPayoutCreatedAt;
 
     public ShopMeta() {}
 
@@ -35,16 +36,19 @@ public class ShopMeta implements Serializable {
         this.partyId = value.partyId;
         this.shopId = value.shopId;
         this.wtime = value.wtime;
+        this.lastPayoutCreatedAt = value.lastPayoutCreatedAt;
     }
 
     public ShopMeta(
         String        partyId,
         String        shopId,
-        LocalDateTime wtime
+        LocalDateTime wtime,
+        LocalDateTime lastPayoutCreatedAt
     ) {
         this.partyId = partyId;
         this.shopId = shopId;
         this.wtime = wtime;
+        this.lastPayoutCreatedAt = lastPayoutCreatedAt;
     }
 
     public String getPartyId() {
@@ -69,6 +73,14 @@ public class ShopMeta implements Serializable {
 
     public void setWtime(LocalDateTime wtime) {
         this.wtime = wtime;
+    }
+
+    public LocalDateTime getLastPayoutCreatedAt() {
+        return this.lastPayoutCreatedAt;
+    }
+
+    public void setLastPayoutCreatedAt(LocalDateTime lastPayoutCreatedAt) {
+        this.lastPayoutCreatedAt = lastPayoutCreatedAt;
     }
 
     @Override
@@ -98,6 +110,12 @@ public class ShopMeta implements Serializable {
         }
         else if (!wtime.equals(other.wtime))
             return false;
+        if (lastPayoutCreatedAt == null) {
+            if (other.lastPayoutCreatedAt != null)
+                return false;
+        }
+        else if (!lastPayoutCreatedAt.equals(other.lastPayoutCreatedAt))
+            return false;
         return true;
     }
 
@@ -108,6 +126,7 @@ public class ShopMeta implements Serializable {
         result = prime * result + ((this.partyId == null) ? 0 : this.partyId.hashCode());
         result = prime * result + ((this.shopId == null) ? 0 : this.shopId.hashCode());
         result = prime * result + ((this.wtime == null) ? 0 : this.wtime.hashCode());
+        result = prime * result + ((this.lastPayoutCreatedAt == null) ? 0 : this.lastPayoutCreatedAt.hashCode());
         return result;
     }
 
@@ -118,6 +137,7 @@ public class ShopMeta implements Serializable {
         sb.append(partyId);
         sb.append(", ").append(shopId);
         sb.append(", ").append(wtime);
+        sb.append(", ").append(lastPayoutCreatedAt);
 
         sb.append(")");
         return sb.toString();

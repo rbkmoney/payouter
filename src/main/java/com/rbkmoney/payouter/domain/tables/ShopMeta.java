@@ -35,7 +35,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class ShopMeta extends TableImpl<ShopMetaRecord> {
 
-    private static final long serialVersionUID = 695736879;
+    private static final long serialVersionUID = -2071095373;
 
     /**
      * The reference instance of <code>sht.shop_meta</code>
@@ -64,6 +64,11 @@ public class ShopMeta extends TableImpl<ShopMetaRecord> {
      * The column <code>sht.shop_meta.wtime</code>.
      */
     public final TableField<ShopMetaRecord, LocalDateTime> WTIME = createField("wtime", org.jooq.impl.SQLDataType.LOCALDATETIME.nullable(false).defaultValue(org.jooq.impl.DSL.field("now()", org.jooq.impl.SQLDataType.LOCALDATETIME)), this, "");
+
+    /**
+     * The column <code>sht.shop_meta.last_payout_created_at</code>.
+     */
+    public final TableField<ShopMetaRecord, LocalDateTime> LAST_PAYOUT_CREATED_AT = createField("last_payout_created_at", org.jooq.impl.SQLDataType.LOCALDATETIME, this, "");
 
     /**
      * Create a <code>sht.shop_meta</code> table reference

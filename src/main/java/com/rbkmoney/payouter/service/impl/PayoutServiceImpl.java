@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -68,7 +69,7 @@ public class PayoutServiceImpl implements PayoutService {
         log.debug("Trying to create payout, partyId={}, shopId={}, fromTime={}, toTime={}, payoutType={}",
                 partyId, shopId, fromTime, toTime, payoutType);
         try {
-            shopMetaDao.getExclusive(partyId, shopId);
+            ShopMeta shopMeta = shopMetaDao.getExclusive(partyId, shopId);
 
             List<Payment> payments = paymentDao.getUnpaid(partyId, shopId, toTime);
             List<Refund> refunds = refundDao.getUnpaid(partyId, shopId, toTime);
@@ -86,6 +87,8 @@ public class PayoutServiceImpl implements PayoutService {
             paymentDao.includeToPayout(payoutId, payments);
             refundDao.includeToPayout(payoutId, refunds);
             adjustmentDao.includeToPayout(payoutId, adjustments);
+
+            shopMetaDao.updateLastPayoutCreatedAt(shopMeta.getPartyId(), shopMeta.getShopId(), payout.getCreatedAt());
 
             shumwayService.hold(payoutId, buildPostings(payout));
 
@@ -185,6 +188,7 @@ public class PayoutServiceImpl implements PayoutService {
         payout.setFromTime(fromTime);
         payout.setToTime(toTime);
         payout.setPayoutType(payoutType);
+        payout.setCreatedAt(LocalDateTime.now(ZoneOffset.UTC));
 
         PayoutToolData payoutToolData = partyManagementService.getPayoutToolData(partyId, shopId);
         payout.setCurrencyCode(payoutToolData.getCurrencyCode());

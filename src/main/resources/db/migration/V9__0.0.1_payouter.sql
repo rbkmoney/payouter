@@ -68,9 +68,10 @@ WHERE enumlabel = 'AccountPayout' AND enumtypid = (SELECT oid FROM pg_type WHERE
 
 -- shop_meta table
 CREATE TABLE sht.shop_meta (
-  party_id CHARACTER VARYING           NOT NULL,
-  shop_id  CHARACTER VARYING           NOT NULL,
-  wtime    TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT now(),
+  party_id               CHARACTER VARYING           NOT NULL,
+  shop_id                CHARACTER VARYING           NOT NULL,
+  wtime                  TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT now(),
+  last_payout_created_at TIMESTAMP WITHOUT TIME ZONE,
   CONSTRAINT shop_meta_pkey PRIMARY KEY (party_id, shop_id)
 );
 

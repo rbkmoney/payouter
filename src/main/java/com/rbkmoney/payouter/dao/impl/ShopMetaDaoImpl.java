@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 import static com.rbkmoney.payouter.domain.Tables.SHOP_META;
 
@@ -37,7 +38,7 @@ public class ShopMetaDaoImpl extends AbstractGenericDao implements ShopMetaDao {
                 .set(SHOP_META.PARTY_ID, partyId)
                 .set(SHOP_META.SHOP_ID, shopId)
                 .onDuplicateKeyUpdate()
-                .set(SHOP_META.WTIME, LocalDateTime.now());
+                .set(SHOP_META.WTIME, LocalDateTime.now(ZoneOffset.UTC));
 
         executeOne(query);
     }
@@ -58,5 +59,17 @@ public class ShopMetaDaoImpl extends AbstractGenericDao implements ShopMetaDao {
                 .forUpdate();
 
         return fetchOne(query, shopMetaRowMapper);
+    }
+
+    @Override
+    public void updateLastPayoutCreatedAt(String partyId, String shopId, LocalDateTime payoutCreatedAt) throws DaoException {
+        Query query = getDslContext()
+                .update(SHOP_META)
+                .set(SHOP_META.LAST_PAYOUT_CREATED_AT, payoutCreatedAt)
+                .where(
+                        SHOP_META.PARTY_ID.eq(partyId)
+                                .and(SHOP_META.SHOP_ID.eq(shopId))
+                );
+        executeOne(query);
     }
 }
