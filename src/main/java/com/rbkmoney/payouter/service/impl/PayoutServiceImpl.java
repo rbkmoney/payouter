@@ -6,6 +6,7 @@ import com.rbkmoney.payouter.domain.enums.PayoutStatus;
 import com.rbkmoney.payouter.domain.enums.PayoutType;
 import com.rbkmoney.payouter.domain.tables.pojos.*;
 import com.rbkmoney.payouter.exception.DaoException;
+import com.rbkmoney.payouter.exception.InvalidStateException;
 import com.rbkmoney.payouter.exception.StorageException;
 import com.rbkmoney.payouter.model.PayoutToolData;
 import com.rbkmoney.payouter.service.PartyManagementService;
@@ -63,7 +64,7 @@ public class PayoutServiceImpl implements PayoutService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public long createPayout(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType) {
+    public long createPayout(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType) throws InvalidStateException, StorageException {
         log.debug("Trying to create payout, partyId={}, shopId={}, fromTime={}, toTime={}, payoutType={}",
                 partyId, shopId, fromTime, toTime, payoutType);
         try {
@@ -76,7 +77,7 @@ public class PayoutServiceImpl implements PayoutService {
             long availableAmount = calculateAvailableAmount(payments, refunds, adjustments);
 
             if (availableAmount <= 0) {
-                throw new RuntimeException("Available amount must be greater than 0");
+                throw new InvalidStateException("Available amount must be greater than 0");
             }
 
             Payout payout = buildPayout(partyId, shopId, fromTime, toTime, payoutType);
@@ -99,6 +100,68 @@ public class PayoutServiceImpl implements PayoutService {
         }
     }
 
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED)
+    public void pay(long payoutId) throws InvalidStateException, StorageException {
+        try {
+            Payout payout = payoutDao.get(payoutId);
+
+            if (payout.getStatus() != PayoutStatus.UNPAID) {
+                throw new InvalidStateException(
+                        String.format("Invalid status for 'pay' action, payoutId='%d', currentStatus='%s'", payoutId, payout.getStatus())
+                );
+            }
+
+            payoutDao.changeStatus(payoutId, PayoutStatus.PAID);
+        } catch (DaoException ex) {
+            throw new StorageException(String.format("Failed to pay a payout, payoutId='%d'", payoutId), ex);
+        }
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED)
+    public void confirm(long payoutId) throws InvalidStateException, StorageException {
+        try {
+            Payout payout = payoutDao.get(payoutId);
+
+            if (payout.getStatus() != PayoutStatus.PAID) {
+                throw new InvalidStateException(
+                        String.format("Invalid status for 'confirm' action, payoutId='%d', currentStatus='%s'", payoutId, payout.getStatus())
+                );
+            }
+
+            payoutDao.changeStatus(payoutId, PayoutStatus.CONFIRMED);
+            shumwayService.commit(payoutId, buildPostings(payout));
+        } catch (DaoException ex) {
+            throw new StorageException(String.format("Failed to confirm a payout, payoutId='%d'", payoutId), ex);
+        }
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED)
+    public void cancel(long payoutId) throws InvalidStateException, StorageException {
+        try {
+            Payout payout = payoutDao.get(payoutId);
+
+            switch (payout.getStatus()) {
+                case UNPAID:
+                case PAID:
+                    payoutDao.changeStatus(payoutId, PayoutStatus.CANCELLED);
+                    shumwayService.rollback(payoutId, buildPostings(payout));
+                    break;
+                case CONFIRMED:
+                    payoutDao.changeStatus(payoutId, PayoutStatus.CANCELLED);
+                    shumwayService.revert(payoutId, buildPostings(payout));
+                    break;
+                default:
+                    throw new InvalidStateException(String.format("Invalid status for 'cancel' action, payoutId='%d', currentStatus='%s'", payoutId, payout.getStatus()));
+            }
+
+        } catch (DaoException ex) {
+            throw new StorageException(String.format("Failed to cancel a payout, payoutId='%d'", payoutId), ex);
+        }
+    }
+
     @Scheduled(fixedDelay = 5000)
     @Transactional(propagation = Propagation.REQUIRED)
     public void processUnpaidPayouts() {
@@ -106,20 +169,13 @@ public class PayoutServiceImpl implements PayoutService {
         List<Payout> paidPayouts = new ArrayList<>();
         for (Payout payout : unpaidPayouts) {
             try {
-                doPaid(payout);
+                pay(payout.getId());
                 paidPayouts.add(payout);
             } catch (Exception ex) {
-                throw new RuntimeException(String.format("Failed to process unpaid payout, payout='%s'", payout), ex);
+                log.warn(ex.getMessage(), ex);
             }
-            //TODO send mail paidPayouts
+            //TODO mail report
         }
-    }
-
-    @Transactional(propagation = Propagation.REQUIRED)
-    public void doPaid(Payout payout) {
-        log.debug("Trying to change payout status to 'paid', payout='{}'", payout);
-        payoutDao.changeStatus(payout.getId(), PayoutStatus.PAID);
-        log.debug("Payout status have been changed, payoutId='{}', status='{}'", payout.getId(), PayoutStatus.PAID);
     }
 
     private Payout buildPayout(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType) {
@@ -129,9 +185,9 @@ public class PayoutServiceImpl implements PayoutService {
         payout.setFromTime(fromTime);
         payout.setToTime(toTime);
         payout.setPayoutType(payoutType);
-        payout.setCurrencyCode("RUB");
 
         PayoutToolData payoutToolData = partyManagementService.getPayoutToolData(partyId, shopId);
+        payout.setCurrencyCode(payoutToolData.getCurrencyCode());
         payout.setBankAccount(payoutToolData.getBankAccount());
         payout.setBankName(payoutToolData.getBankName());
         payout.setBankBik(payoutToolData.getBankBik());

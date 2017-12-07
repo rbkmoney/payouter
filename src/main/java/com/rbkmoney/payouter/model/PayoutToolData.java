@@ -8,6 +8,8 @@ public class PayoutToolData {
 
     public long shopPayoutAccountId;
 
+    public String currencyCode;
+
     public String bankAccount;
 
     public String bankBik;
@@ -32,6 +34,14 @@ public class PayoutToolData {
 
     public void setShopAccountId(long shopAccountId) {
         this.shopAccountId = shopAccountId;
+    }
+
+    public String getCurrencyCode() {
+        return currencyCode;
+    }
+
+    public void setCurrencyCode(String currencyCode) {
+        this.currencyCode = currencyCode;
     }
 
     public long getShopPayoutAccountId() {
@@ -119,6 +129,7 @@ public class PayoutToolData {
         return "PayoutToolData{" +
                 "shopAccountId=" + shopAccountId +
                 ", shopPayoutAccountId=" + shopPayoutAccountId +
+                ", currencyCode='" + currencyCode + '\'' +
                 ", bankAccount='" + bankAccount + '\'' +
                 ", bankBik='" + bankBik + '\'' +
                 ", bankName='" + bankName + '\'' +

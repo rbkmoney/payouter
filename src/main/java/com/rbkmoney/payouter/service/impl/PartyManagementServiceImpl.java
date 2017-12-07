@@ -3,6 +3,7 @@ package com.rbkmoney.payouter.service.impl;
 import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.payment_processing.*;
 import com.rbkmoney.geck.common.util.TypeUtil;
+import com.rbkmoney.payouter.exception.InvalidStateException;
 import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.model.PayoutToolData;
 import com.rbkmoney.payouter.service.PartyManagementService;
@@ -55,7 +56,7 @@ public class PartyManagementServiceImpl implements PartyManagementService {
     }
 
     @Override
-    public PayoutToolData getPayoutToolData(String partyId, String shopId) throws NotFoundException {
+    public PayoutToolData getPayoutToolData(String partyId, String shopId) throws InvalidStateException, NotFoundException {
         Shop shop = getShop(partyId, shopId);
 
         PayoutToolData payoutToolData = new PayoutToolData();
@@ -63,6 +64,7 @@ public class PartyManagementServiceImpl implements PartyManagementService {
         ShopAccount shopAccount = shop.getAccount();
         payoutToolData.setShopAccountId(shopAccount.getSettlement());
         payoutToolData.setShopPayoutAccountId(shopAccount.getPayout());
+        payoutToolData.setCurrencyCode(shopAccount.getCurrency().getSymbolicCode());
 
 
         Contract contract = getContract(partyId, shop.getContractId());
@@ -79,7 +81,12 @@ public class PartyManagementServiceImpl implements PartyManagementService {
                             partyId, shopId, shop.getPayoutToolId()));
         }
 
-        BankAccount bankAccount = payoutToolOptional.get().getPayoutToolInfo().getBankAccount();
+        PayoutTool payoutTool = payoutToolOptional.get();
+        if (!payoutToolData.getCurrencyCode().equals(payoutTool.getCurrency().getSymbolicCode())) {
+            throw new InvalidStateException("Shop account and payout tool currency must be equals");
+        }
+
+        BankAccount bankAccount = payoutTool.getPayoutToolInfo().getBankAccount();
 
         payoutToolData.setBankAccount(bankAccount.getAccount());
         payoutToolData.setBankBik(bankAccount.getBankBik());
