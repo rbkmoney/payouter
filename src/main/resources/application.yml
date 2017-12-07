@@ -10,3 +10,8 @@ spring:
     hikari:
       idle-timeout: 30000
       maximum-pool-size: 3
+service:
+  shumway:
+    url: http://localhost:8022/accounter
+  partyManagement:
+    url: http://localhost:8022/v1/processing/partymgmt

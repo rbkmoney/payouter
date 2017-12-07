@@ -26,7 +26,7 @@ import javax.annotation.Generated;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Payout implements Serializable {
 
-    private static final long serialVersionUID = -753068619;
+    private static final long serialVersionUID = -1667499330;
 
     private Long          id;
     private String        partyId;
@@ -41,7 +41,6 @@ public class Payout implements Serializable {
     private Long          shopPayoutAcc;
     private String        currencyCode;
     private String        bankAccount;
-    private String        corAccount;
     private String        bankBik;
     private String        bankName;
     private String        bankPostAccount;
@@ -67,7 +66,6 @@ public class Payout implements Serializable {
         this.shopPayoutAcc = value.shopPayoutAcc;
         this.currencyCode = value.currencyCode;
         this.bankAccount = value.bankAccount;
-        this.corAccount = value.corAccount;
         this.bankBik = value.bankBik;
         this.bankName = value.bankName;
         this.bankPostAccount = value.bankPostAccount;
@@ -92,7 +90,6 @@ public class Payout implements Serializable {
         Long          shopPayoutAcc,
         String        currencyCode,
         String        bankAccount,
-        String        corAccount,
         String        bankBik,
         String        bankName,
         String        bankPostAccount,
@@ -115,7 +112,6 @@ public class Payout implements Serializable {
         this.shopPayoutAcc = shopPayoutAcc;
         this.currencyCode = currencyCode;
         this.bankAccount = bankAccount;
-        this.corAccount = corAccount;
         this.bankBik = bankBik;
         this.bankName = bankName;
         this.bankPostAccount = bankPostAccount;
@@ -228,14 +224,6 @@ public class Payout implements Serializable {
 
     public void setBankAccount(String bankAccount) {
         this.bankAccount = bankAccount;
-    }
-
-    public String getCorAccount() {
-        return this.corAccount;
-    }
-
-    public void setCorAccount(String corAccount) {
-        this.corAccount = corAccount;
     }
 
     public String getBankBik() {
@@ -389,12 +377,6 @@ public class Payout implements Serializable {
         }
         else if (!bankAccount.equals(other.bankAccount))
             return false;
-        if (corAccount == null) {
-            if (other.corAccount != null)
-                return false;
-        }
-        else if (!corAccount.equals(other.corAccount))
-            return false;
         if (bankBik == null) {
             if (other.bankBik != null)
                 return false;
@@ -463,7 +445,6 @@ public class Payout implements Serializable {
         result = prime * result + ((this.shopPayoutAcc == null) ? 0 : this.shopPayoutAcc.hashCode());
         result = prime * result + ((this.currencyCode == null) ? 0 : this.currencyCode.hashCode());
         result = prime * result + ((this.bankAccount == null) ? 0 : this.bankAccount.hashCode());
-        result = prime * result + ((this.corAccount == null) ? 0 : this.corAccount.hashCode());
         result = prime * result + ((this.bankBik == null) ? 0 : this.bankBik.hashCode());
         result = prime * result + ((this.bankName == null) ? 0 : this.bankName.hashCode());
         result = prime * result + ((this.bankPostAccount == null) ? 0 : this.bankPostAccount.hashCode());
@@ -492,7 +473,6 @@ public class Payout implements Serializable {
         sb.append(", ").append(shopPayoutAcc);
         sb.append(", ").append(currencyCode);
         sb.append(", ").append(bankAccount);
-        sb.append(", ").append(corAccount);
         sb.append(", ").append(bankBik);
         sb.append(", ").append(bankName);
         sb.append(", ").append(bankPostAccount);

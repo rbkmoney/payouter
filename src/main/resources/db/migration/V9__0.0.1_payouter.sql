@@ -39,8 +39,6 @@ ALTER TABLE sht.payment ALTER COLUMN test SET NOT NULL;
 --refactor adjustment table
 --drop unused columns
 ALTER TABLE sht.adjustment DROP COLUMN paid;
-ALTER TABLE sht.adjustment DROP COLUMN payment_amount;
-ALTER TABLE sht.adjustment DROP COLUMN payment_fee;
 -- drop default alter column created_at
 ALTER TABLE sht.adjustment ALTER COLUMN created_at DROP DEFAULT;
 -- rename commission to fee
@@ -57,3 +55,41 @@ ALTER TABLE sht.refund DROP COLUMN paid;
 ALTER TABLE sht.refund RENAME COLUMN update_at TO succeeded_at;
 ALTER TABLE sht.refund ALTER COLUMN succeeded_at DROP DEFAULT;
 
+-- refactor payout table
+ALTER TABLE sht.payout DROP COLUMN cor_account;
+-- canceled -> cancelled
+UPDATE pg_enum SET enumlabel = 'CANCELLED'
+WHERE enumlabel = 'CANCELED' AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'payout_status');
+-- change payout_type names
+UPDATE pg_enum SET enumlabel = 'bank_card'
+WHERE enumlabel = 'CardPayout' AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'payout_type');
+UPDATE pg_enum SET enumlabel = 'bank_account'
+WHERE enumlabel = 'AccountPayout' AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'payout_type');
+
+-- shop_meta table
+CREATE TABLE sht.shop_meta (
+  party_id CHARACTER VARYING           NOT NULL,
+  shop_id  CHARACTER VARYING           NOT NULL,
+  wtime    TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT now(),
+  CONSTRAINT shop_meta_pkey PRIMARY KEY (party_id, shop_id)
+);
+
+-- account type
+CREATE TYPE sht.ACCOUNT_TYPE AS ENUM ('merchant', 'provider', 'system', 'external');
+
+-- cash_flow_posting table
+CREATE TABLE sht.cash_flow_posting (
+  id                BIGSERIAL                   NOT NULL,
+  payout_id         BIGINT                      NOT NULL,
+  plan_id           CHARACTER VARYING           NOT NULL,
+  batch_id          BIGINT                      NOT NULL,
+  from_account_id   BIGINT                      NOT NULL,
+  from_account_type sht.ACCOUNT_TYPE            NOT NULL,
+  to_account_id     BIGINT                      NOT NULL,
+  to_account_type   sht.ACCOUNT_TYPE            NOT NULL,
+  amount            BIGINT                      NOT NULL,
+  currency_code     CHARACTER VARYING           NOT NULL,
+  description       CHARACTER VARYING,
+  created_at        TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT now(),
+  CONSTRAINT posting_pkey PRIMARY KEY (id)
+);

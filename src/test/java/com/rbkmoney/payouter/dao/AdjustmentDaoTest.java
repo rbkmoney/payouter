@@ -50,7 +50,7 @@ public class AdjustmentDaoTest extends AbstractIntegrationTest {
         adjustments.stream().forEach(payment -> adjustmentDao.save(payment));
 
         assertTrue(adjustmentDao.getByPayoutId(payoutId).isEmpty());
-        assertEquals(adjustments.size(), adjustmentDao.includeToPayout(payoutId, adjustments));
+        adjustmentDao.includeToPayout(payoutId, adjustments);
         assertEquals(adjustments.size(), adjustmentDao.getByPayoutId(payoutId).size());
         assertEquals(adjustments.size(), adjustmentDao.excludeFromPayout(payoutId));
         assertTrue(adjustmentDao.getByPayoutId(payoutId).isEmpty());

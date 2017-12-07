@@ -64,4 +64,13 @@ public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
 
         executeOne(query);
     }
+
+    @Override
+    public List<Payout> getUnpaidPayouts() throws DaoException {
+        Query query = getDslContext().selectFrom(PAYOUT)
+                .where(PAYOUT.STATUS.eq(PayoutStatus.UNPAID))
+                .forUpdate();
+
+        return fetch(query, payoutRowMapper);
+    }
 }

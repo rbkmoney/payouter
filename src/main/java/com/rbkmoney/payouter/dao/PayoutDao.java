@@ -17,4 +17,6 @@ public interface PayoutDao extends GenericDao {
 
     void changeStatus(long payoutId, PayoutStatus payoutStatus) throws DaoException;
 
+    List<Payout> getUnpaidPayouts() throws DaoException;
+
 }

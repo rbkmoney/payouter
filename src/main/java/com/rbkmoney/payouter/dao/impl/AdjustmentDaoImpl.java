@@ -77,7 +77,8 @@ public class AdjustmentDaoImpl extends AbstractGenericDao implements AdjustmentD
                         .and(PAYMENT.CAPTURED_AT.lessThan(to)))
                 .where(ADJUSTMENT.STATUS.eq(AdjustmentStatus.CAPTURED)
                         .and(ADJUSTMENT.PARTY_ID.eq(partyId))
-                        .and(ADJUSTMENT.SHOP_ID.eq(shopId)));
+                        .and(ADJUSTMENT.SHOP_ID.eq(shopId))
+                        .and(ADJUSTMENT.PAYOUT_ID.isNull()));
         return fetch(query, adjustmentRowMapper);
     }
 
@@ -90,7 +91,7 @@ public class AdjustmentDaoImpl extends AbstractGenericDao implements AdjustmentD
     }
 
     @Override
-    public int includeToPayout(long payoutId, List<Adjustment> adjustments) throws DaoException {
+    public void includeToPayout(long payoutId, List<Adjustment> adjustments) throws DaoException {
         Set<Long> adjustmentsIds = adjustments.stream()
                 .map(adjustment -> adjustment.getId())
                 .collect(Collectors.toSet());
@@ -98,7 +99,7 @@ public class AdjustmentDaoImpl extends AbstractGenericDao implements AdjustmentD
         Query query = getDslContext().update(ADJUSTMENT)
                 .set(ADJUSTMENT.PAYOUT_ID, payoutId)
                 .where(ADJUSTMENT.ID.in(adjustmentsIds));
-        return execute(query);
+        execute(query, adjustmentsIds.size());
     }
 
     @Override

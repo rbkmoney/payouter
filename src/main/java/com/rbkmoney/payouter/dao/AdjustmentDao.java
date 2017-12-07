@@ -20,7 +20,7 @@ public interface AdjustmentDao extends GenericDao {
 
     List<Adjustment> getByPayoutId(long payoutId) throws DaoException;
 
-    int includeToPayout(long payoutId, List<Adjustment> adjustments) throws DaoException;
+    void includeToPayout(long payoutId, List<Adjustment> adjustments) throws DaoException;
 
     int excludeFromPayout(long payoutId) throws DaoException;
 

@@ -50,7 +50,7 @@ public class RefundDaoTest extends AbstractIntegrationTest {
         refunds.stream().forEach(payment -> refundDao.save(payment));
 
         assertTrue(refundDao.getByPayoutId(payoutId).isEmpty());
-        assertEquals(refunds.size(), refundDao.includeToPayout(payoutId, refunds));
+        refundDao.includeToPayout(payoutId, refunds);
         assertEquals(refunds.size(), refundDao.getByPayoutId(payoutId).size());
         assertEquals(refunds.size(), refundDao.excludeFromPayout(payoutId));
         assertTrue(refundDao.getByPayoutId(payoutId).isEmpty());

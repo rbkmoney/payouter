@@ -14,7 +14,7 @@ public interface PaymentDao extends GenericDao {
 
     List<Payment> getByPayoutId(long payoutId) throws DaoException;
 
-    int includeToPayout(long payoutId, List<Payment> payments) throws DaoException;
+    void includeToPayout(long payoutId, List<Payment> payments) throws DaoException;
 
     int excludeFromPayout(long payoutId) throws DaoException;
 

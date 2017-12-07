@@ -50,7 +50,7 @@ public class PaymentDaoTest extends AbstractIntegrationTest {
         payments.stream().forEach(payment -> paymentDao.save(payment));
 
         assertTrue(paymentDao.getByPayoutId(payoutId).isEmpty());
-        assertEquals(payments.size(), paymentDao.includeToPayout(payoutId, payments));
+        paymentDao.includeToPayout(payoutId, payments);
         assertEquals(payments.size(), paymentDao.getByPayoutId(payoutId).size());
         assertEquals(payments.size(), paymentDao.excludeFromPayout(payoutId));
         assertTrue(paymentDao.getByPayoutId(payoutId).isEmpty());
