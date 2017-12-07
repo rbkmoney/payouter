@@ -34,11 +34,14 @@ public class ShopMetaDaoImpl extends AbstractGenericDao implements ShopMetaDao {
 
     @Override
     public void save(String partyId, String shopId) throws DaoException {
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
+
         Query query = getDslContext().insertInto(SHOP_META)
                 .set(SHOP_META.PARTY_ID, partyId)
                 .set(SHOP_META.SHOP_ID, shopId)
+                .set(SHOP_META.WTIME, now)
                 .onDuplicateKeyUpdate()
-                .set(SHOP_META.WTIME, LocalDateTime.now(ZoneOffset.UTC));
+                .set(SHOP_META.WTIME, now);
 
         executeOne(query);
     }
