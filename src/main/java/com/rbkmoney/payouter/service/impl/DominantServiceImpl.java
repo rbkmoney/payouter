@@ -22,7 +22,7 @@ public class DominantServiceImpl implements DominantService {
             VersionedObject versionedObject = dominantClient.checkoutObject(com.rbkmoney.damsel.domain_config.Reference.version(domainRevision), reference);
             return versionedObject.getObject().getCategory().getData().getType();
         } catch (VersionNotFound | ObjectNotFound e) {
-            throw new NotFoundException(String.format("Version not found categoryId=%d, revisionId=%d", categoryRef.getId(), domainRevision), e);
+            throw new NotFoundException(String.format("Version not found, categoryId=%d, revisionId=%d", categoryRef.getId(), domainRevision), e);
         } catch (TException e) {
             throw new RuntimeException(String.format("Failed to get category type, categoryId=%d, revisionId=%d", categoryRef.getId(), domainRevision), e);
         }
