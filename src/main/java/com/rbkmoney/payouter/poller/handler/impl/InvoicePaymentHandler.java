@@ -13,9 +13,12 @@ import com.rbkmoney.payouter.dao.PaymentDao;
 import com.rbkmoney.payouter.domain.enums.PaymentStatus;
 import com.rbkmoney.payouter.domain.tables.pojos.Invoice;
 import com.rbkmoney.payouter.domain.tables.pojos.Payment;
+import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.poller.handler.Handler;
 import com.rbkmoney.payouter.util.CashFlowType;
 import com.rbkmoney.payouter.util.DamselUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -26,6 +29,8 @@ import static com.rbkmoney.payouter.util.CashFlowType.*;
 
 @Component
 public class InvoicePaymentHandler implements Handler {
+
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private final InvoiceDao invoiceDao;
 
@@ -45,6 +50,7 @@ public class InvoicePaymentHandler implements Handler {
                 .getInvoicePaymentStarted();
 
         Payment payment = new Payment();
+        InvoicePayment invoicePayment = invoicePaymentStarted.getPayment();
 
         Event event = stockEvent.getSourceEvent().getProcessingEvent();
 
@@ -53,6 +59,11 @@ public class InvoicePaymentHandler implements Handler {
         payment.setInvoiceId(invoiceId);
 
         Invoice invoice = invoiceDao.get(invoiceId);
+        if (invoice == null) {
+            throw new NotFoundException(String.format("Invoice on payment not found, invoiceId='%s', paymentId='%s'",
+                    invoiceId, invoicePayment.getId()));
+        }
+
         payment.setPartyId(invoice.getPartyId());
         payment.setShopId(invoice.getShopId());
 
@@ -61,8 +72,6 @@ public class InvoicePaymentHandler implements Handler {
         payment.setProviderId(providerId);
         int terminalId = paymentRoute.getTerminal().getId();
         payment.setTerminalId(terminalId);
-
-        InvoicePayment invoicePayment = invoicePaymentStarted.getPayment();
 
         payment.setPaymentId(invoicePayment.getId());
         payment.setCurrencyCode(invoicePayment.getCost().getCurrency().getSymbolicCode());
@@ -76,6 +85,7 @@ public class InvoicePaymentHandler implements Handler {
         payment.setExternalFee(parsedCashFlow.getOrDefault(EXTERNAL_FEE, 0L));
 
         paymentDao.save(payment);
+        log.info("Payment have been saved, eventId={}, payment={}", event.getId(), payment);
     }
 
     @Override

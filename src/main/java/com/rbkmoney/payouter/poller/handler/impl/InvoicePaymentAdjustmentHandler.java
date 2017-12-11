@@ -13,9 +13,12 @@ import com.rbkmoney.payouter.dao.PaymentDao;
 import com.rbkmoney.payouter.domain.enums.AdjustmentStatus;
 import com.rbkmoney.payouter.domain.tables.pojos.Adjustment;
 import com.rbkmoney.payouter.domain.tables.pojos.Payment;
+import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.poller.handler.Handler;
 import com.rbkmoney.payouter.util.CashFlowType;
 import com.rbkmoney.payouter.util.DamselUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -25,6 +28,8 @@ import static com.rbkmoney.payouter.util.CashFlowType.*;
 
 @Component
 public class InvoicePaymentAdjustmentHandler implements Handler {
+
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private final AdjustmentDao adjustmentDao;
 
@@ -57,12 +62,17 @@ public class InvoicePaymentAdjustmentHandler implements Handler {
         adjustment.setPaymentId(paymentId);
 
         Payment payment = paymentDao.get(invoiceId, paymentId);
+        if (payment == null) {
+            throw new NotFoundException(String.format("Payment on adjustment not found, invoiceId='%s', paymentId='%s', adjustmentId='%s'",
+                    invoiceId, paymentId, invoicePaymentAdjustment.getId()));
+        }
+
         adjustment.setPartyId(payment.getPartyId());
         adjustment.setShopId(payment.getShopId());
         adjustment.setPaymentAmount(payment.getAmount());
         adjustment.setPaymentFee(payment.getFee());
 
-        adjustment.setAdjustmentId(invoicePaymentAdjustmentChange.getId());
+        adjustment.setAdjustmentId(invoicePaymentAdjustment.getId());
         adjustment.setStatus(AdjustmentStatus.PENDING);
         adjustment.setCreatedAt(TypeUtil.stringToLocalDateTime(invoicePaymentAdjustment.getCreatedAt()));
         adjustment.setDomainRevision(invoicePaymentAdjustment.getDomainRevision());
@@ -75,6 +85,7 @@ public class InvoicePaymentAdjustmentHandler implements Handler {
         adjustment.setNewExternalFee(newCashFlow.getOrDefault(EXTERNAL_FEE, 0L));
 
         adjustmentDao.save(adjustment);
+        log.info("Adjustment have been saved, eventId={}, adjustment={}", eventId, adjustment);
     }
 
     @Override

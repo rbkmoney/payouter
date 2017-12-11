@@ -9,6 +9,8 @@ import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.geck.filter.Filter;
 import com.rbkmoney.payouter.dao.AdjustmentDao;
 import com.rbkmoney.payouter.poller.handler.Handler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -16,6 +18,8 @@ import java.time.LocalDateTime;
 
 @Component
 public class InvoicePaymentAdjustmentCapturedHandler implements Handler {
+
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private final AdjustmentDao adjustmentDao;
 
@@ -40,6 +44,8 @@ public class InvoicePaymentAdjustmentCapturedHandler implements Handler {
         String adjustmentId = invoicePaymentAdjustmentChange.getId();
 
         adjustmentDao.markAsCaptured(eventId, invoiceId, paymentId, adjustmentId, capturedAt);
+        log.info("Adjustment have been captured, eventId={}, invoiceId={}, paymentId={}, adjustmentId={}",
+                eventId, invoiceId, paymentId, adjustmentId);
     }
 
     @Override

@@ -11,6 +11,8 @@ import com.rbkmoney.payouter.domain.tables.pojos.EventStockMeta;
 import com.rbkmoney.payouter.exception.StorageException;
 import com.rbkmoney.payouter.poller.handler.Handler;
 import com.rbkmoney.payouter.service.EventStockService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -21,6 +23,8 @@ import java.util.Optional;
 
 @Service
 public class EventStockServiceImpl implements EventStockService {
+
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private final EventStockMetaDao eventStockMetaDao;
 
@@ -43,6 +47,7 @@ public class EventStockServiceImpl implements EventStockService {
         SourceEvent sourceEvent = stockEvent.getSourceEvent();
         if (sourceEvent.isSetProcessingEvent()) {
             Event event = sourceEvent.getProcessingEvent();
+            log.debug("Trying to save eventId, eventId={}, eventCreatedAt={}", event.getId(), event.getCreatedAt());
             eventStockMetaDao.setLastEventMeta(event.getId(), TypeUtil.stringToLocalDateTime(event.getCreatedAt()));
 
             EventPayload payload = event.getPayload();
@@ -50,10 +55,15 @@ public class EventStockServiceImpl implements EventStockService {
                 for (InvoiceChange invoiceChange : payload.getInvoiceChanges()) {
                     Handler handler = getHandler(invoiceChange);
                     if (handler != null) {
+                        if (log.isDebugEnabled()) {
+                            log.debug("Trying to handle invoice change, invoiceChange={}, eventId={}", invoiceChange, event.getId());
+                        }
                         handler.handle(invoiceChange, stockEvent);
+                        log.info("Invoice change have been handled, eventId={}", event.getId());
                     }
                 }
             }
+            log.info("Event id have been saved, eventId={}, eventCreatedAt={}", event.getId(), event.getCreatedAt());
         }
     }
 

@@ -8,11 +8,15 @@ import com.rbkmoney.damsel.payment_processing.InvoicePaymentChange;
 import com.rbkmoney.geck.filter.Filter;
 import com.rbkmoney.payouter.dao.AdjustmentDao;
 import com.rbkmoney.payouter.poller.handler.Handler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class InvoicePaymentAdjustmentCancelledHandler implements Handler {
+
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private final AdjustmentDao adjustmentDao;
 
@@ -36,6 +40,8 @@ public class InvoicePaymentAdjustmentCancelledHandler implements Handler {
         String adjustmentId = invoicePaymentAdjustmentChange.getId();
 
         adjustmentDao.markAsCancelled(eventId, invoiceId, paymentId, adjustmentId);
+        log.info("Adjustment have been cancelled, eventId={}, invoiceId={}, paymentId={}, adjustmentId={}",
+                eventId, invoiceId, paymentId, adjustmentId);
     }
 
     @Override

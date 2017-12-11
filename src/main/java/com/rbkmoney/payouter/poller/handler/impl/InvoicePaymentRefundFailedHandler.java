@@ -8,11 +8,15 @@ import com.rbkmoney.damsel.payment_processing.InvoicePaymentRefundChange;
 import com.rbkmoney.geck.filter.Filter;
 import com.rbkmoney.payouter.dao.RefundDao;
 import com.rbkmoney.payouter.poller.handler.Handler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class InvoicePaymentRefundFailedHandler implements Handler {
+
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private final RefundDao refundDao;
 
@@ -36,6 +40,8 @@ public class InvoicePaymentRefundFailedHandler implements Handler {
         String refundId = invoicePaymentRefundChange.getId();
 
         refundDao.markAsFailed(eventId, invoiceId, paymentId, refundId);
+        log.info("Refund have been failed, eventId={}, invoiceId={}, paymentId={}, refundId={}",
+                eventId, invoiceId, paymentId, refundId);
     }
 
     @Override

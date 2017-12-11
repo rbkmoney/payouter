@@ -7,11 +7,15 @@ import com.rbkmoney.geck.filter.Filter;
 import com.rbkmoney.payouter.dao.InvoiceDao;
 import com.rbkmoney.payouter.dao.ShopMetaDao;
 import com.rbkmoney.payouter.poller.handler.Handler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class InvoiceHandler implements Handler {
+
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private final ShopMetaDao shopMetaDao;
 
@@ -28,6 +32,8 @@ public class InvoiceHandler implements Handler {
         Invoice invoice = invoiceChange.getInvoiceCreated().getInvoice();
         shopMetaDao.save(invoice.getOwnerId(), invoice.getShopId());
         invoiceDao.save(invoice.getId(), invoice.getOwnerId(), invoice.getShopId());
+        log.info("Invoice and merchant shop have been successfully handled, eventId={}, invoiceId={}, partyId={}, shopId={}",
+                invoice.getId(), invoice.getOwnerId(), invoice.getShopId());
     }
 
     @Override

@@ -10,9 +10,12 @@ import com.rbkmoney.payouter.dao.RefundDao;
 import com.rbkmoney.payouter.domain.enums.RefundStatus;
 import com.rbkmoney.payouter.domain.tables.pojos.Payment;
 import com.rbkmoney.payouter.domain.tables.pojos.Refund;
+import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.poller.handler.Handler;
 import com.rbkmoney.payouter.util.CashFlowType;
 import com.rbkmoney.payouter.util.DamselUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -23,6 +26,8 @@ import static com.rbkmoney.payouter.util.CashFlowType.REFUND_AMOUNT;
 
 @Component
 public class InvoicePaymentRefundHandler implements Handler {
+
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private final RefundDao refundDao;
 
@@ -54,6 +59,12 @@ public class InvoicePaymentRefundHandler implements Handler {
         refund.setEventId(eventId);
 
         Payment payment = paymentDao.get(invoiceId, paymentId);
+
+        if (payment == null) {
+            throw new NotFoundException(String.format("Payment on refund not found, invoiceId='%s', paymentId='%s', refundId='%s'",
+                    invoiceId, paymentId, invoicePaymentRefund.getId()));
+        }
+
         refund.setPartyId(payment.getPartyId());
         refund.setShopId(payment.getShopId());
 
@@ -69,6 +80,7 @@ public class InvoicePaymentRefundHandler implements Handler {
         refund.setFee(cashFlow.getOrDefault(FEE, 0L));
 
         refundDao.save(refund);
+        log.info("Refund have been saved, eventId={}, refund={}", eventId, refund);
     }
 
     @Override
