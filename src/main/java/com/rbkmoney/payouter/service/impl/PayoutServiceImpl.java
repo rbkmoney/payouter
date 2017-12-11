@@ -106,6 +106,7 @@ public class PayoutServiceImpl implements PayoutService {
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public void pay(long payoutId) throws InvalidStateException, StorageException {
+        log.debug("Trying to pay a payout, payoutId={}", payoutId);
         try {
             Payout payout = payoutDao.get(payoutId);
 
@@ -116,6 +117,7 @@ public class PayoutServiceImpl implements PayoutService {
             }
 
             payoutDao.changeStatus(payoutId, PayoutStatus.PAID);
+            log.info("Payout have been paid, payoutId={}", payoutId);
         } catch (DaoException ex) {
             throw new StorageException(String.format("Failed to pay a payout, payoutId='%d'", payoutId), ex);
         }
@@ -124,6 +126,7 @@ public class PayoutServiceImpl implements PayoutService {
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public void confirm(long payoutId) throws InvalidStateException, StorageException {
+        log.debug("Trying to confirm a payout, payoutId={}", payoutId);
         try {
             Payout payout = payoutDao.get(payoutId);
 
@@ -135,6 +138,7 @@ public class PayoutServiceImpl implements PayoutService {
 
             payoutDao.changeStatus(payoutId, PayoutStatus.CONFIRMED);
             shumwayService.commit(payoutId, buildPostings(payout));
+            log.info("Payout have been confirmed, payoutId={}", payoutId);
         } catch (DaoException ex) {
             throw new StorageException(String.format("Failed to confirm a payout, payoutId='%d'", payoutId), ex);
         }
@@ -143,6 +147,7 @@ public class PayoutServiceImpl implements PayoutService {
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public void cancel(long payoutId) throws InvalidStateException, StorageException {
+        log.debug("Trying to cancel a payout, payoutId={}", payoutId);
         try {
             Payout payout = payoutDao.get(payoutId);
 
@@ -159,7 +164,7 @@ public class PayoutServiceImpl implements PayoutService {
                 default:
                     throw new InvalidStateException(String.format("Invalid status for 'cancel' action, payoutId='%d', currentStatus='%s'", payoutId, payout.getStatus()));
             }
-
+            log.info("Payout have been cancelled, payoutId={}", payoutId);
         } catch (DaoException ex) {
             throw new StorageException(String.format("Failed to cancel a payout, payoutId='%d'", payoutId), ex);
         }
