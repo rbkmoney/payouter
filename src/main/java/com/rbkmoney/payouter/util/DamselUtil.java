@@ -15,7 +15,6 @@ import org.apache.thrift.TBase;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public class DamselUtil {
 
@@ -188,11 +187,4 @@ public class DamselUtil {
                 throw new NotFoundException(String.format("User type not found, userType = %s", userType));
         }
     }
-
-    public static void main(String[] args) {
-
-        Optional<Object> o = Optional.empty();
-        System.out.println(o.isPresent());
-    }
-
 }
