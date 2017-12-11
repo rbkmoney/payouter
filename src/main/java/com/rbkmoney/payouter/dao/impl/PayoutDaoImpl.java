@@ -6,14 +6,17 @@ import com.rbkmoney.payouter.domain.enums.PayoutStatus;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.exception.DaoException;
 import org.jooq.Query;
+import org.jooq.SelectQuery;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import static com.rbkmoney.payouter.domain.Tables.PAYOUT;
 
@@ -71,6 +74,17 @@ public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
                 .where(PAYOUT.STATUS.eq(PayoutStatus.UNPAID))
                 .forUpdate();
 
+        return fetch(query, payoutRowMapper);
+    }
+
+    @Override
+    public List<Payout> search(Optional<PayoutStatus> payoutStatus, Optional<LocalDateTime> fromTime, Optional<LocalDateTime> toTime, Optional<List<Long>> payoutIds) throws DaoException {
+        SelectQuery query = getDslContext().selectQuery();
+        query.addFrom(PAYOUT);
+        payoutStatus.ifPresent(ps -> query.addConditions(PAYOUT.STATUS.eq(ps)));
+        fromTime.ifPresent(from -> query.addConditions(PAYOUT.CREATED_AT.ge(from)));
+        toTime.ifPresent(to -> query.addConditions(PAYOUT.CREATED_AT.le(to)));
+        payoutIds.ifPresent(ids -> query.addConditions(PAYOUT.ID.in(ids)));
         return fetch(query, payoutRowMapper);
     }
 }

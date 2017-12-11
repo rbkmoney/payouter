@@ -1,7 +1,11 @@
 package com.rbkmoney.payouter.service.impl;
 
-import com.rbkmoney.damsel.domain.*;
-import com.rbkmoney.damsel.domain_config.*;
+import com.rbkmoney.damsel.domain.CategoryRef;
+import com.rbkmoney.damsel.domain.CategoryType;
+import com.rbkmoney.damsel.domain_config.ObjectNotFound;
+import com.rbkmoney.damsel.domain_config.RepositoryClientSrv;
+import com.rbkmoney.damsel.domain_config.VersionNotFound;
+import com.rbkmoney.damsel.domain_config.VersionedObject;
 import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.service.DominantService;
 import org.apache.thrift.TException;

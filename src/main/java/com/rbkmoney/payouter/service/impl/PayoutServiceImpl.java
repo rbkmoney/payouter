@@ -25,6 +25,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class PayoutServiceImpl implements PayoutService {
@@ -163,6 +164,11 @@ public class PayoutServiceImpl implements PayoutService {
         } catch (DaoException ex) {
             throw new StorageException(String.format("Failed to cancel a payout, payoutId='%d'", payoutId), ex);
         }
+    }
+
+    @Override
+    public List<Payout> search(Optional<PayoutStatus> payoutStatus, Optional<LocalDateTime> fromTime, Optional<LocalDateTime> toTime, Optional<List<Long>> payoutIds) {
+        return payoutDao.search(payoutStatus, fromTime, toTime, payoutIds);
     }
 
     @Scheduled(fixedDelay = 5000)

@@ -15,6 +15,7 @@ import org.apache.thrift.TBase;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class DamselUtil {
 
@@ -31,6 +32,40 @@ public class DamselUtil {
         payoutCreated.setInitiator(toDamselUserInfo(payoutEvent));
         payoutCreated.setPayout(toDamselPayout(payoutEvent));
         return payoutCreated;
+    }
+
+    public static UserInfo buildUserInfo() {
+        UserInfo userInfo = new UserInfo();
+        userInfo.setId("TODO: getUser");
+        userInfo.setType(UserType.internal_user(new InternalUser()));
+        return userInfo;
+    }
+
+    public static PayoutStatus toDamselPayoutStatus(com.rbkmoney.payouter.domain.tables.pojos.Payout payout) {
+        com.rbkmoney.payouter.domain.enums.PayoutStatus recordStatus = payout.getStatus();
+
+        switch (recordStatus) {
+            case UNPAID: {
+                return PayoutStatus.unpaid(new PayoutUnpaid());
+            }
+            case PAID: {
+                PaidDetails paidDetails = new PaidDetails();
+                paidDetails.setAccountDetails(new AccountPaidDetails());
+                return PayoutStatus.paid(new PayoutPaid(paidDetails));
+            }
+            case CONFIRMED: {
+                return PayoutStatus.confirmed(new PayoutConfirmed(buildUserInfo()));
+            }
+            case CANCELLED: {
+                PayoutCancelled payoutCancelled = new PayoutCancelled();
+                payoutCancelled.setDetails(payout.getDescription());
+                payoutCancelled.setUserInfo(buildUserInfo());
+                return PayoutStatus.cancelled(payoutCancelled);
+            }
+            default: {
+                throw new UnsupportedOperationException("Can't parse Payoutstatus enum." + recordStatus.name());
+            }
+        }
     }
 
     public static PayoutStatus toDamselPayoutStatus(PayoutEvent payoutEvent) {
@@ -152,6 +187,12 @@ public class DamselUtil {
             default:
                 throw new NotFoundException(String.format("User type not found, userType = %s", userType));
         }
+    }
+
+    public static void main(String[] args) {
+
+        Optional<Object> o = Optional.empty();
+        System.out.println(o.isPresent());
     }
 
 }
