@@ -60,6 +60,16 @@ public class RefundDaoImpl extends AbstractGenericDao implements RefundDao {
     }
 
     @Override
+    public void markAsFailed(long eventId, String invoiceId, String paymentId, String refundId) throws DaoException {
+        Query query = getDslContext().update(REFUND)
+                .set(REFUND.STATUS, RefundStatus.FAILED)
+                .where(REFUND.INVOICE_ID.eq(invoiceId)
+                        .and(REFUND.PAYMENT_ID.eq(paymentId)
+                                .and(REFUND.REFUND_ID.eq(refundId))));
+        executeOne(query);
+    }
+
+    @Override
     public List<Refund> getUnpaid(String partyId, String shopId, LocalDateTime to) throws DaoException {
         Query query = getDslContext()
                 .select(REFUND.fields())

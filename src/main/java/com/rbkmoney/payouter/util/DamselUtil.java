@@ -15,12 +15,56 @@ import org.apache.thrift.TBase;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import static com.rbkmoney.damsel.domain.CashFlowAccount._Fields.*;
+import static com.rbkmoney.payouter.util.CashFlowType.*;
 
 public class DamselUtil {
 
     public final static ObjectMapper objectMapper = new ObjectMapper();
 
     public final static JsonProcessor jsonProcessor = new JsonProcessor();
+
+    public static Map<CashFlowType, Long> parseCashFlow(List<FinalCashFlowPosting> finalCashFlow) {
+        Map<CashFlowType, Long> collect = finalCashFlow.stream()
+                .collect(
+                        Collectors.groupingBy(
+                                DamselUtil::getCashFlowType,
+                                Collectors.summingLong(cashFlow -> cashFlow.getVolume().getAmount()
+                                )
+                        )
+                );
+        return collect;
+    }
+
+    public static CashFlowType getCashFlowType(FinalCashFlowPosting cashFlowPosting) {
+        if (checkRoute(PROVIDER, MERCHANT, cashFlowPosting)) {
+            return AMOUNT;
+        }
+        if (checkRoute(SYSTEM, PROVIDER, cashFlowPosting)) {
+            return PROVIDER_FEE;
+        }
+        if (checkRoute(MERCHANT, SYSTEM, cashFlowPosting)) {
+            return FEE;
+        }
+        if (checkRoute(SYSTEM, EXTERNAL, cashFlowPosting)) {
+            return EXTERNAL_FEE;
+        }
+
+        if (checkRoute(MERCHANT, PROVIDER, cashFlowPosting)) {
+            return REFUND_AMOUNT;
+        }
+
+        throw new IllegalArgumentException("Unsupported cashflow");
+    }
+
+    public static boolean checkRoute(CashFlowAccount._Fields source, CashFlowAccount._Fields destination, FinalCashFlowPosting cashFlow) {
+        return source.equals(cashFlow.getSource().getAccountType().getSetField()) &&
+                destination.equals(cashFlow.getDestination().getAccountType().getSetField());
+
+    }
 
     public static <T extends TBase> T jsonToTBase(JsonNode jsonNode, Class<T> type) throws IOException {
         return jsonProcessor.process(jsonNode, new TBaseHandler<>(type));

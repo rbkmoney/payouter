@@ -94,3 +94,8 @@ CREATE TABLE sht.cash_flow_posting (
   created_at        TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT now(),
   CONSTRAINT posting_pkey PRIMARY KEY (id)
 );
+
+CREATE TABLE sht.event_stock_meta (
+  last_event_id BIGINT,
+  last_event_created_at TIMESTAMP WITHOUT TIME ZONE
+);
