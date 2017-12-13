@@ -174,15 +174,12 @@ public class PayoutServiceImpl implements PayoutService {
     @Transactional(propagation = Propagation.REQUIRED)
     public void processUnpaidPayouts() {
         List<Payout> unpaidPayouts = payoutDao.getUnpaidPayouts();
-        List<Payout> paidPayouts = new ArrayList<>();
         for (Payout payout : unpaidPayouts) {
-            try {
-                pay(payout.getId());
-                paidPayouts.add(payout);
-            } catch (Exception ex) {
-                log.warn(ex.getMessage(), ex);
-            }
-            //TODO mail report
+            pay(payout.getId());
+        }
+
+        for (Payout payout : unpaidPayouts) {
+            //TODO send mail
         }
     }
 

@@ -6,7 +6,6 @@ import com.rbkmoney.payouter.exception.DaoException;
 import org.jooq.DSLContext;
 import org.jooq.Query;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
@@ -14,13 +13,12 @@ import javax.sql.DataSource;
 import static com.rbkmoney.payouter.domain.Tables.REPORT;
 
 @Component
-@DependsOn("dbInitializer")
-public class ReportDaoPg extends AbstractGenericDao implements ReportDao {
+public class ReportDaoImpl extends AbstractGenericDao implements ReportDao {
 
     @Autowired
     DSLContext dslContext;
 
-    public ReportDaoPg(DataSource dataSource) {
+    public ReportDaoImpl(DataSource dataSource) {
         super(dataSource);
     }
 

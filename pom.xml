@@ -29,7 +29,7 @@
         <db.password>postgres</db.password>
         <db.schema>sht</db.schema>
         <flyway.version>4.2.0</flyway.version>
-        <damsel.version>1.206-0abdda2</damsel.version>
+        <damsel.version>1.210-3d1c673-epic</damsel.version>
     </properties>
 
     <dependencies>
@@ -47,6 +47,10 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-freemarker</artifactId>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
