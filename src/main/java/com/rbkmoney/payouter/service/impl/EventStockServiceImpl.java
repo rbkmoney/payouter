@@ -8,6 +8,8 @@ import com.rbkmoney.damsel.payment_processing.InvoiceChange;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.payouter.dao.EventStockMetaDao;
 import com.rbkmoney.payouter.domain.tables.pojos.EventStockMeta;
+import com.rbkmoney.payouter.exception.DaoException;
+import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.exception.StorageException;
 import com.rbkmoney.payouter.poller.handler.Handler;
 import com.rbkmoney.payouter.service.EventStockService;
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,17 +41,31 @@ public class EventStockServiceImpl implements EventStockService {
 
     @Override
     public Optional<EventStockMeta> getLastEventId() throws StorageException {
-        return Optional.ofNullable(eventStockMetaDao.getLastEventMeta());
+        try {
+            return Optional.ofNullable(eventStockMetaDao.getLastEventMeta());
+        } catch (DaoException ex) {
+            throw new StorageException("Failed to get last event id", ex);
+        }
     }
 
     @Override
+    public void setLastEventId(long eventId, LocalDateTime eventCreatedAt) throws StorageException {
+        try {
+            eventStockMetaDao.setLastEventMeta(eventId, eventCreatedAt);
+        } catch (DaoException ex) {
+            throw new StorageException(String.format("Failed to change last event id, eventId=%d, eventCreatedAt='%s'", eventId, eventCreatedAt));
+        }
+    }
+
+
+    @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void processStockEvent(StockEvent stockEvent) {
+    public void processStockEvent(StockEvent stockEvent) throws StorageException, NotFoundException {
         SourceEvent sourceEvent = stockEvent.getSourceEvent();
         if (sourceEvent.isSetProcessingEvent()) {
             Event event = sourceEvent.getProcessingEvent();
             log.debug("Trying to save eventId, eventId={}, eventCreatedAt={}", event.getId(), event.getCreatedAt());
-            eventStockMetaDao.setLastEventMeta(event.getId(), TypeUtil.stringToLocalDateTime(event.getCreatedAt()));
+            setLastEventId(event.getId(), TypeUtil.stringToLocalDateTime(event.getCreatedAt()));
 
             EventPayload payload = event.getPayload();
             if (payload.isSetInvoiceChanges()) {
@@ -58,8 +75,12 @@ public class EventStockServiceImpl implements EventStockService {
                         if (log.isDebugEnabled()) {
                             log.debug("Trying to handle invoice change, invoiceChange={}, eventId={}", invoiceChange, event.getId());
                         }
-                        handler.handle(invoiceChange, stockEvent);
-                        log.info("Invoice change have been handled, eventId={}", event.getId());
+                        try {
+                            handler.handle(invoiceChange, stockEvent);
+                            log.info("Invoice change have been handled, eventId={}", event.getId());
+                        } catch (DaoException ex) {
+                            throw new StorageException(String.format("Failed to save event, eventId=%d", event.getId()));
+                        }
                     }
                 }
             }

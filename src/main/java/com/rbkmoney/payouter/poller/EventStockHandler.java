@@ -4,6 +4,7 @@ import com.rbkmoney.damsel.event_stock.StockEvent;
 import com.rbkmoney.eventstock.client.EventAction;
 import com.rbkmoney.eventstock.client.EventHandler;
 import com.rbkmoney.payouter.exception.DaoException;
+import com.rbkmoney.payouter.exception.StorageException;
 import com.rbkmoney.payouter.service.EventStockService;
 import com.rbkmoney.woody.api.flow.error.WRuntimeException;
 import org.slf4j.Logger;
@@ -28,9 +29,11 @@ public class EventStockHandler implements EventHandler<StockEvent> {
         try {
             eventStockService.processStockEvent(stockEvent);
             return EventAction.CONTINUE;
-        } catch (DaoException | WRuntimeException ex) {
+        } catch (StorageException | WRuntimeException ex) {
+            log.warn("Failed to handle event, retry", ex);
             return EventAction.DELAYED_RETRY;
         } catch(Exception ex) {
+            log.error("Failed to handle event, interrupted", ex);
             return EventAction.INTERRUPT;
         }
     }
