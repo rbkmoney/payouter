@@ -37,6 +37,15 @@ public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
     }
 
     @Override
+    public Payout getExclusive(long payoutId) throws DaoException {
+        Query query = getDslContext().selectFrom(PAYOUT)
+                .where(PAYOUT.ID.eq(payoutId))
+                .forUpdate();
+
+        return fetchOne(query, payoutRowMapper);
+    }
+
+    @Override
     public List<Payout> get(Collection<Long> payoutIds) throws DaoException {
         Query query = getDslContext().selectFrom(PAYOUT)
                 .where(PAYOUT.ID.in(payoutIds));

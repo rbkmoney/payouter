@@ -11,6 +11,8 @@ public interface PayoutDao extends GenericDao {
 
     Payout get(long payoutId) throws DaoException;
 
+    Payout getExclusive(long payoutId) throws DaoException;
+
     List<Payout> get(Collection<Long> payoutIds) throws DaoException;
 
     long save(Payout payout) throws DaoException;

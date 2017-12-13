@@ -108,7 +108,7 @@ public class PayoutServiceImpl implements PayoutService {
     public void pay(long payoutId) throws InvalidStateException, StorageException {
         log.debug("Trying to pay a payout, payoutId={}", payoutId);
         try {
-            Payout payout = payoutDao.get(payoutId);
+            Payout payout = payoutDao.getExclusive(payoutId);
 
             if (payout.getStatus() != PayoutStatus.UNPAID) {
                 throw new InvalidStateException(
@@ -128,7 +128,7 @@ public class PayoutServiceImpl implements PayoutService {
     public void confirm(long payoutId) throws InvalidStateException, StorageException {
         log.debug("Trying to confirm a payout, payoutId={}", payoutId);
         try {
-            Payout payout = payoutDao.get(payoutId);
+            Payout payout = payoutDao.getExclusive(payoutId);
 
             if (payout.getStatus() != PayoutStatus.PAID) {
                 throw new InvalidStateException(
@@ -149,7 +149,7 @@ public class PayoutServiceImpl implements PayoutService {
     public void cancel(long payoutId) throws InvalidStateException, StorageException {
         log.debug("Trying to cancel a payout, payoutId={}", payoutId);
         try {
-            Payout payout = payoutDao.get(payoutId);
+            Payout payout = payoutDao.getExclusive(payoutId);
 
             switch (payout.getStatus()) {
                 case UNPAID:
