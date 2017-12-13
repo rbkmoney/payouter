@@ -89,69 +89,70 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
     @Override
     public List<PayoutInfo> getPayoutsInfo(PayoutSearchCriteria payoutSearchCriteria) throws InvalidRequest, TException {
         log.info("GetPayoutsInfo with search criteria: {}", payoutSearchCriteria);
-        List<String> errorList = new ArrayList<>();
-        Optional<com.rbkmoney.payouter.domain.enums.PayoutStatus> payoutStatus = Optional.empty();
-        if (payoutSearchCriteria.getStatus() != null) {
-            String statusName = payoutSearchCriteria.getStatus().name().toUpperCase();
+        Optional<com.rbkmoney.payouter.domain.enums.PayoutStatus> payoutStatus = Optional.ofNullable(payoutSearchCriteria.getStatus()).map(ps -> {
             try {
-                payoutStatus = Optional.of(com.rbkmoney.payouter.domain.enums.PayoutStatus.valueOf(statusName));
+                return com.rbkmoney.payouter.domain.enums.PayoutStatus.valueOf(ps.name().toUpperCase());
             } catch (IllegalArgumentException e) {
-                errorList.add(String.format("Wrong status %s, must be one of them %s", statusName, Arrays.toString(com.rbkmoney.payouter.domain.enums.PayoutStatus.values())));
+                return null;
+            }
+        });
+        Optional<LocalDateTime> fromTime = Optional.ofNullable(payoutSearchCriteria.getTimeRange()).map(tr -> TypeUtil.stringToLocalDateTime(tr.getFromTime()));
+        Optional<LocalDateTime> toTime = Optional.ofNullable(payoutSearchCriteria.getTimeRange()).map(TimeRange::getToTime).map(TypeUtil::stringToLocalDateTime);
+        Optional<List<Long>> payoutIds = Optional.ofNullable(payoutSearchCriteria.getPayoutIds()).map(pids -> pids.stream().map(Long::valueOf).collect(Collectors.toList()));
+
+        validateRequest(payoutSearchCriteria, payoutStatus, fromTime, toTime);
+
+        List<Payout> payoutList = payoutService.search(payoutStatus, fromTime, toTime, payoutIds);
+        List<PayoutInfo> payoutInfoList = payoutList.stream().map(this::buildPayoutInfo).collect(Collectors.toList());
+        log.info("GetPayoutsInfo count: {}", payoutInfoList.size());
+        return payoutInfoList;
+    }
+
+    private void validateRequest(PayoutSearchCriteria payoutSearchCriteria, Optional<com.rbkmoney.payouter.domain.enums.PayoutStatus> payoutStatus, Optional<LocalDateTime> fromTime, Optional<LocalDateTime> toTime) throws InvalidRequest {
+        List<String> errorList = new ArrayList<>();
+        if (payoutSearchCriteria.getStatus() != null) {
+            if (!payoutStatus.isPresent()) {
+                errorList.add(String.format("Wrong status %s, must be one of them %s", payoutSearchCriteria.getStatus().name().toUpperCase(), Arrays.toString(com.rbkmoney.payouter.domain.enums.PayoutStatus.values())));
             }
         }
-        Optional<LocalDateTime> fromTime = Optional.empty();
-        Optional<LocalDateTime> toTime = Optional.empty();
-        if (payoutSearchCriteria.getTimeRange() != null) {
-            fromTime = Optional.of(TypeUtil.stringToLocalDateTime(payoutSearchCriteria.getTimeRange().getFromTime()));
-            if (payoutSearchCriteria.getTimeRange().getToTime() != null) {
-                toTime = Optional.of(TypeUtil.stringToLocalDateTime(payoutSearchCriteria.getTimeRange().getToTime()));
-            }
-            if (toTime.isPresent()) {
-                if (fromTime.get().isAfter(toTime.get())) {
-                    errorList.add(String.format("FromTime %s must be before toTime %s", fromTime.get().toString(), toTime.get().toString()));
-                }
+        if (toTime.isPresent() && fromTime.isPresent()) {
+            if (fromTime.get().isAfter(toTime.get())) {
+                errorList.add(String.format("FromTime %s must be before toTime %s", fromTime.get().toString(), toTime.get().toString()));
             }
         }
         if (!errorList.isEmpty()) {
             throw new InvalidRequest(errorList);
         }
-        Optional<List<Long>> payoutIds = Optional.empty();
-        if (payoutSearchCriteria.getPayoutIds() != null) {
-            payoutIds = Optional.of(payoutSearchCriteria.getPayoutIds().stream().map(Long::valueOf).collect(Collectors.toList()));
-        }
-        List<Payout> payoutList = payoutService.search(payoutStatus, fromTime, toTime, payoutIds);
-        List<PayoutInfo> payoutInfoList = payoutList.stream().map(record -> {
-                    PayoutInfo payoutInfo = new PayoutInfo();
-                    payoutInfo.setId(String.valueOf(record.getId()));
-                    payoutInfo.setPartyId(record.getPartyId());
-                    payoutInfo.setShopId(record.getShopId());
-                    payoutInfo.setAmount(record.getAmount());
-                    if (record.getPayoutType().equals(PayoutType.bank_account)) {
-                        BankAccount bankAccount = new BankAccount();
-                        bankAccount.setBankBik(record.getBankBik());
-                        bankAccount.setAccount(record.getBankAccount());
-                        bankAccount.setBankPostAccount(record.getBankPostAccount());
-                        bankAccount.setBankName(record.getBankName());
+    }
 
-                        PayoutAccount payoutAccount = new PayoutAccount();
-                        payoutAccount.setAccount(bankAccount);
-                        payoutAccount.setInn(record.getInn());
-                        payoutAccount.setPurpose(record.getPurpose());
-                        //todo: add correct data
-                        LegalAgreement legalAgreement = new LegalAgreement("UNKNOWN", "UNKNOWN");
-                        payoutAccount.setLegalAgreement(legalAgreement);
-                        com.rbkmoney.damsel.payout_processing.PayoutType payoutType = new com.rbkmoney.damsel.payout_processing.PayoutType();
-                        payoutType.setBankAccount(payoutAccount);
-                        payoutInfo.setType(payoutType);
-                    }
-                    payoutInfo.setStatus(DamselUtil.toDamselPayoutStatus(record));
-                    payoutInfo.setFromTime(TypeUtil.temporalToString(record.getFromTime()));
-                    payoutInfo.setToTime(TypeUtil.temporalToString(record.getToTime()));
-                    payoutInfo.setCreatedAt(TypeUtil.temporalToString(record.getCreatedAt()));
-                    return payoutInfo;
-                }
-        ).collect(Collectors.toList());
-        log.info("GetPayoutsInfo count: {}", payoutInfoList.size());
-        return payoutInfoList;
+    private PayoutInfo buildPayoutInfo(Payout record) {
+        PayoutInfo payoutInfo = new PayoutInfo();
+        payoutInfo.setId(String.valueOf(record.getId()));
+        payoutInfo.setPartyId(record.getPartyId());
+        payoutInfo.setShopId(record.getShopId());
+        payoutInfo.setAmount(record.getAmount());
+        if (record.getPayoutType().equals(PayoutType.bank_account)) {
+            BankAccount bankAccount = new BankAccount();
+            bankAccount.setBankBik(record.getBankBik());
+            bankAccount.setAccount(record.getBankAccount());
+            bankAccount.setBankPostAccount(record.getBankPostAccount());
+            bankAccount.setBankName(record.getBankName());
+
+            PayoutAccount payoutAccount = new PayoutAccount();
+            payoutAccount.setAccount(bankAccount);
+            payoutAccount.setInn(record.getInn());
+            payoutAccount.setPurpose(record.getPurpose());
+            //todo: add correct data
+            LegalAgreement legalAgreement = new LegalAgreement("UNKNOWN", "UNKNOWN");
+            payoutAccount.setLegalAgreement(legalAgreement);
+            com.rbkmoney.damsel.payout_processing.PayoutType payoutType = new com.rbkmoney.damsel.payout_processing.PayoutType();
+            payoutType.setBankAccount(payoutAccount);
+            payoutInfo.setType(payoutType);
+        }
+        payoutInfo.setStatus(DamselUtil.toDamselPayoutStatus(record));
+        payoutInfo.setFromTime(TypeUtil.temporalToString(record.getFromTime()));
+        payoutInfo.setToTime(TypeUtil.temporalToString(record.getToTime()));
+        payoutInfo.setCreatedAt(TypeUtil.temporalToString(record.getCreatedAt()));
+        return payoutInfo;
     }
 }
