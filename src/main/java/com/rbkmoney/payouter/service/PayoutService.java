@@ -20,6 +20,6 @@ public interface PayoutService {
 
     void cancel(long payoutId) throws InvalidStateException, StorageException;
 
-    List<Payout> search(Optional<PayoutStatus> payoutStatus, Optional<LocalDateTime> fromTime, Optional<LocalDateTime> toTimer, Optional<List<Long>> payoutIds);
+    List<Payout> search(Optional<PayoutStatus> payoutStatus, Optional<LocalDateTime> fromTime, Optional<LocalDateTime> toTimer, Optional<List<Long>> payoutIds, long fromId, int size);
 
 }

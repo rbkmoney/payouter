@@ -10,6 +10,7 @@ import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.exception.InvalidStateException;
 import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.service.PayoutService;
+import com.rbkmoney.payouter.service.impl.PayoutServiceImpl;
 import com.rbkmoney.payouter.util.DamselUtil;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
@@ -18,15 +19,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
 public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
-
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private final PayoutService payoutService;
@@ -37,10 +34,11 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
     }
 
     @Override
-    public String generatePayout(GeneratePayoutParams generatePayoutParams) throws InvalidRequest, TException {
+    public List<String> generatePayout(GeneratePayoutParams generatePayoutParams) throws InvalidRequest, TException {
         try {
-            String partyId = generatePayoutParams.getPartyId();
-            String shopId = generatePayoutParams.getShopId();
+            //TODO PASHA
+            String partyId = generatePayoutParams.getShop().getPartyId();
+            String shopId = generatePayoutParams.getShop().getShopId();
 
             TimeRange timeRange = generatePayoutParams.getTimeRange();
             LocalDateTime fromTime = TypeUtil.stringToLocalDateTime(timeRange.getFromTime());
@@ -52,7 +50,8 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
 
             long payoutId = payoutService.createPayout(partyId, shopId, fromTime, toTime, PayoutType.bank_account);
 
-            return String.valueOf(payoutId);
+            //TODO PASHA
+            return Collections.singletonList(String.valueOf(payoutId));
         } catch (NotFoundException | InvalidStateException | IllegalArgumentException ex) {
             throw new InvalidRequest(Arrays.asList(ex.getMessage()));
         }
@@ -73,9 +72,9 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
     }
 
     @Override
-    public List<String> cancelPayouts(List<String> payoutIds) throws InvalidRequest, TException {
+    public List<String> cancelPayouts(List<String> list, String s) throws InvalidRequest, TException {
         List<String> cancelledPayouts = new ArrayList<>();
-        for (String payoutId : payoutIds) {
+        for (String payoutId : list) {
             try {
                 payoutService.cancel(Long.valueOf(payoutId));
                 cancelledPayouts.add(payoutId);
@@ -87,23 +86,31 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
     }
 
     @Override
-    public List<PayoutInfo> getPayoutsInfo(PayoutSearchCriteria payoutSearchCriteria) throws InvalidRequest, TException {
-        log.info("GetPayoutsInfo with search criteria: {}", payoutSearchCriteria);
+    public PayoutSearchResponse getPayoutsInfo(PayoutSearchRequest payoutSearchRequest) throws InvalidRequest, TException {
+        PayoutSearchCriteria payoutSearchCriteria = payoutSearchRequest.getSearchCriteria();
+        log.info("GetPayoutsInfo with request parameters: {}", payoutSearchRequest);
+        long fromId = payoutSearchRequest.getFromId();
+        int size = payoutSearchRequest.getSize();
         Optional<com.rbkmoney.payouter.domain.enums.PayoutStatus> payoutStatus = Optional.ofNullable(payoutSearchCriteria.getStatus()).map(ps -> com.rbkmoney.payouter.domain.enums.PayoutStatus.valueOf(ps.name().toUpperCase()));
         Optional<LocalDateTime> fromTime = Optional.ofNullable(payoutSearchCriteria.getTimeRange()).map(tr -> TypeUtil.stringToLocalDateTime(tr.getFromTime()));
-        Optional<LocalDateTime> toTime = Optional.ofNullable(payoutSearchCriteria.getTimeRange()).map(TimeRange::getToTime).map(TypeUtil::stringToLocalDateTime);
+        Optional<LocalDateTime> toTime = Optional.ofNullable(payoutSearchCriteria.getTimeRange()).map(tr -> TypeUtil.stringToLocalDateTime(tr.getToTime()));
         Optional<List<Long>> payoutIds = Optional.ofNullable(payoutSearchCriteria.getPayoutIds()).map(pids -> pids.stream().map(Long::valueOf).collect(Collectors.toList()));
 
-        validateRequest(fromTime, toTime);
+        validateRequest(size, fromTime, toTime);
 
-        List<Payout> payoutList = payoutService.search(payoutStatus, fromTime, toTime, payoutIds);
+        List<Payout> payoutList = payoutService.search(payoutStatus, fromTime, toTime, payoutIds, fromId, size);
         List<PayoutInfo> payoutInfoList = payoutList.stream().map(this::buildPayoutInfo).collect(Collectors.toList());
+        long lastId = payoutInfoList.isEmpty() ? 0 : Long.parseLong(payoutInfoList.get(payoutInfoList.size() - 1).getId());
+        PayoutSearchResponse payoutSearchResponse = new PayoutSearchResponse(payoutInfoList, lastId);
         log.info("GetPayoutsInfo count: {}", payoutInfoList.size());
-        return payoutInfoList;
+        return payoutSearchResponse;
     }
 
-    private void validateRequest(Optional<LocalDateTime> fromTime, Optional<LocalDateTime> toTime) throws InvalidRequest {
+    private void validateRequest(int size, Optional<LocalDateTime> fromTime, Optional<LocalDateTime> toTime) throws InvalidRequest {
         List<String> errorList = new ArrayList<>();
+        if (size <= 0 || size > PayoutServiceImpl.MAX_SIZE) {
+            errorList.add(String.format("Size %d must be positive and less then %d", size, PayoutServiceImpl.MAX_SIZE));
+        }
         if (toTime.isPresent() && fromTime.isPresent()) {
             if (fromTime.get().isAfter(toTime.get())) {
                 errorList.add(String.format("FromTime %s must be before toTime %s", fromTime.get().toString(), toTime.get().toString()));

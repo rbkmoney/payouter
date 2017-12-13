@@ -21,6 +21,6 @@ public interface PayoutDao extends GenericDao {
 
     List<Payout> getUnpaidPayouts() throws DaoException;
 
-    List<Payout> search(Optional<PayoutStatus> payoutStatus, Optional<LocalDateTime> fromTime, Optional<LocalDateTime> toTimer, Optional<List<Long>> payoutIds) throws DaoException;
+    List<Payout> search(Optional<PayoutStatus> payoutStatus, Optional<LocalDateTime> fromTime, Optional<LocalDateTime> toTimer, Optional<List<Long>> payoutIds, long fromId, int size) throws DaoException;
 
 }

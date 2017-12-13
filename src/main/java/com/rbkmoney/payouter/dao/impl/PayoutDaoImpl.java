@@ -78,13 +78,15 @@ public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
     }
 
     @Override
-    public List<Payout> search(Optional<PayoutStatus> payoutStatus, Optional<LocalDateTime> fromTime, Optional<LocalDateTime> toTime, Optional<List<Long>> payoutIds) throws DaoException {
+    public List<Payout> search(Optional<PayoutStatus> payoutStatus, Optional<LocalDateTime> fromTime, Optional<LocalDateTime> toTime, Optional<List<Long>> payoutIds, long fromId, int size) throws DaoException {
         SelectQuery query = getDslContext().selectQuery();
         query.addFrom(PAYOUT);
         payoutStatus.ifPresent(ps -> query.addConditions(PAYOUT.STATUS.eq(ps)));
         fromTime.ifPresent(from -> query.addConditions(PAYOUT.CREATED_AT.ge(from)));
         toTime.ifPresent(to -> query.addConditions(PAYOUT.CREATED_AT.le(to)));
         payoutIds.ifPresent(ids -> query.addConditions(PAYOUT.ID.in(ids)));
+        query.addConditions(PAYOUT.ID.gt(fromId));
+        query.addLimit(size);
         return fetch(query, payoutRowMapper);
     }
 }
