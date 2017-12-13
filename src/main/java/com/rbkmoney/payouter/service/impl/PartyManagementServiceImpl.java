@@ -18,17 +18,17 @@ public class PartyManagementServiceImpl implements PartyManagementService {
 
     private final UserInfo userInfo = new UserInfo("admin", UserType.internal_user(new InternalUser()));
 
-    private final PartyManagementSrv.Iface partyManagementSrv;
+    private final PartyManagementSrv.Iface partyManagementClient;
 
     @Autowired
-    public PartyManagementServiceImpl(PartyManagementSrv.Iface partyManagementSrv) {
-        this.partyManagementSrv = partyManagementSrv;
+    public PartyManagementServiceImpl(PartyManagementSrv.Iface partyManagementClient) {
+        this.partyManagementClient = partyManagementClient;
     }
 
     @Override
     public Shop getShop(String partyId, String shopId) throws NotFoundException {
         try {
-            return partyManagementSrv.getShop(userInfo, partyId, shopId);
+            return partyManagementClient.getShop(userInfo, partyId, shopId);
         } catch (PartyNotFound | ShopNotFound ex) {
             throw new NotFoundException(
                     String.format("Shop not found, partyId='%s', contractId='%s'", partyId, shopId), ex
@@ -43,7 +43,7 @@ public class PartyManagementServiceImpl implements PartyManagementService {
     @Override
     public Contract getContract(String partyId, String contractId) throws NotFoundException {
         try {
-            return partyManagementSrv.getContract(userInfo, partyId, contractId);
+            return partyManagementClient.getContract(userInfo, partyId, contractId);
         } catch (PartyNotFound | ContractNotFound ex) {
             throw new NotFoundException(
                     String.format("Contract not found, partyId='%s', contractId='%s'", partyId, contractId),
