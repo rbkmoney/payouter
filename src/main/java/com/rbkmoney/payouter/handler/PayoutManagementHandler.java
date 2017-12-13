@@ -89,18 +89,12 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
     @Override
     public List<PayoutInfo> getPayoutsInfo(PayoutSearchCriteria payoutSearchCriteria) throws InvalidRequest, TException {
         log.info("GetPayoutsInfo with search criteria: {}", payoutSearchCriteria);
-        Optional<com.rbkmoney.payouter.domain.enums.PayoutStatus> payoutStatus = Optional.ofNullable(payoutSearchCriteria.getStatus()).map(ps -> {
-            try {
-                return com.rbkmoney.payouter.domain.enums.PayoutStatus.valueOf(ps.name().toUpperCase());
-            } catch (IllegalArgumentException e) {
-                return null;
-            }
-        });
+        Optional<com.rbkmoney.payouter.domain.enums.PayoutStatus> payoutStatus = Optional.ofNullable(payoutSearchCriteria.getStatus()).map(ps -> com.rbkmoney.payouter.domain.enums.PayoutStatus.valueOf(ps.name().toUpperCase()));
         Optional<LocalDateTime> fromTime = Optional.ofNullable(payoutSearchCriteria.getTimeRange()).map(tr -> TypeUtil.stringToLocalDateTime(tr.getFromTime()));
         Optional<LocalDateTime> toTime = Optional.ofNullable(payoutSearchCriteria.getTimeRange()).map(TimeRange::getToTime).map(TypeUtil::stringToLocalDateTime);
         Optional<List<Long>> payoutIds = Optional.ofNullable(payoutSearchCriteria.getPayoutIds()).map(pids -> pids.stream().map(Long::valueOf).collect(Collectors.toList()));
 
-        validateRequest(payoutSearchCriteria, payoutStatus, fromTime, toTime);
+        validateRequest(fromTime, toTime);
 
         List<Payout> payoutList = payoutService.search(payoutStatus, fromTime, toTime, payoutIds);
         List<PayoutInfo> payoutInfoList = payoutList.stream().map(this::buildPayoutInfo).collect(Collectors.toList());
@@ -108,13 +102,8 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
         return payoutInfoList;
     }
 
-    private void validateRequest(PayoutSearchCriteria payoutSearchCriteria, Optional<com.rbkmoney.payouter.domain.enums.PayoutStatus> payoutStatus, Optional<LocalDateTime> fromTime, Optional<LocalDateTime> toTime) throws InvalidRequest {
+    private void validateRequest(Optional<LocalDateTime> fromTime, Optional<LocalDateTime> toTime) throws InvalidRequest {
         List<String> errorList = new ArrayList<>();
-        if (payoutSearchCriteria.getStatus() != null) {
-            if (!payoutStatus.isPresent()) {
-                errorList.add(String.format("Wrong status %s, must be one of them %s", payoutSearchCriteria.getStatus().name().toUpperCase(), Arrays.toString(com.rbkmoney.payouter.domain.enums.PayoutStatus.values())));
-            }
-        }
         if (toTime.isPresent() && fromTime.isPresent()) {
             if (fromTime.get().isAfter(toTime.get())) {
                 errorList.add(String.format("FromTime %s must be before toTime %s", fromTime.get().toString(), toTime.get().toString()));
@@ -142,8 +131,7 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
             payoutAccount.setAccount(bankAccount);
             payoutAccount.setInn(record.getInn());
             payoutAccount.setPurpose(record.getPurpose());
-            //todo: add correct data
-            LegalAgreement legalAgreement = new LegalAgreement("UNKNOWN", "UNKNOWN");
+            LegalAgreement legalAgreement = new LegalAgreement(record.getAccountLegalAgreementId(), TypeUtil.temporalToString(record.getAccountLegalAgreementSignedAt()));
             payoutAccount.setLegalAgreement(legalAgreement);
             com.rbkmoney.damsel.payout_processing.PayoutType payoutType = new com.rbkmoney.damsel.payout_processing.PayoutType();
             payoutType.setBankAccount(payoutAccount);
