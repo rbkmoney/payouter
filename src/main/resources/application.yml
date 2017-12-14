@@ -21,7 +21,7 @@ service:
     url: http://dudoser:8022/dudos
     mail:
       from: no-reply@rbkmoney.com
-      to: a.semenkov@rbkmoney.com
+      to: platform-reports@rbkmoney.com
 
 report:
   1c:

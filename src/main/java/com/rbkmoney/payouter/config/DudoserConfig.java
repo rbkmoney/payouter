@@ -9,9 +9,6 @@ import org.springframework.core.io.Resource;
 
 import java.io.IOException;
 
-/**
- * @since 06.02.17
- **/
 @Configuration
 public class DudoserConfig {
 
