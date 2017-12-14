@@ -1,14 +1,21 @@
-package com.rbkmoney.payouter.service.report;
+package com.rbkmoney.payouter.service.report._1c;
 
 import com.rbkmoney.payouter.dao.ReportDao;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.domain.tables.pojos.Report;
+import com.rbkmoney.payouter.service.report.ReportService;
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
+import java.io.IOException;
+import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -21,7 +28,7 @@ import java.util.stream.Collectors;
 import static java.lang.String.valueOf;
 
 @Service
-public class Report1CService {
+public class Report1CService implements ReportService {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private static final String DATE_FORMAT = "dd.MM.yyyy";
@@ -29,20 +36,21 @@ public class Report1CService {
     private static final ZoneId UTC = ZoneOffset.of("UTC");
     private static final String TEMPLATE_NAME = "1c_payout.ftl";
 
-    @Value("${report.1c.fileName.prefix}")
+    @Value("${report.1c.file.name.prefix}")
     private String namePrefix;
 
-    @Value("${report.1c.fileName.extension}")
+    @Value("${report.1c.file.name.extension}")
     private String extension;
 
     @Autowired
-    private TemplateEngine templateEngine;
+    private FreeMarkerConfigurer freeMarkerConfigurer;
 
     @Autowired
     private ReportDao reportDao;
 
     //todo: проверить как считаются суммы с adjustment
-    public Report generateReport(List<Payout> payoutRecords)  {
+    @Override
+    public Report generate(List<Payout> payoutRecords)  {
         final List<Map<String, Object>> payoutsAttributes = new ArrayList<>();
         final StringBuilder reportDescription = new StringBuilder("Выплаты для: <br>");
         for (Payout payoutRecord : payoutRecords) {
@@ -65,7 +73,7 @@ public class Report1CService {
         dataModel.put("payouts", payoutsAttributes);
         dataModel.put("date", currentMoscowDate());
 
-        final String reportContent = templateEngine.process(dataModel, TEMPLATE_NAME);
+        final String reportContent = processTemplate(dataModel, TEMPLATE_NAME);
 
         List<String> payoutIds = payoutRecords.stream().map(p -> p.getId().toString()).collect(Collectors.toList());
         Report report = new Report();
@@ -80,11 +88,23 @@ public class Report1CService {
         return report;
     }
 
-    public static String currentMoscowDate() {
+    private static String currentMoscowDate() {
         return DateTimeFormatter.ofPattern(DATE_FORMAT).format(LocalDateTime.now(MOSCOW));
     }
 
-    public static LocalDateTime currentUTC() {
+    private static LocalDateTime currentUTC() {
         return LocalDateTime.now(UTC);
+    }
+
+    private String processTemplate(Map<String, Object> data, String templateName) {
+        Configuration cfg = freeMarkerConfigurer.getConfiguration();
+        try {
+            Template template = cfg.getTemplate(templateName);
+            StringWriter stringWriter = new StringWriter();
+            template.process(data, stringWriter);
+            return stringWriter.toString();
+        } catch (TemplateException | IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

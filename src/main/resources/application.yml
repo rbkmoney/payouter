@@ -17,9 +17,16 @@ service:
     url: http://localhost:8022/v1/processing/partymgmt
   dominant:
     url: http://dominant:8022/v1/domain/repository_client
+  dudoser:
+    url: http://dudoser:8022/dudos
+    mail:
+      from: no-reply@rbkmoney.com
+      to: a.semenkov@rbkmoney.com
 
 report:
   1c:
-    fileName:
-      prefix: test_1c
-      extension: .txt
+    file:
+      name:
+        prefix: test_1c
+        extension: .txt
+      encoding: Windows-1251

@@ -11,7 +11,10 @@ import com.rbkmoney.payouter.exception.StorageException;
 import com.rbkmoney.payouter.model.PayoutToolData;
 import com.rbkmoney.payouter.service.PartyManagementService;
 import com.rbkmoney.payouter.service.PayoutService;
+import com.rbkmoney.payouter.service.report.ReportService;
 import com.rbkmoney.payouter.service.ShumwayService;
+import com.rbkmoney.payouter.service.report.ReportSendService;
+import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,9 +25,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class PayoutServiceImpl implements PayoutService {
@@ -45,6 +48,10 @@ public class PayoutServiceImpl implements PayoutService {
 
     private final PartyManagementService partyManagementService;
 
+    private final ReportService reportService;
+
+    private final ReportSendService reportSendService;
+
     @Autowired
     public PayoutServiceImpl(ShopMetaDao shopMetaDao,
                              PaymentDao paymentDao,
@@ -52,7 +59,9 @@ public class PayoutServiceImpl implements PayoutService {
                              AdjustmentDao adjustmentDao,
                              PayoutDao payoutDao,
                              ShumwayService shumwayService,
-                             PartyManagementService partyManagementService) {
+                             PartyManagementService partyManagementService,
+                             ReportService reportService,
+                             ReportSendService reportSendService) {
         this.shopMetaDao = shopMetaDao;
         this.paymentDao = paymentDao;
         this.refundDao = refundDao;
@@ -60,6 +69,8 @@ public class PayoutServiceImpl implements PayoutService {
         this.payoutDao = payoutDao;
         this.shumwayService = shumwayService;
         this.partyManagementService = partyManagementService;
+        this.reportService = reportService;
+        this.reportSendService = reportSendService;
         //over
     }
 
@@ -174,13 +185,27 @@ public class PayoutServiceImpl implements PayoutService {
     @Transactional(propagation = Propagation.REQUIRED)
     public void processUnpaidPayouts() {
         List<Payout> unpaidPayouts = payoutDao.getUnpaidPayouts();
-        for (Payout payout : unpaidPayouts) {
-            pay(payout.getId());
+        if (unpaidPayouts.isEmpty()) return;
+        unpaidPayouts.forEach(p -> pay(p.getId());
+
+        final String subject = "Выплаты, сгенерированные " + TimeUtils.currentMoscowDate();
+        final Report report = reportService.generate(unpaidPayouts);
+        reportSendService.sendEmail(onesMailTo, subject, report, onesEncoding);
+    }
+
+    @Transactional
+    public void createAndSendReport(List<PayoutRecord> payouts) {
+        List<Long> payoutIds = payouts.stream().map(p -> p.getId()).collect(Collectors.toList())
+
+        try {
+            reportSendService.sendEmail(onesMailTo, oneSsubject, oneSReport, onesEncoding);
+            reportSendService.sendEmail(onesMailTo, paymentsSubject, paymentsReport, onesEncoding);
+        } catch (TException e) {
+            log.error("Fail to send 1S report by email.");
+            throw new RuntimeException(e);
         }
 
-        for (Payout payout : unpaidPayouts) {
-            //TODO send mail
-        }
+        log.info("Report for payouts:[{}] was generated and send.", payouts.stream().map(p -> p.getId()).collect(Collectors.toList()));
     }
 
     private Payout buildPayout(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType) {
