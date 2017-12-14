@@ -30,9 +30,13 @@ public class InvoiceHandler implements Handler {
     @Override
     public void handle(InvoiceChange invoiceChange, StockEvent stockEvent) {
         Invoice invoice = invoiceChange.getInvoiceCreated().getInvoice();
+
         shopMetaDao.save(invoice.getOwnerId(), invoice.getShopId());
+        log.info("Merchant shop have been saved, eventId={}, invoiceId={}, partyId={}, shopId={}",
+                invoice.getOwnerId(), invoice.getShopId());
+
         invoiceDao.save(invoice.getId(), invoice.getOwnerId(), invoice.getShopId());
-        log.info("Invoice and merchant shop have been successfully handled, eventId={}, invoiceId={}, partyId={}, shopId={}",
+        log.info("Invoice have been saved, eventId={}, invoiceId={}, partyId={}, shopId={}",
                 invoice.getId(), invoice.getOwnerId(), invoice.getShopId());
     }
 
