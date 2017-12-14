@@ -10,7 +10,6 @@ import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.exception.InvalidStateException;
 import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.service.PayoutService;
-import com.rbkmoney.payouter.service.impl.PayoutServiceImpl;
 import com.rbkmoney.payouter.util.DamselUtil;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
@@ -25,6 +24,7 @@ import java.util.stream.Collectors;
 @Component
 public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
+    public static final int MAX_SIZE = 1000;
 
     private final PayoutService payoutService;
 
@@ -108,8 +108,8 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
 
     private void validateRequest(int size, Optional<LocalDateTime> fromTime, Optional<LocalDateTime> toTime) throws InvalidRequest {
         List<String> errorList = new ArrayList<>();
-        if (size <= 0 || size > PayoutServiceImpl.MAX_SIZE) {
-            errorList.add(String.format("Size %d must be positive and less then %d", size, PayoutServiceImpl.MAX_SIZE));
+        if (size <= 0 || size > MAX_SIZE) {
+            errorList.add(String.format("Size %d must be positive and less then %d", size, MAX_SIZE));
         }
         if (toTime.isPresent() && fromTime.isPresent()) {
             if (fromTime.get().isAfter(toTime.get())) {

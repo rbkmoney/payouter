@@ -30,8 +30,6 @@ import java.util.Optional;
 @Service
 public class PayoutServiceImpl implements PayoutService {
 
-    public static final int MAX_SIZE = 1000;
-
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private final ShopMetaDao shopMetaDao;
