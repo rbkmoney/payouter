@@ -4,7 +4,6 @@ import com.rbkmoney.damsel.event_stock.SourceEvent;
 import com.rbkmoney.damsel.event_stock.StockEvent;
 import com.rbkmoney.damsel.payment_processing.EventPayload;
 import com.rbkmoney.damsel.payment_processing.InvoiceChange;
-import com.rbkmoney.payouter.exception.StorageException;
 import com.rbkmoney.payouter.poller.handler.Handler;
 import com.rbkmoney.payouter.service.EventStockService;
 import org.springframework.beans.factory.annotation.Autowired;
