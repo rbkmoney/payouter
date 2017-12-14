@@ -1,9 +1,9 @@
-package com.rbkmoney.payouter.service.report._1c;
+package com.rbkmoney.payouter.service.report;
 
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.domain.tables.pojos.Report;
 import com.rbkmoney.payouter.exception.ReportException;
-import com.rbkmoney.payouter.service.report.ReportSendService;
+import com.rbkmoney.payouter.service.report._1c.Report1CService;
 import org.apache.thrift.TException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

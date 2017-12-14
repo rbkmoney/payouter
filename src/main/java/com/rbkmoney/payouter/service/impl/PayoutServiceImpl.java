@@ -12,7 +12,7 @@ import com.rbkmoney.payouter.model.PayoutToolData;
 import com.rbkmoney.payouter.service.PartyManagementService;
 import com.rbkmoney.payouter.service.PayoutService;
 import com.rbkmoney.payouter.service.ShumwayService;
-import com.rbkmoney.payouter.service.report._1c.Report1CSendService;
+import com.rbkmoney.payouter.service.report.Report1CSendService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
