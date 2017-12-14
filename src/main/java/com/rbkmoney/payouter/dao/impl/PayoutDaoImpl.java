@@ -96,7 +96,8 @@ public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
                 .where(PAYMENT.PAYOUT_ID.isNull())
                 .and(PAYMENT.TEST.isFalse())
                 .and(PAYMENT.CAPTURED_AT.ge(fromTime))
-                .and(PAYMENT.CAPTURED_AT.lt(toTime));
+                .and(PAYMENT.CAPTURED_AT.lt(toTime))
+                .groupBy(PAYMENT.PARTY_ID, PAYMENT.SHOP_ID);
 
         return fetch(query, (rs, i) -> new ShopParams(rs.getString(PAYMENT.PARTY_ID.getName()), rs.getString(PAYMENT.SHOP_ID.getName())));
     }
