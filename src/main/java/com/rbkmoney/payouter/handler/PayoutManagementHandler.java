@@ -72,9 +72,9 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
     }
 
     @Override
-    public List<String> cancelPayouts(List<String> list, String s) throws InvalidRequest, TException {
+    public List<String> cancelPayouts(List<String> payoutIds, String details) throws InvalidRequest, TException {
         List<String> cancelledPayouts = new ArrayList<>();
-        for (String payoutId : list) {
+        for (String payoutId : payoutIds) {
             try {
                 payoutService.cancel(Long.valueOf(payoutId));
                 cancelledPayouts.add(payoutId);
