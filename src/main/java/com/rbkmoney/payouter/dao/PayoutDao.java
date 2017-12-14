@@ -1,5 +1,6 @@
 package com.rbkmoney.payouter.dao;
 
+import com.rbkmoney.damsel.payout_processing.ShopParams;
 import com.rbkmoney.payouter.domain.enums.PayoutStatus;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.exception.DaoException;
@@ -22,6 +23,8 @@ public interface PayoutDao extends GenericDao {
     void changeStatus(long payoutId, PayoutStatus payoutStatus) throws DaoException;
 
     List<Payout> getUnpaidPayouts() throws DaoException;
+
+    List<ShopParams> getUnpaidShops(LocalDateTime fromTime, LocalDateTime toTime) throws DaoException;
 
     List<Payout> search(Optional<PayoutStatus> payoutStatus, Optional<LocalDateTime> fromTime, Optional<LocalDateTime> toTimer, Optional<List<Long>> payoutIds, long fromId, int size) throws DaoException;
 
