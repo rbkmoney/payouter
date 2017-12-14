@@ -13,9 +13,6 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * @since 06.02.17
- **/
 @Service
 public class ReportSendService {
 

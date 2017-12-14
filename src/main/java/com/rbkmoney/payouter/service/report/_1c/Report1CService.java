@@ -32,12 +32,11 @@ public class Report1CService implements ReportService {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private static final String DATE_FORMAT = "dd.MM.yyyy";
-    private static final ZoneId MOSCOW = ZoneOffset.of("Europe/Moscow");
-    private static final ZoneId UTC = ZoneOffset.of("UTC");
+    private static final ZoneId MOSCOW = ZoneOffset.of("+3");
     private static final String TEMPLATE_NAME = "1c_payout.ftl";
 
     @Value("${report.1c.file.name.prefix}")
-    private String namePrefix;
+    private String prefix;
 
     @Value("${report.1c.file.name.extension}")
     private String extension;
@@ -77,7 +76,7 @@ public class Report1CService implements ReportService {
 
         List<String> payoutIds = payoutRecords.stream().map(p -> p.getId().toString()).collect(Collectors.toList());
         Report report = new Report();
-        report.setName(namePrefix + "_" + currentMoscowDate() + extension);
+        report.setName(prefix + "_" + currentMoscowDate() + extension);
         report.setContent(reportContent);
         report.setDescription(reportDescription.toString());
         report.setPayoutids(String.join(",", payoutIds));
@@ -93,7 +92,7 @@ public class Report1CService implements ReportService {
     }
 
     private static LocalDateTime currentUTC() {
-        return LocalDateTime.now(UTC);
+        return LocalDateTime.now(ZoneOffset.UTC);
     }
 
     private String processTemplate(Map<String, Object> data, String templateName) {

@@ -1,10 +1,8 @@
 package com.rbkmoney.payouter.dao;
 
 import com.rbkmoney.payouter.domain.tables.pojos.Report;
+import com.rbkmoney.payouter.exception.DaoException;
 
-/**
- * Created by jeckep on 17.08.17.
- */
 public interface ReportDao {
-    void save(Report report);
+    void save(Report report) throws DaoException;
 }
