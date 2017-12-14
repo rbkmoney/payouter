@@ -1,6 +1,7 @@
 package com.rbkmoney.payouter.util;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -16,7 +17,7 @@ public class TypeUtil {
         return Optional.ofNullable(names)
                 .map(
                         values -> values.stream()
-                                .filter(name -> name != null)
+                                .filter(Objects::nonNull)
                                 .map(name -> toEnumField(name, enumType))
                                 .collect(Collectors.toList())
                 ).orElse(null);

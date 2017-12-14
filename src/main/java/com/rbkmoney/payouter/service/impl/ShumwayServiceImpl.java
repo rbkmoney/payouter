@@ -4,6 +4,8 @@ import com.rbkmoney.damsel.accounter.*;
 import com.rbkmoney.payouter.domain.tables.pojos.CashFlowPosting;
 import com.rbkmoney.payouter.service.ShumwayService;
 import org.apache.thrift.TException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +16,8 @@ import java.util.stream.Collectors;
 @Service
 public class ShumwayServiceImpl implements ShumwayService {
 
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
     private final AccounterSrv.Iface shumwayClient;
 
     @Autowired
@@ -23,38 +27,65 @@ public class ShumwayServiceImpl implements ShumwayService {
 
     @Override
     public void hold(long payoutId, List<CashFlowPosting> postings) {
+        log.debug("Trying to hold payout postings, payoutId={}, postings={}", payoutId, postings);
         try {
             shumwayClient.hold(new PostingPlanChange(toPlanId(payoutId), toPostingBatch(1, postings)));
+            log.info("Payout postings has been held, payoutId={}, postings={}", payoutId, postings);
         } catch (TException ex) {
-            throw new RuntimeException("Failed to hold postings, payoutId=" + payoutId, ex);
+            throw new RuntimeException(String.format("Failed to hold postings, payoutId='%d', postings='%s'", payoutId, postings), ex);
+        }
+    }
+
+    public void hold(String planId, List<CashFlowPosting> postings) {
+        log.debug("Trying to hold payout postings, planId={}, postings={}", planId, postings);
+        try {
+            shumwayClient.hold(new PostingPlanChange(planId, toPostingBatch(1, postings)));
+            log.info("Payout postings has been held, planId={}, postings={}", planId, postings);
+        } catch (TException ex) {
+            throw new RuntimeException(String.format("Failed to hold postings, planId='%d', postings='%s'", planId, postings), ex);
         }
     }
 
     @Override
     public void commit(long payoutId, List<CashFlowPosting> postings) {
+        log.debug("Trying to commit payout postings, payoutId={}, postings={}", payoutId, postings);
         try {
             shumwayClient.commitPlan(new PostingPlan(toPlanId(payoutId), toPostingBatches(postings)));
+            log.info("Payout postings has been committed, payoutId={}, postings={}", payoutId, postings);
         } catch (TException ex) {
-            throw new RuntimeException("Failed to commit postings, payoutId=" + payoutId, ex);
+            throw new RuntimeException(String.format("Failed to commit postings, payoutId='%d', postings='%s'", payoutId, postings), ex);
+        }
+    }
+
+    public void commit(String planId, List<CashFlowPosting> postings) {
+        log.debug("Trying to commit payout postings, planId={}, postings={}", planId, postings);
+        try {
+            shumwayClient.commitPlan(new PostingPlan(planId, toPostingBatches(postings)));
+            log.info("Payout postings has been committed, payoutId={}, postings={}", planId, postings);
+        } catch (TException ex) {
+            throw new RuntimeException(String.format("Failed to commit postings, payoutId='%d', postings='%s'", planId, postings), ex);
         }
     }
 
     @Override
     public void rollback(long payoutId, List<CashFlowPosting> postings) {
+        log.debug("Trying to rollback payout postings, payoutId={}, postings={}", payoutId, postings);
         try {
             shumwayClient.rollbackPlan(new PostingPlan(toPlanId(payoutId), toPostingBatches(postings)));
+            log.info("Payout postings has been rolled back, payoutId={}, postings={}", payoutId, postings);
         } catch (TException ex) {
-            throw new RuntimeException("Failed to rollback postings, payoutId=" + payoutId, ex);
+            throw new RuntimeException(String.format("Failed to rollback postings, payoutId='%d', postings='%s'", payoutId, postings), ex);
         }
     }
 
     @Override
     public void revert(long payoutId, List<CashFlowPosting> postings) {
+        log.debug("Trying to revert payout postings, payoutId={}, postings={}", payoutId, postings);
         List<CashFlowPosting> revertPostings = postings.stream()
                 .map(posting -> {
                     CashFlowPosting revertPosting = new CashFlowPosting();
                     revertPosting.setPayoutId(posting.getPayoutId());
-                    revertPosting.setPlanId("revert_" + posting.getPlanId());
+                    revertPosting.setPlanId(toRevertPlanId(payoutId));
                     revertPosting.setFromAccountId(posting.getToAccountId());
                     revertPosting.setFromAccountType(posting.getToAccountType());
                     revertPosting.setToAccountId(posting.getFromAccountId());
@@ -69,11 +100,31 @@ public class ShumwayServiceImpl implements ShumwayService {
                     return revertPosting;
                 }).collect(Collectors.toList());
         try {
-            hold(payoutId, revertPostings);
-            commit(payoutId, revertPostings);
-        } catch (RuntimeException ex) {
-            throw new RuntimeException("Failed to revert postings, payoutId=" + payoutId, ex);
+            doRevert(payoutId, revertPostings);
+            log.info("Payout postings has been reverted, payoutId={}, postings={}", payoutId, postings);
+        } catch (Exception ex) {
+            throw new RuntimeException(String.format("Failed to revert postings, payoutId='%d', postings='%s'", payoutId, postings), ex);
         }
+    }
+
+    private void doRevert(long payoutId, List<CashFlowPosting> revertPostings) throws Exception {
+        try {
+            hold(toRevertPlanId(payoutId), revertPostings);
+            commit(toRevertPlanId(payoutId), revertPostings);
+        } catch (Exception ex) {
+            processRollbackRevertWhenError(payoutId, revertPostings, ex);
+        }
+    }
+
+    private void processRollbackRevertWhenError(long payoutId, List<CashFlowPosting> postings, Exception parent) throws Exception {
+        try {
+            rollback(payoutId, postings);
+        } catch (Throwable ex) {
+            Exception rollbackEx = new RuntimeException(String.format("Failed to rollback postings from revert action, payoutId='%d', postings='%s'", payoutId, postings), ex);
+            parent.addSuppressed(rollbackEx);
+            log.warn("Inconsistent state of postings in shumway, payoutId='{}', postings='{}'", payoutId, postings, ex);
+        }
+        throw parent;
     }
 
     private PostingBatch toPostingBatch(long batchId, List<CashFlowPosting> postings) {
@@ -106,6 +157,10 @@ public class ShumwayServiceImpl implements ShumwayService {
 
     private String toPlanId(long payoutId) {
         return "payout_" + payoutId;
+    }
+
+    private String toRevertPlanId(long payoutId) {
+        return "revert_" + toPlanId(payoutId);
     }
 
 }

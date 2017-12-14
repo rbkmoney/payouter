@@ -1,20 +1,25 @@
 package com.rbkmoney.payouter.dao.impl;
 
+import com.rbkmoney.damsel.payout_processing.ShopParams;
 import com.rbkmoney.payouter.dao.PayoutDao;
 import com.rbkmoney.payouter.dao.mapper.RecordRowMapper;
 import com.rbkmoney.payouter.domain.enums.PayoutStatus;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.exception.DaoException;
 import org.jooq.Query;
+import org.jooq.SelectQuery;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
+import static com.rbkmoney.payouter.domain.Tables.PAYMENT;
 import static com.rbkmoney.payouter.domain.Tables.PAYOUT;
 
 @Component
@@ -32,6 +37,15 @@ public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
     public Payout get(long payoutId) throws DaoException {
         Query query = getDslContext().selectFrom(PAYOUT)
                 .where(PAYOUT.ID.eq(payoutId));
+
+        return fetchOne(query, payoutRowMapper);
+    }
+
+    @Override
+    public Payout getExclusive(long payoutId) throws DaoException {
+        Query query = getDslContext().selectFrom(PAYOUT)
+                .where(PAYOUT.ID.eq(payoutId))
+                .forUpdate();
 
         return fetchOne(query, payoutRowMapper);
     }
@@ -71,6 +85,32 @@ public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
                 .where(PAYOUT.STATUS.eq(PayoutStatus.UNPAID))
                 .forUpdate();
 
+        return fetch(query, payoutRowMapper);
+    }
+
+    @Override
+    public List<ShopParams> getUnpaidShops(LocalDateTime fromTime, LocalDateTime toTime) throws DaoException {
+        Query query = getDslContext()
+                .select(PAYMENT.PARTY_ID, PAYMENT.SHOP_ID)
+                .from(PAYMENT)
+                .where(PAYMENT.PAYOUT_ID.isNull())
+                .and(PAYMENT.TEST.isFalse())
+                .and(PAYMENT.CAPTURED_AT.ge(fromTime))
+                .and(PAYMENT.CAPTURED_AT.lt(toTime));
+
+        return fetch(query, (rs, i) -> new ShopParams(rs.getString(PAYMENT.PARTY_ID.getName()), rs.getString(PAYMENT.SHOP_ID.getName())));
+    }
+
+    @Override
+    public List<Payout> search(Optional<PayoutStatus> payoutStatus, Optional<LocalDateTime> fromTime, Optional<LocalDateTime> toTime, Optional<List<Long>> payoutIds, long fromId, int size) throws DaoException {
+        SelectQuery query = getDslContext().selectQuery();
+        query.addFrom(PAYOUT);
+        payoutStatus.ifPresent(ps -> query.addConditions(PAYOUT.STATUS.eq(ps)));
+        fromTime.ifPresent(from -> query.addConditions(PAYOUT.CREATED_AT.ge(from)));
+        toTime.ifPresent(to -> query.addConditions(PAYOUT.CREATED_AT.lt(to)));
+        payoutIds.ifPresent(ids -> query.addConditions(PAYOUT.ID.in(ids)));
+        query.addConditions(PAYOUT.ID.gt(fromId));
+        query.addLimit(size);
         return fetch(query, payoutRowMapper);
     }
 }
