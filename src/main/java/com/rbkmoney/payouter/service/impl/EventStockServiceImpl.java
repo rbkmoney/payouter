@@ -79,7 +79,7 @@ public class EventStockServiceImpl implements EventStockService {
                             handler.handle(invoiceChange, stockEvent);
                             log.info("Invoice change have been handled, eventId={}", event.getId());
                         } catch (DaoException ex) {
-                            throw new StorageException(String.format("Failed to save event, eventId=%d", event.getId()));
+                            throw new StorageException(String.format("Failed to save event, eventId=%d", event.getId()), ex);
                         }
                     }
                 }

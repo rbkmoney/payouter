@@ -133,6 +133,12 @@
             <version>3.6.0</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.rbkmoney.hg-mock</groupId>
+            <artifactId>generator</artifactId>
+            <version>0.9.7</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

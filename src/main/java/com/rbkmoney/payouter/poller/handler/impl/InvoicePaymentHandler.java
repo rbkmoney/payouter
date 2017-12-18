@@ -7,6 +7,7 @@ import com.rbkmoney.damsel.event_stock.StockEvent;
 import com.rbkmoney.damsel.payment_processing.Event;
 import com.rbkmoney.damsel.payment_processing.InvoiceChange;
 import com.rbkmoney.damsel.payment_processing.InvoicePaymentStarted;
+import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.geck.filter.Filter;
 import com.rbkmoney.payouter.dao.InvoiceDao;
 import com.rbkmoney.payouter.dao.PaymentDao;
@@ -76,6 +77,7 @@ public class InvoicePaymentHandler implements Handler {
         payment.setPaymentId(invoicePayment.getId());
         payment.setCurrencyCode(invoicePayment.getCost().getCurrency().getSymbolicCode());
         payment.setStatus(PaymentStatus.PENDING);
+        payment.setCreatedAt(TypeUtil.stringToLocalDateTime(invoicePayment.getCreatedAt()));
 
         List<FinalCashFlowPosting> finalCashFlow = invoicePaymentStarted.getCashFlow();
         Map<CashFlowType, Long> parsedCashFlow = DamselUtil.parseCashFlow(finalCashFlow);
