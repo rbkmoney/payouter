@@ -34,14 +34,16 @@ public class Report1CService implements ReportService {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private static final String DATE_FORMAT = "dd.MM.yyyy";
-    private static final ZoneId MOSCOW = ZoneOffset.of("+3");
-    private static final String TEMPLATE_NAME = "1c_payout.ftl";
+    private static final ZoneId MOSCOW = ZoneId.of("Europe/Moscow");
 
     @Value("${report.1c.file.name.prefix}")
     private String prefix;
 
     @Value("${report.1c.file.name.extension}")
     private String extension;
+
+    @Value("${report.1c.templateFileName}")
+    private String templateFileName;
 
     @Autowired
     private FreeMarkerConfigurer freeMarkerConfigurer;
@@ -74,7 +76,7 @@ public class Report1CService implements ReportService {
         dataModel.put("payouts", payoutsAttributes);
         dataModel.put("date", currentMoscowDate());
 
-        final String reportContent = processTemplate(dataModel, TEMPLATE_NAME);
+        final String reportContent = processTemplate(dataModel, templateFileName);
 
         List<String> payoutIds = payoutRecords.stream().map(p -> p.getId().toString()).collect(Collectors.toList());
         Report report = new Report();

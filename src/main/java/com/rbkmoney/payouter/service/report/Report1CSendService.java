@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -31,7 +31,7 @@ public class Report1CSendService {
 
     public void generateAndSend(List<Payout> payouts) throws ReportException {
         Report report = report1CService.generate(payouts);
-        String subject = "Выплаты, сгенерированные " + DateTimeFormatter.ofPattern("dd.MM.yyyy").format(LocalDate.now(ZoneOffset.of("+3")));
+        String subject = "Выплаты, сгенерированные " + DateTimeFormatter.ofPattern("dd.MM.yyyy").format(LocalDate.now(ZoneId.of("Europe/Moscow")));
         try {
             reportSendService.sendEmail(to, subject, report, encoding);
         } catch (TException e) {
