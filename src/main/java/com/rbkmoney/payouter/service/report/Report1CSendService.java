@@ -23,6 +23,9 @@ public class Report1CSendService {
     @Value("${report.1c.file.encoding}")
     private String encoding;
 
+    @Value("${report.1c.timezone}")
+    private String timezone;
+
     @Autowired
     private Report1CService report1CService;
 
@@ -30,13 +33,12 @@ public class Report1CSendService {
     private ReportSendService reportSendService;
 
     public void generateAndSend(List<Payout> payouts) throws ReportException {
-        Report report = report1CService.generate(payouts);
-        String subject = "Выплаты, сгенерированные " + DateTimeFormatter.ofPattern("dd.MM.yyyy").format(LocalDate.now(ZoneId.of("Europe/Moscow")));
+        String subject = "Выплаты, сгенерированные " + DateTimeFormatter.ofPattern("dd.MM.yyyy").format(LocalDate.now(ZoneId.of(timezone)));
         try {
+            Report report = report1CService.generate(payouts);
             reportSendService.sendEmail(to, subject, report, encoding);
-        } catch (TException e) {
-            throw new ReportException(e);
+        } catch (Exception e) {
+            throw new ReportException(String.format("Couldn't send report with subject %s", subject), e);
         }
     }
-
 }

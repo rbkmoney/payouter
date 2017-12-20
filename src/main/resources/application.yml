@@ -31,3 +31,4 @@ report:
         extension: .txt
       encoding: Windows-1251
     templateFileName: 1c_payout.ftl
+    timezone: Europe/Moscow

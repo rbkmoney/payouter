@@ -3,6 +3,8 @@ package com.rbkmoney.payouter.service.report._1c;
 import com.rbkmoney.payouter.dao.ReportDao;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.domain.tables.pojos.Report;
+import com.rbkmoney.payouter.exception.DaoException;
+import com.rbkmoney.payouter.exception.ReportException;
 import com.rbkmoney.payouter.service.report.ReportService;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
@@ -34,7 +36,6 @@ public class Report1CService implements ReportService {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private static final String DATE_FORMAT = "dd.MM.yyyy";
-    private static final ZoneId MOSCOW = ZoneId.of("Europe/Moscow");
 
     @Value("${report.1c.file.name.prefix}")
     private String prefix;
@@ -45,6 +46,9 @@ public class Report1CService implements ReportService {
     @Value("${report.1c.templateFileName}")
     private String templateFileName;
 
+    @Value("${report.1c.timezone}")
+    private String timezone;
+
     @Autowired
     private FreeMarkerConfigurer freeMarkerConfigurer;
 
@@ -53,7 +57,7 @@ public class Report1CService implements ReportService {
 
     //todo: проверить как считаются суммы с adjustment
     @Override
-    public Report generate(List<Payout> payoutRecords)  {
+    public Report generate(List<Payout> payoutRecords) {
         final List<Map<String, Object>> payoutsAttributes = new ArrayList<>();
         final StringBuilder reportDescription = new StringBuilder("Выплаты для: <br>");
         for (Payout payoutRecord : payoutRecords) {
@@ -85,17 +89,21 @@ public class Report1CService implements ReportService {
         report.setDescription(reportDescription.toString());
         report.setPayoutids(String.join(",", payoutIds));
         report.setCreatedAt(currentUTC());
-        reportDao.save(report);
+        try {
+            reportDao.save(report);
+        } catch (DaoException e) {
+            throw new RuntimeException(String.format("Couldn't save report '%s' to db", report.getName()), e);
+        }
 
         log.info("Generated 1CReport id:{} for payouts: {}", report.getId(), payoutIds);
         return report;
     }
 
-    private static String currentMoscowDate() {
-        return DateTimeFormatter.ofPattern(DATE_FORMAT).format(LocalDateTime.now(MOSCOW));
+    private String currentMoscowDate() {
+        return DateTimeFormatter.ofPattern(DATE_FORMAT).format(LocalDateTime.now(ZoneId.of(timezone)));
     }
 
-    private static LocalDateTime currentUTC() {
+    private LocalDateTime currentUTC() {
         return LocalDateTime.now(ZoneOffset.UTC);
     }
 
@@ -107,7 +115,7 @@ public class Report1CService implements ReportService {
             template.process(data, stringWriter);
             return stringWriter.toString();
         } catch (TemplateException | IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException(String.format("Couldn't process template '%s'", templateName), e);
         }
     }
 }
