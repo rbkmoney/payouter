@@ -14,6 +14,7 @@ import org.apache.thrift.TBase;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class DamselUtil {
@@ -186,5 +187,30 @@ public class DamselUtil {
             default:
                 throw new NotFoundException(String.format("User type not found, userType = %s", userType));
         }
+    }
+
+    public static PayoutChange toDamselPayoutChange(PayoutEvent payoutEvent) {
+        PayoutChange._Fields payoutChangeType = PayoutChange._Fields.findByName(payoutEvent.getEventType());
+        switch (payoutChangeType) {
+            case PAYOUT_CREATED:
+                return PayoutChange.payout_created(
+                        DamselUtil.toDamselPayoutCreated(payoutEvent)
+                );
+            case PAYOUT_STATUS_CHANGED:
+                return PayoutChange.payout_status_changed(new PayoutStatusChanged(DamselUtil.toDamselPayoutStatus(payoutEvent)));
+            default:
+                throw new NotFoundException(String.format("Payout event type not found, eventType = %s", payoutChangeType));
+        }
+    }
+
+    public static Event toDamselEvent(PayoutEvent payoutEvent) {
+        Event event = new Event();
+        event.setId(payoutEvent.getEventId());
+        event.setCreatedAt(TypeUtil.temporalToString(payoutEvent.getEventCreatedAt()));
+        event.setSource(EventSource.payout_id(payoutEvent.getPayoutId()));
+        event.setPayload(EventPayload.payout_changes(Arrays.asList(
+                DamselUtil.toDamselPayoutChange(payoutEvent)
+        )));
+        return event;
     }
 }
