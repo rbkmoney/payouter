@@ -254,7 +254,7 @@ public class PayoutServiceImpl implements PayoutService {
 
     private long calculateAvailableAmount(List<Payment> payments, List<Refund> refunds, List<Adjustment> adjustments) {
         long paymentAmount = payments.stream()
-                .mapToLong(payment -> payment.getAmount() - payment.getFee())
+                .mapToLong(payment -> payment.getAmount() - payment.getFee() - payment.getGuaranteeDeposit())
                 .sum();
 
         long refundAmount = refunds.stream()

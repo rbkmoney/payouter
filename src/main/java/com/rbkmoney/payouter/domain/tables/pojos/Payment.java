@@ -25,7 +25,7 @@ import javax.annotation.Generated;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Payment implements Serializable {
 
-    private static final long serialVersionUID = -1888682572;
+    private static final long serialVersionUID = -1523659690;
 
     private Long          id;
     private Long          eventId;
@@ -44,6 +44,7 @@ public class Payment implements Serializable {
     private LocalDateTime capturedAt;
     private Boolean       test;
     private LocalDateTime createdAt;
+    private Long          guaranteeDeposit;
     private Integer       terminalId;
     private Long          domainRevision;
 
@@ -67,6 +68,7 @@ public class Payment implements Serializable {
         this.capturedAt = value.capturedAt;
         this.test = value.test;
         this.createdAt = value.createdAt;
+        this.guaranteeDeposit = value.guaranteeDeposit;
         this.terminalId = value.terminalId;
         this.domainRevision = value.domainRevision;
     }
@@ -89,6 +91,7 @@ public class Payment implements Serializable {
         LocalDateTime capturedAt,
         Boolean       test,
         LocalDateTime createdAt,
+        Long          guaranteeDeposit,
         Integer       terminalId,
         Long          domainRevision
     ) {
@@ -109,6 +112,7 @@ public class Payment implements Serializable {
         this.capturedAt = capturedAt;
         this.test = test;
         this.createdAt = createdAt;
+        this.guaranteeDeposit = guaranteeDeposit;
         this.terminalId = terminalId;
         this.domainRevision = domainRevision;
     }
@@ -249,6 +253,14 @@ public class Payment implements Serializable {
         this.createdAt = createdAt;
     }
 
+    public Long getGuaranteeDeposit() {
+        return this.guaranteeDeposit;
+    }
+
+    public void setGuaranteeDeposit(Long guaranteeDeposit) {
+        this.guaranteeDeposit = guaranteeDeposit;
+    }
+
     public Integer getTerminalId() {
         return this.terminalId;
     }
@@ -376,6 +388,12 @@ public class Payment implements Serializable {
         }
         else if (!createdAt.equals(other.createdAt))
             return false;
+        if (guaranteeDeposit == null) {
+            if (other.guaranteeDeposit != null)
+                return false;
+        }
+        else if (!guaranteeDeposit.equals(other.guaranteeDeposit))
+            return false;
         if (terminalId == null) {
             if (other.terminalId != null)
                 return false;
@@ -412,6 +430,7 @@ public class Payment implements Serializable {
         result = prime * result + ((this.capturedAt == null) ? 0 : this.capturedAt.hashCode());
         result = prime * result + ((this.test == null) ? 0 : this.test.hashCode());
         result = prime * result + ((this.createdAt == null) ? 0 : this.createdAt.hashCode());
+        result = prime * result + ((this.guaranteeDeposit == null) ? 0 : this.guaranteeDeposit.hashCode());
         result = prime * result + ((this.terminalId == null) ? 0 : this.terminalId.hashCode());
         result = prime * result + ((this.domainRevision == null) ? 0 : this.domainRevision.hashCode());
         return result;
@@ -438,6 +457,7 @@ public class Payment implements Serializable {
         sb.append(", ").append(capturedAt);
         sb.append(", ").append(test);
         sb.append(", ").append(createdAt);
+        sb.append(", ").append(guaranteeDeposit);
         sb.append(", ").append(terminalId);
         sb.append(", ").append(domainRevision);
 
