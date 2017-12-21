@@ -66,7 +66,7 @@ public class PayoutServiceImpl implements PayoutService {
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public List<Long> createPayouts(LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType) throws InvalidStateException, StorageException {
-        log.debug("Trying to create payouts, fromTime={}, toTime={}, payoutType={}", fromTime, toTime, payoutType);
+        log.info("Trying to create payouts, fromTime={}, toTime={}, payoutType={}", fromTime, toTime, payoutType);
         try {
             List<ShopParams> shops = payoutDao.getUnpaidShops(fromTime, toTime);
 
@@ -92,7 +92,7 @@ public class PayoutServiceImpl implements PayoutService {
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public long createPayout(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType) throws InvalidStateException, StorageException {
-        log.debug("Trying to create payout, partyId={}, shopId={}, fromTime={}, toTime={}, payoutType={}",
+        log.info("Trying to create payout, partyId={}, shopId={}, fromTime={}, toTime={}, payoutType={}",
                 partyId, shopId, fromTime, toTime, payoutType);
         try {
             ShopMeta shopMeta = shopMetaDao.getExclusive(partyId, shopId);
@@ -132,7 +132,7 @@ public class PayoutServiceImpl implements PayoutService {
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public void pay(long payoutId) throws InvalidStateException, StorageException {
-        log.debug("Trying to pay a payout, payoutId={}", payoutId);
+        log.info("Trying to pay a payout, payoutId={}", payoutId);
         try {
             Payout payout = payoutDao.getExclusive(payoutId);
 
@@ -152,7 +152,7 @@ public class PayoutServiceImpl implements PayoutService {
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public void confirm(long payoutId) throws InvalidStateException, StorageException {
-        log.debug("Trying to confirm a payout, payoutId={}", payoutId);
+        log.info("Trying to confirm a payout, payoutId={}", payoutId);
         try {
             Payout payout = payoutDao.getExclusive(payoutId);
 
@@ -173,7 +173,7 @@ public class PayoutServiceImpl implements PayoutService {
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public void cancel(long payoutId) throws InvalidStateException, StorageException {
-        log.debug("Trying to cancel a payout, payoutId={}", payoutId);
+        log.info("Trying to cancel a payout, payoutId={}", payoutId);
         try {
             Payout payout = payoutDao.getExclusive(payoutId);
 

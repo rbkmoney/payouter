@@ -35,6 +35,7 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
 
     @Override
     public List<String> generatePayouts(GeneratePayoutParams generatePayoutParams) throws InvalidRequest, TException {
+        log.info("Start generate payouts, params: {}", generatePayoutParams);
         try {
             TimeRange timeRange = generatePayoutParams.getTimeRange();
             LocalDateTime fromTime = TypeUtil.stringToLocalDateTime(timeRange.getFromTime());
@@ -57,35 +58,47 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
 
         } catch (NotFoundException | InvalidStateException | IllegalArgumentException ex) {
             throw new InvalidRequest(Arrays.asList(ex.getMessage()));
+        } finally {
+            log.info("End generate payouts, params: {}", generatePayoutParams);
         }
     }
 
     @Override
     public Set<String> confirmPayouts(Set<String> payoutIds) throws InvalidRequest, TException {
-        Set<String> confirmedPayouts = new HashSet<>();
-        for (String payoutId : payoutIds) {
-            try {
-                payoutService.confirm(Long.valueOf(payoutId));
-                confirmedPayouts.add(payoutId);
-            } catch (Exception ex) {
-                log.warn(ex.getMessage(), ex);
+        log.info("Start confirm payouts, payoutIds: {}", payoutIds);
+        try {
+            Set<String> confirmedPayouts = new HashSet<>();
+            for (String payoutId : payoutIds) {
+                try {
+                    payoutService.confirm(Long.valueOf(payoutId));
+                    confirmedPayouts.add(payoutId);
+                } catch (Exception ex) {
+                    log.warn("Failed to confirm payout, payoutId={}", payoutId, ex);
+                }
             }
+            return confirmedPayouts;
+        } finally {
+            log.info("End confirm payouts, payoutIds: {}", payoutIds);
         }
-        return confirmedPayouts;
     }
 
     @Override
     public Set<String> cancelPayouts(Set<String> payoutIds, String details) throws InvalidRequest, TException {
-        Set<String> cancelledPayouts = new HashSet<>();
-        for (String payoutId : payoutIds) {
-            try {
-                payoutService.cancel(Long.valueOf(payoutId));
-                cancelledPayouts.add(payoutId);
-            } catch (Exception ex) {
-                log.warn(ex.getMessage(), ex);
+        log.info("Start cancel payouts, payoutIds: {}", payoutIds);
+        try {
+            Set<String> cancelledPayouts = new HashSet<>();
+            for (String payoutId : payoutIds) {
+                try {
+                    payoutService.cancel(Long.valueOf(payoutId));
+                    cancelledPayouts.add(payoutId);
+                } catch (Exception ex) {
+                    log.warn("Failed to cancel payout, payoutId={}", payoutId, ex);
+                }
             }
+            return cancelledPayouts;
+        } finally {
+            log.info("End cancel payouts, payoutIds: {}", payoutIds);
         }
-        return cancelledPayouts;
     }
 
     @Override
