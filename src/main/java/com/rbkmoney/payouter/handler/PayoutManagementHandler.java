@@ -79,7 +79,7 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
         Set<String> cancelledPayouts = new HashSet<>();
         for (String payoutId : payoutIds) {
             try {
-                payoutService.cancel(Long.valueOf(payoutId));
+                payoutService.cancel(Long.valueOf(payoutId), details);
                 cancelledPayouts.add(payoutId);
             } catch (Exception ex) {
                 log.warn(ex.getMessage(), ex);
