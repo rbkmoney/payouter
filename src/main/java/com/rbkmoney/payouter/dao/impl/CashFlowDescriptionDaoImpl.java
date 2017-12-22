@@ -5,6 +5,7 @@ import com.rbkmoney.payouter.dao.mapper.RecordRowMapper;
 import com.rbkmoney.payouter.domain.tables.pojos.CashFlowDescription;
 import com.rbkmoney.payouter.domain.tables.records.CashFlowDescriptionRecord;
 import com.rbkmoney.payouter.exception.DaoException;
+import org.jooq.InsertSetMoreStep;
 import org.jooq.InsertSetStep;
 import org.jooq.Query;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,15 +31,13 @@ public class CashFlowDescriptionDaoImpl extends AbstractGenericDao implements Ca
 
     @Override
     public void save(List<CashFlowDescription> cashFlowDescription) throws DaoException {
-        InsertSetStep<CashFlowDescriptionRecord> insert = getDslContext()
-                .insertInto(CASH_FLOW_DESCRIPTION);
+        if (cashFlowDescription.isEmpty()) return;
+        InsertSetMoreStep<CashFlowDescriptionRecord> query = getDslContext()
+                .insertInto(CASH_FLOW_DESCRIPTION)
+                .set(getDslContext().newRecord(CASH_FLOW_DESCRIPTION, cashFlowDescription.get(0)));
 
-        Query query = null;
-        for (CashFlowDescription cfd : cashFlowDescription) {
-            query = insert.set(getDslContext().newRecord(CASH_FLOW_DESCRIPTION, cfd));
-        }
-
-        executeOne(query);
+        cashFlowDescription.stream().skip(1).forEach(cfd -> query.newRecord().set(getDslContext().newRecord(CASH_FLOW_DESCRIPTION, cfd)));
+        execute(query);
     }
 
     @Override
