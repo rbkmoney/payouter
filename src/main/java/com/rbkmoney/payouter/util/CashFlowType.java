@@ -5,5 +5,6 @@ public enum CashFlowType {
     EXTERNAL_FEE,
     PROVIDER_FEE,
     FEE,
-    REFUND_AMOUNT
+    REFUND_AMOUNT,
+    GUARANTEE_DEPOSIT
 }

@@ -54,6 +54,8 @@ ALTER TABLE sht.refund DROP COLUMN paid;
 -- rename updated_at to succeeded_at
 ALTER TABLE sht.refund RENAME COLUMN update_at TO succeeded_at;
 ALTER TABLE sht.refund ALTER COLUMN succeeded_at DROP DEFAULT;
+--add domain revision
+ALTER TABLE sht.refund ADD COLUMN domain_revision BIGINT;
 
 -- refactor payout table
 ALTER TABLE sht.payout DROP COLUMN cor_account;

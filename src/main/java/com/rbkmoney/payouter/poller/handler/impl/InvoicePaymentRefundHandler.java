@@ -12,6 +12,7 @@ import com.rbkmoney.payouter.domain.tables.pojos.Payment;
 import com.rbkmoney.payouter.domain.tables.pojos.Refund;
 import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.poller.handler.Handler;
+import com.rbkmoney.payouter.service.PartyManagementService;
 import com.rbkmoney.payouter.util.CashFlowType;
 import com.rbkmoney.payouter.util.DamselUtil;
 import org.slf4j.Logger;
@@ -33,10 +34,13 @@ public class InvoicePaymentRefundHandler implements Handler {
 
     private final PaymentDao paymentDao;
 
+    private final PartyManagementService partyManagementService;
+
     @Autowired
-    public InvoicePaymentRefundHandler(RefundDao refundDao, PaymentDao paymentDao) {
+    public InvoicePaymentRefundHandler(RefundDao refundDao, PaymentDao paymentDao, PartyManagementService partyManagementService) {
         this.refundDao = refundDao;
         this.paymentDao = paymentDao;
+        this.partyManagementService = partyManagementService;
     }
 
     @Override
@@ -74,6 +78,7 @@ public class InvoicePaymentRefundHandler implements Handler {
         refund.setStatus(RefundStatus.PENDING);
         refund.setCreatedAt(TypeUtil.stringToLocalDateTime(invoicePaymentRefund.getCreatedAt()));
         refund.setReason(invoicePaymentRefund.getReason());
+        refund.setDomainRevision(invoicePaymentRefund.getDomainRevision());
 
         Map<CashFlowType, Long> cashFlow = DamselUtil.parseCashFlow(invoicePaymentRefundCreated.getCashFlow());
         refund.setAmount(cashFlow.getOrDefault(REFUND_AMOUNT, 0L));

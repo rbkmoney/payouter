@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.rbkmoney.damsel.domain.CashFlowAccount._Fields.*;
 import static com.rbkmoney.payouter.util.CashFlowType.*;
 
 public class DamselUtil {
@@ -40,29 +39,56 @@ public class DamselUtil {
     }
 
     public static CashFlowType getCashFlowType(FinalCashFlowPosting cashFlowPosting) {
-        if (checkRoute(PROVIDER, MERCHANT, cashFlowPosting)) {
+        if (checkRoute(
+                CashFlowAccount.provider(ProviderCashFlowAccount.settlement),
+                CashFlowAccount.merchant(MerchantCashFlowAccount.settlement),
+                cashFlowPosting)) {
             return AMOUNT;
         }
-        if (checkRoute(SYSTEM, PROVIDER, cashFlowPosting)) {
-            return PROVIDER_FEE;
-        }
-        if (checkRoute(MERCHANT, SYSTEM, cashFlowPosting)) {
+        if (checkRoute(
+                CashFlowAccount.merchant(MerchantCashFlowAccount.settlement),
+                CashFlowAccount.system(SystemCashFlowAccount.settlement),
+                cashFlowPosting)) {
             return FEE;
         }
-        if (checkRoute(SYSTEM, EXTERNAL, cashFlowPosting)) {
+        if (checkRoute(
+                CashFlowAccount.system(SystemCashFlowAccount.settlement),
+                CashFlowAccount.provider(ProviderCashFlowAccount.settlement),
+                cashFlowPosting)) {
+            return PROVIDER_FEE;
+        }
+        if (checkRoute(
+                CashFlowAccount.system(SystemCashFlowAccount.settlement),
+                CashFlowAccount.external(ExternalCashFlowAccount.income),
+                cashFlowPosting)) {
             return EXTERNAL_FEE;
         }
-
-        if (checkRoute(MERCHANT, PROVIDER, cashFlowPosting)) {
+        if (checkRoute(
+                CashFlowAccount.system(SystemCashFlowAccount.settlement),
+                CashFlowAccount.external(ExternalCashFlowAccount.outcome),
+                cashFlowPosting)) {
+            return EXTERNAL_FEE;
+        }
+        if (checkRoute(
+                CashFlowAccount.merchant(MerchantCashFlowAccount.settlement),
+                CashFlowAccount.provider(ProviderCashFlowAccount.settlement),
+                cashFlowPosting)) {
             return REFUND_AMOUNT;
         }
+        if (checkRoute(
+                CashFlowAccount.merchant(MerchantCashFlowAccount.settlement),
+                CashFlowAccount.merchant(MerchantCashFlowAccount.guarantee),
+                cashFlowPosting)) {
+            return GUARANTEE_DEPOSIT;
+        }
 
-        throw new IllegalArgumentException("Unsupported cashflow");
+        throw new UnsupportedOperationException("Unsupported cashflow");
     }
 
-    public static boolean checkRoute(CashFlowAccount._Fields source, CashFlowAccount._Fields destination, FinalCashFlowPosting cashFlow) {
-        return source.equals(cashFlow.getSource().getAccountType().getSetField()) &&
-                destination.equals(cashFlow.getDestination().getAccountType().getSetField());
+
+    public static boolean checkRoute(CashFlowAccount source, CashFlowAccount destination, FinalCashFlowPosting cashFlow) {
+        return source.equals(cashFlow.getSource().getAccountType()) &&
+                destination.equals(cashFlow.getDestination().getAccountType());
 
     }
 

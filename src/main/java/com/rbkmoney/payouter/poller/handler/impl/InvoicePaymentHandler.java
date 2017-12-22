@@ -16,6 +16,7 @@ import com.rbkmoney.payouter.domain.tables.pojos.Invoice;
 import com.rbkmoney.payouter.domain.tables.pojos.Payment;
 import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.poller.handler.Handler;
+import com.rbkmoney.payouter.service.PartyManagementService;
 import com.rbkmoney.payouter.util.CashFlowType;
 import com.rbkmoney.payouter.util.DamselUtil;
 import org.slf4j.Logger;
@@ -23,6 +24,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 
@@ -37,10 +41,13 @@ public class InvoicePaymentHandler implements Handler {
 
     private final PaymentDao paymentDao;
 
+    private final PartyManagementService partyManagementService;
+
     @Autowired
-    public InvoicePaymentHandler(InvoiceDao invoiceDao, PaymentDao paymentDao) {
+    public InvoicePaymentHandler(InvoiceDao invoiceDao, PaymentDao paymentDao, PartyManagementService partyManagementService) {
         this.invoiceDao = invoiceDao;
         this.paymentDao = paymentDao;
+        this.partyManagementService = partyManagementService;
     }
 
     @Override
@@ -77,7 +84,10 @@ public class InvoicePaymentHandler implements Handler {
         payment.setPaymentId(invoicePayment.getId());
         payment.setCurrencyCode(invoicePayment.getCost().getCurrency().getSymbolicCode());
         payment.setStatus(PaymentStatus.PENDING);
-        payment.setCreatedAt(TypeUtil.stringToLocalDateTime(invoicePayment.getCreatedAt()));
+
+        Instant paymentCreatedAt = TypeUtil.stringToInstant(invoicePayment.getCreatedAt());
+        payment.setCreatedAt(LocalDateTime.ofInstant(paymentCreatedAt, ZoneOffset.UTC));
+        payment.setDomainRevision(invoicePayment.getDomainRevision());
 
         List<FinalCashFlowPosting> finalCashFlow = invoicePaymentStarted.getCashFlow();
         Map<CashFlowType, Long> parsedCashFlow = DamselUtil.parseCashFlow(finalCashFlow);
@@ -85,6 +95,16 @@ public class InvoicePaymentHandler implements Handler {
         payment.setFee(parsedCashFlow.getOrDefault(FEE, 0L));
         payment.setProviderFee(parsedCashFlow.getOrDefault(PROVIDER_FEE, 0L));
         payment.setExternalFee(parsedCashFlow.getOrDefault(EXTERNAL_FEE, 0L));
+        payment.setGuaranteeDeposit(parsedCashFlow.getOrDefault(GUARANTEE_DEPOSIT, 0L));
+
+        payment.setTest(
+                partyManagementService.isTestCategoryType(
+                        payment.getPartyId(),
+                        payment.getShopId(),
+                        payment.getDomainRevision(),
+                        paymentCreatedAt
+                )
+        );
 
         paymentDao.save(payment);
         log.info("Payment have been saved, eventId={}, payment={}", event.getId(), payment);
