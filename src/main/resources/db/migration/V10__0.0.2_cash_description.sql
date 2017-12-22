@@ -6,7 +6,7 @@ CREATE TABLE sht.cash_flow_description (
   id                BIGSERIAL                   NOT NULL,
   payout_id         BIGINT                      NOT NULL,
   cash_flow_type    sht.CASH_FLOW_TYPE          NOT NULL,
-  count             BIGINT                      NOT NULL,
+  count             INT                         NOT NULL,
   amount            BIGINT                      NOT NULL,
   currency_code     CHARACTER VARYING           NOT NULL,
   description       CHARACTER VARYING,

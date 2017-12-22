@@ -2,10 +2,7 @@ package com.rbkmoney.payouter.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rbkmoney.damsel.domain.*;
-import com.rbkmoney.damsel.payout_processing.PaidDetails;
-import com.rbkmoney.damsel.payout_processing.PayoutChange;
-import com.rbkmoney.damsel.payout_processing.ShopParams;
-import com.rbkmoney.damsel.payout_processing.UserInfo;
+import com.rbkmoney.damsel.payout_processing.*;
 import com.rbkmoney.geck.serializer.kit.json.JsonHandler;
 import com.rbkmoney.geck.serializer.kit.tbase.TBaseProcessor;
 import com.rbkmoney.payouter.dao.*;
@@ -13,16 +10,15 @@ import com.rbkmoney.payouter.domain.enums.AccountType;
 import com.rbkmoney.payouter.domain.enums.PayoutStatus;
 import com.rbkmoney.payouter.domain.enums.PayoutType;
 import com.rbkmoney.payouter.domain.tables.pojos.*;
+import com.rbkmoney.payouter.domain.tables.pojos.CashFlowDescription;
 import com.rbkmoney.payouter.domain.tables.pojos.CashFlowPosting;
+import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.exception.DaoException;
 import com.rbkmoney.payouter.exception.InvalidStateException;
 import com.rbkmoney.payouter.exception.StorageException;
 import com.rbkmoney.payouter.model.PayoutToolData;
-import com.rbkmoney.payouter.service.EventSinkService;
-import com.rbkmoney.payouter.service.PartyManagementService;
-import com.rbkmoney.payouter.service.PayoutService;
-import com.rbkmoney.payouter.service.ShumwayService;
-import com.rbkmoney.payouter.util.DamselUtil;
+import com.rbkmoney.payouter.service.*;
+import com.rbkmoney.payouter.util.WoodyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,11 +48,13 @@ public class PayoutServiceImpl implements PayoutService {
 
     private final PayoutDao payoutDao;
 
+    private final CashFlowDescriptionService cashFlowDescriptionService;
+
     private final ShumwayService shumwayService;
 
     private final PartyManagementService partyManagementService;
 
-    private EventSinkService eventSinkService;
+    private final EventSinkService eventSinkService;
 
     @Autowired
     public PayoutServiceImpl(ShopMetaDao shopMetaDao,
@@ -64,6 +62,7 @@ public class PayoutServiceImpl implements PayoutService {
                              RefundDao refundDao,
                              AdjustmentDao adjustmentDao,
                              PayoutDao payoutDao,
+                             CashFlowDescriptionService cashFlowDescriptionService,
                              ShumwayService shumwayService,
                              PartyManagementService partyManagementService,
                              EventSinkService eventSinkService) {
@@ -72,6 +71,7 @@ public class PayoutServiceImpl implements PayoutService {
         this.refundDao = refundDao;
         this.adjustmentDao = adjustmentDao;
         this.payoutDao = payoutDao;
+        this.cashFlowDescriptionService = cashFlowDescriptionService;
         this.shumwayService = shumwayService;
         this.partyManagementService = partyManagementService;
         this.eventSinkService = eventSinkService;
@@ -129,9 +129,12 @@ public class PayoutServiceImpl implements PayoutService {
             refundDao.includeToPayout(payoutId, refunds);
             adjustmentDao.includeToPayout(payoutId, adjustments);
 
+            List<CashFlowDescription> cashFlowDescriptions = buildCashFlowDescriptions(payments, refunds, adjustments, payoutId, payout.getCurrencyCode());
+            cashFlowDescriptionService.save(cashFlowDescriptions);
+
             shopMetaDao.updateLastPayoutCreatedAt(shopMeta.getPartyId(), shopMeta.getShopId(), payout.getCreatedAt());
 
-            UserInfo userInfo = DamselUtil.buildUserInfo();
+            UserInfo userInfo = WoodyUtils.getUserInfo();
             PayoutEvent payoutEvent = buildPayoutCreatedEvent(payout, userInfo);
             eventSinkService.saveEvent(payoutEvent);
 
@@ -184,7 +187,7 @@ public class PayoutServiceImpl implements PayoutService {
             }
 
             payoutDao.changeStatus(payoutId, PayoutStatus.CONFIRMED);
-            UserInfo userInfo = DamselUtil.buildUserInfo();
+            UserInfo userInfo = WoodyUtils.getUserInfo();
             PayoutEvent payoutEvent = buildPayoutConfirmedEvent(payout, userInfo);
             eventSinkService.saveEvent(payoutEvent);
             shumwayService.commit(payoutId, buildPostings(payout));
@@ -201,7 +204,7 @@ public class PayoutServiceImpl implements PayoutService {
         try {
             Payout payout = payoutDao.getExclusive(payoutId);
 
-            UserInfo userInfo = DamselUtil.buildUserInfo();
+            UserInfo userInfo = WoodyUtils.getUserInfo();
             PayoutEvent payoutEvent = buildPayoutCancelledEvent(payout, details, userInfo);
             eventSinkService.saveEvent(payoutEvent);
 
@@ -352,7 +355,6 @@ public class PayoutServiceImpl implements PayoutService {
         payout.setAccountLegalAgreementId(payoutToolData.getLegalAgreementId());
         payout.setAccountLegalAgreementSignedAt(payoutToolData.getLegalAgreementSignedAt());
 
-
         return payout;
     }
 
@@ -365,6 +367,52 @@ public class PayoutServiceImpl implements PayoutService {
         cashFlowPosting.setAmount(payout.getAmount());
         cashFlowPosting.setCurrencyCode(payout.getCurrencyCode());
         return Arrays.asList(cashFlowPosting);
+    }
+
+    private List<CashFlowDescription> buildCashFlowDescriptions(List<Payment> payments, List<Refund> refunds, List<Adjustment> adjustments, long payoutId, String currencyCode) {
+        List<CashFlowDescription> result = new ArrayList<>();
+
+        long paymentAmount = payments.stream().mapToLong(Payment::getAmount).sum();
+        CashFlowDescription paymentCashFlow = new CashFlowDescription();
+        paymentCashFlow.setAmount(paymentAmount);
+        paymentCashFlow.setCurrencyCode(currencyCode);
+        paymentCashFlow.setCashFlowType(com.rbkmoney.payouter.domain.enums.CashFlowType.payment);
+        paymentCashFlow.setCount(payments.size());
+        paymentCashFlow.setPayoutId(payoutId);
+        result.add(paymentCashFlow);
+
+        long paymentFee = payments.stream().mapToLong(Payment::getFee).sum();
+        CashFlowDescription paymentFeeCashFlow = new CashFlowDescription();
+        paymentFeeCashFlow.setAmount(paymentFee);
+        paymentFeeCashFlow.setCurrencyCode(currencyCode);
+        paymentFeeCashFlow.setCashFlowType(com.rbkmoney.payouter.domain.enums.CashFlowType.fee);
+        paymentFeeCashFlow.setCount(payments.size());
+        paymentFeeCashFlow.setPayoutId(payoutId);
+        result.add(paymentFeeCashFlow);
+
+        if (!refunds.isEmpty()) {
+            long refundAmount = refunds.stream().mapToLong(Refund::getAmount).sum();
+            CashFlowDescription refundCashFlow = new CashFlowDescription();
+            refundCashFlow.setAmount(refundAmount);
+            refundCashFlow.setCurrencyCode(currencyCode);
+            refundCashFlow.setCashFlowType(com.rbkmoney.payouter.domain.enums.CashFlowType.refund);
+            refundCashFlow.setCount(refunds.size());
+            refundCashFlow.setPayoutId(payoutId);
+            result.add(refundCashFlow);
+        }
+
+        if (!adjustments.isEmpty()) {
+            long adjustmentAmount = adjustments.stream().mapToLong(Adjustment::getPaymentFee).sum();
+            CashFlowDescription adjustmentCashFlow = new CashFlowDescription();
+            adjustmentCashFlow.setAmount(adjustmentAmount);
+            adjustmentCashFlow.setCurrencyCode(currencyCode);
+            adjustmentCashFlow.setCashFlowType(com.rbkmoney.payouter.domain.enums.CashFlowType.adjustment);
+            adjustmentCashFlow.setCount(adjustments.size());
+            adjustmentCashFlow.setPayoutId(payoutId);
+            result.add(adjustmentCashFlow);
+        }
+
+        return result;
     }
 
     private long calculateAvailableAmount(List<Payment> payments, List<Refund> refunds, List<Adjustment> adjustments) {
