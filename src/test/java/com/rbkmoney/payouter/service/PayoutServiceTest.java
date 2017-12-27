@@ -9,7 +9,10 @@ import com.rbkmoney.damsel.payout_processing.PayoutManagementSrv;
 import com.rbkmoney.damsel.payout_processing.ShopParams;
 import com.rbkmoney.damsel.payout_processing.TimeRange;
 import com.rbkmoney.geck.common.util.TypeUtil;
-import com.rbkmoney.generation.*;
+import com.rbkmoney.generation.AdjustmentGenerator;
+import com.rbkmoney.generation.GeneratorConfig;
+import com.rbkmoney.generation.InvoicePaymentGenerator;
+import com.rbkmoney.generation.RefundGenerator;
 import com.rbkmoney.payouter.AbstractIntegrationTest;
 import com.rbkmoney.payouter.dao.PayoutDao;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
@@ -60,14 +63,6 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
     @MockBean
     ShumwayService shumwayService;
 
-    EventsGenerator eventsGenerator;
-
-    InvoicePaymentGenerator invoicePaymentGenerator;
-
-    AdjustmentGenerator adjustmentGenerator;
-
-    RefundGenerator refundGenerator;
-
     PayoutManagementSrv.Iface client;
 
     WFlow wFlow = new WFlow();
@@ -82,19 +77,66 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
                 .withAddress(new URI("http://localhost:" + port + "/payout/management"))
                 .withNetworkTimeout(0)
                 .build(PayoutManagementSrv.Iface.class);
-
-        GeneratorConfig generatorConfig = new GeneratorConfig();
-
-        eventsGenerator = new EventsGenerator(generatorConfig);
-        invoicePaymentGenerator = new InvoicePaymentGenerator(generatorConfig);
-        adjustmentGenerator = new AdjustmentGenerator(generatorConfig);
-        refundGenerator = new RefundGenerator(generatorConfig);
     }
 
     @After
     public void cleanUp() {
         JdbcTestUtils.deleteFromTables(jdbcTemplate,
                 "sht.payout", "sht.payment", "sht.adjustment", "sht.refund");
+    }
+
+    @Test
+    public void testCreatePayoutWithAdjustment() throws Exception {
+        given(partyManagementService.getPayoutToolData(partyId, shopId))
+                .willReturn(random(PayoutToolData.class));
+
+        addCapturedPayment("adjustment-id");
+        addCapturedAdjustment("adjustment-id");
+
+        GeneratePayoutParams generatePayoutParams = new GeneratePayoutParams();
+        ShopParams shopParams = new ShopParams();
+        shopParams.setPartyId(partyId);
+        shopParams.setShopId(shopId);
+        generatePayoutParams.setShop(shopParams);
+        generatePayoutParams.setTimeRange(new TimeRange("2015-06-17T00:00:00Z", "2018-06-17T00:00:00Z"));
+
+        List<String> payoutIds = callService(() -> client.generatePayouts(generatePayoutParams));
+        assertEquals(1, payoutIds.size());
+        long payoutId = Long.valueOf(payoutIds.get(0));
+
+        payoutService.pay(payoutId);
+
+        Payout payout = payoutDao.get(payoutId);
+        assertEquals(Long.valueOf(9600L), payout.getAmount());
+        assertEquals(PAID, payout.getStatus());
+        assertEquals(partyId, payout.getPartyId());
+    }
+
+    @Test
+    public void createPayoutWithRefund() throws Exception {
+        given(partyManagementService.getPayoutToolData(partyId, shopId))
+                .willReturn(random(PayoutToolData.class));
+
+        addCapturedPayment("refund-id");
+        addCapturedRefund("refund-id");
+        addCapturedPayment();
+
+        GeneratePayoutParams generatePayoutParams = new GeneratePayoutParams();
+        ShopParams shopParams = new ShopParams();
+        shopParams.setPartyId(partyId);
+        shopParams.setShopId(shopId);
+        generatePayoutParams.setTimeRange(new TimeRange("2015-06-17T00:00:00Z", "2018-06-17T00:00:00Z"));
+
+        List<String> payoutIds = callService(() -> client.generatePayouts(generatePayoutParams));
+        assertEquals(1, payoutIds.size());
+        long payoutId = Long.valueOf(payoutIds.get(0));
+
+        payoutService.pay(payoutId);
+
+        Payout payout = payoutDao.get(payoutId);
+        assertEquals(Long.valueOf(9000L), payout.getAmount());
+        assertEquals(PAID, payout.getStatus());
+        assertEquals(partyId, payout.getPartyId());
     }
 
     @Test(expected = InvalidRequest.class)
@@ -145,7 +187,50 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
 
     }
 
+    public void addCapturedAdjustment() {
+        addCapturedAdjustment("for-adjustment");
+    }
+
+    public void addCapturedAdjustment(String invoiceId) {
+        GeneratorConfig generatorConfig = new GeneratorConfig();
+        generatorConfig.setInvoiceId(invoiceId);
+
+        AdjustmentGenerator adjustmentGenerator = new AdjustmentGenerator(generatorConfig);
+
+        Event adjustmentCreated = adjustmentGenerator.createAdjustmentCreated();
+        Event adjustmentStatusChanged = adjustmentGenerator.createAdjustmentStatusChanged();
+
+        eventStockService.processStockEvent(buildStockEvent(adjustmentCreated));
+        eventStockService.processStockEvent(buildStockEvent(adjustmentStatusChanged));
+    }
+
+    public void addCapturedRefund() {
+        addCapturedRefund("for-refund");
+    }
+
+    public void addCapturedRefund(String invoiceId) {
+        GeneratorConfig generatorConfig = new GeneratorConfig();
+        generatorConfig.setInvoiceId(invoiceId);
+
+        RefundGenerator refundGenerator = new RefundGenerator(generatorConfig);
+
+        Event refundCreated = refundGenerator.createRefundCreated();
+        Event refundCaptured = refundGenerator.createRefundCaptured();
+
+        eventStockService.processStockEvent(buildStockEvent(refundCreated));
+        eventStockService.processStockEvent(buildStockEvent(refundCaptured));
+    }
+
     public void addCapturedPayment() {
+        addCapturedPayment("for-payment");
+    }
+
+    public void addCapturedPayment(String invoiceId) {
+        GeneratorConfig generatorConfig = new GeneratorConfig();
+        generatorConfig.setInvoiceId(invoiceId);
+
+        InvoicePaymentGenerator invoicePaymentGenerator = new InvoicePaymentGenerator(generatorConfig);
+
         Event invoiceCreated = invoicePaymentGenerator.createInvoiceCreated();
         Event paymentStarted = invoicePaymentGenerator.createInvoicePaymentStarted();
         Event paymentCaptured = invoicePaymentGenerator.createPaymentStatusChanged();

@@ -37,7 +37,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Refund extends TableImpl<RefundRecord> {
 
-    private static final long serialVersionUID = -667163321;
+    private static final long serialVersionUID = 2083814760;
 
     /**
      * The reference instance of <code>sht.refund</code>
@@ -120,7 +120,7 @@ public class Refund extends TableImpl<RefundRecord> {
     /**
      * The column <code>sht.refund.succeeded_at</code>.
      */
-    public final TableField<RefundRecord, LocalDateTime> SUCCEEDED_AT = createField("succeeded_at", org.jooq.impl.SQLDataType.LOCALDATETIME.nullable(false), this, "");
+    public final TableField<RefundRecord, LocalDateTime> SUCCEEDED_AT = createField("succeeded_at", org.jooq.impl.SQLDataType.LOCALDATETIME, this, "");
 
     /**
      * The column <code>sht.refund.domain_revision</code>.
