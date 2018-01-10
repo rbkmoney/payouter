@@ -391,7 +391,7 @@ public class PayoutServiceImpl implements PayoutService {
         result.add(paymentFeeCashFlow);
 
         if (!refunds.isEmpty()) {
-            long refundAmount = refunds.stream().mapToLong(Refund::getAmount).sum();
+            long refundAmount = refunds.stream().mapToLong(r -> r.getAmount() + r.getFee()).sum();
             CashFlowDescription refundCashFlow = new CashFlowDescription();
             refundCashFlow.setAmount(refundAmount);
             refundCashFlow.setCurrencyCode(currencyCode);
@@ -402,7 +402,7 @@ public class PayoutServiceImpl implements PayoutService {
         }
 
         if (!adjustments.isEmpty()) {
-            long adjustmentAmount = adjustments.stream().mapToLong(Adjustment::getPaymentFee).sum();
+            long adjustmentAmount = adjustments.stream().mapToLong(a -> a.getPaymentFee() - a.getNewFee()).sum();
             CashFlowDescription adjustmentCashFlow = new CashFlowDescription();
             adjustmentCashFlow.setAmount(adjustmentAmount);
             adjustmentCashFlow.setCurrencyCode(currencyCode);

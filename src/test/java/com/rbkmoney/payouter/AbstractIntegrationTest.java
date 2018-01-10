@@ -1,6 +1,5 @@
 package com.rbkmoney.payouter;
 
-import com.rbkmoney.payouter.PayouterApplication;
 import org.junit.ClassRule;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Value;

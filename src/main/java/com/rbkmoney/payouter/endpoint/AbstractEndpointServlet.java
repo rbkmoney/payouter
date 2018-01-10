@@ -1,6 +1,8 @@
 package com.rbkmoney.payouter.endpoint;
 
 import com.rbkmoney.woody.thrift.impl.http.THServiceBuilder;
+import com.rbkmoney.woody.thrift.impl.http.event.HttpServiceEventLogListener;
+import com.rbkmoney.woody.thrift.impl.http.event.ServiceEventLogListener;
 
 import javax.servlet.*;
 import java.io.IOException;
