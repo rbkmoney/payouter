@@ -1,5 +1,6 @@
 package com.rbkmoney.payouter.service.impl;
 
+import com.rbkmoney.damsel.payout_processing.ShopParams;
 import com.rbkmoney.payouter.dao.*;
 import com.rbkmoney.payouter.domain.enums.AccountType;
 import com.rbkmoney.payouter.domain.enums.PayoutStatus;
@@ -23,9 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class PayoutServiceImpl implements PayoutService {
@@ -69,9 +69,35 @@ public class PayoutServiceImpl implements PayoutService {
     }
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional(propagation = Propagation.REQUIRED)
+    public List<Long> createPayouts(LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType) throws InvalidStateException, StorageException {
+        log.info("Trying to create payouts, fromTime={}, toTime={}, payoutType={}", fromTime, toTime, payoutType);
+        try {
+            List<ShopParams> shops = payoutDao.getUnpaidShops(fromTime, toTime);
+
+            if (shops.isEmpty()) {
+                log.info("No shops found for creating payouts, fromTime={}, toTime={}, payoutType={}", fromTime, toTime, payoutType);
+                return Collections.emptyList();
+            }
+
+            List<Long> payoutIds = shops.stream()
+                    .map(shopParams ->
+                            createPayout(shopParams.getPartyId(), shopParams.getShopId(), fromTime, toTime, payoutType))
+                    .collect(Collectors.toList());
+            log.info("Payouts successfully created, payoutIds='{}', fromTime={}, toTime={}, payoutType={}",
+                    payoutIds, fromTime, toTime, payoutType);
+
+            return payoutIds;
+        } catch (DaoException ex) {
+            throw new StorageException(
+                    String.format("Failed to create payouts, fromTime='%s', toTime='%s', payoutType='%s'", fromTime, toTime, payoutType), ex);
+        }
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED)
     public long createPayout(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType) throws InvalidStateException, StorageException {
-        log.debug("Trying to create payout, partyId={}, shopId={}, fromTime={}, toTime={}, payoutType={}",
+        log.info("Trying to create payout, partyId={}, shopId={}, fromTime={}, toTime={}, payoutType={}",
                 partyId, shopId, fromTime, toTime, payoutType);
         try {
             ShopMeta shopMeta = shopMetaDao.getExclusive(partyId, shopId);
@@ -103,7 +129,7 @@ public class PayoutServiceImpl implements PayoutService {
             return payoutId;
         } catch (DaoException ex) {
             throw new StorageException(
-                    String.format("Failed to create report, partyId='%s', shopId='%s', fromTime='%s', toTime='%s', payoutType='%s'",
+                    String.format("Failed to create payout, partyId='%s', shopId='%s', fromTime='%s', toTime='%s', payoutType='%s'",
                             partyId, shopId, fromTime, toTime, payoutType), ex);
         }
     }
@@ -111,7 +137,7 @@ public class PayoutServiceImpl implements PayoutService {
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public void pay(long payoutId) throws InvalidStateException, StorageException {
-        log.debug("Trying to pay a payout, payoutId={}", payoutId);
+        log.info("Trying to pay a payout, payoutId={}", payoutId);
         try {
             Payout payout = payoutDao.getExclusive(payoutId);
 
@@ -131,7 +157,7 @@ public class PayoutServiceImpl implements PayoutService {
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public void confirm(long payoutId) throws InvalidStateException, StorageException {
-        log.debug("Trying to confirm a payout, payoutId={}", payoutId);
+        log.info("Trying to confirm a payout, payoutId={}", payoutId);
         try {
             Payout payout = payoutDao.getExclusive(payoutId);
 
@@ -152,7 +178,7 @@ public class PayoutServiceImpl implements PayoutService {
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public void cancel(long payoutId) throws InvalidStateException, StorageException {
-        log.debug("Trying to cancel a payout, payoutId={}", payoutId);
+        log.info("Trying to cancel a payout, payoutId={}", payoutId);
         try {
             Payout payout = payoutDao.getExclusive(payoutId);
 
@@ -226,7 +252,7 @@ public class PayoutServiceImpl implements PayoutService {
 
     private long calculateAvailableAmount(List<Payment> payments, List<Refund> refunds, List<Adjustment> adjustments) {
         long paymentAmount = payments.stream()
-                .mapToLong(payment -> payment.getAmount() - payment.getFee())
+                .mapToLong(payment -> payment.getAmount() - payment.getFee() - payment.getGuaranteeDeposit())
                 .sum();
 
         long refundAmount = refunds.stream()

@@ -12,6 +12,8 @@ import java.util.Optional;
 
 public interface PayoutService {
 
+    List<Long> createPayouts(LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType) throws InvalidStateException, StorageException;
+
     long createPayout(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType) throws InvalidStateException, StorageException;
 
     void pay(long payoutId) throws InvalidStateException, StorageException;

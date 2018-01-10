@@ -34,12 +34,9 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
     }
 
     @Override
-    public List<String> generatePayout(GeneratePayoutParams generatePayoutParams) throws InvalidRequest, TException {
+    public List<String> generatePayouts(GeneratePayoutParams generatePayoutParams) throws InvalidRequest, TException {
+        log.info("Start generate payouts, params: {}", generatePayoutParams);
         try {
-            //TODO PASHA
-            String partyId = generatePayoutParams.getShop().getPartyId();
-            String shopId = generatePayoutParams.getShop().getShopId();
-
             TimeRange timeRange = generatePayoutParams.getTimeRange();
             LocalDateTime fromTime = TypeUtil.stringToLocalDateTime(timeRange.getFromTime());
             LocalDateTime toTime = TypeUtil.stringToLocalDateTime(timeRange.getToTime());
@@ -48,41 +45,60 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
                 throw new InvalidRequest(Arrays.asList("fromTime must be less that toTime"));
             }
 
-            long payoutId = payoutService.createPayout(partyId, shopId, fromTime, toTime, PayoutType.bank_account);
+            if (generatePayoutParams.isSetShop()) {
+                ShopParams shopParams = generatePayoutParams.getShop();
+                long payoutId = payoutService.createPayout(shopParams.getPartyId(), shopParams.getShopId(), fromTime, toTime, PayoutType.bank_account);
+                return Arrays.asList(String.valueOf(payoutId));
+            }
 
-            //TODO PASHA
-            return Collections.singletonList(String.valueOf(payoutId));
+            List<Long> payoutIds = payoutService.createPayouts(fromTime, toTime, PayoutType.bank_account);
+            return payoutIds.stream()
+                    .map(id -> String.valueOf(id))
+                    .collect(Collectors.toList());
+
         } catch (NotFoundException | InvalidStateException | IllegalArgumentException ex) {
             throw new InvalidRequest(Arrays.asList(ex.getMessage()));
+        } finally {
+            log.info("End generate payouts, params: {}", generatePayoutParams);
         }
     }
 
     @Override
-    public List<String> confirmPayouts(List<String> payoutIds) throws InvalidRequest, TException {
-        List<String> confirmedPayouts = new ArrayList<>();
-        for (String payoutId : payoutIds) {
-            try {
-                payoutService.confirm(Long.valueOf(payoutId));
-                confirmedPayouts.add(payoutId);
-            } catch (Exception ex) {
-                log.warn(ex.getMessage(), ex);
+    public Set<String> confirmPayouts(Set<String> payoutIds) throws InvalidRequest, TException {
+        log.info("Start confirm payouts, payoutIds: {}", payoutIds);
+        try {
+            Set<String> confirmedPayouts = new HashSet<>();
+            for (String payoutId : payoutIds) {
+                try {
+                    payoutService.confirm(Long.valueOf(payoutId));
+                    confirmedPayouts.add(payoutId);
+                } catch (Exception ex) {
+                    log.warn("Failed to confirm payout, payoutId={}", payoutId, ex);
+                }
             }
+            return confirmedPayouts;
+        } finally {
+            log.info("End confirm payouts, payoutIds: {}", payoutIds);
         }
-        return confirmedPayouts;
     }
 
     @Override
-    public List<String> cancelPayouts(List<String> payoutIds, String details) throws InvalidRequest, TException {
-        List<String> cancelledPayouts = new ArrayList<>();
-        for (String payoutId : payoutIds) {
-            try {
-                payoutService.cancel(Long.valueOf(payoutId));
-                cancelledPayouts.add(payoutId);
-            } catch (Exception ex) {
-                log.warn(ex.getMessage(), ex);
+    public Set<String> cancelPayouts(Set<String> payoutIds, String details) throws InvalidRequest, TException {
+        log.info("Start cancel payouts, payoutIds: {}", payoutIds);
+        try {
+            Set<String> cancelledPayouts = new HashSet<>();
+            for (String payoutId : payoutIds) {
+                try {
+                    payoutService.cancel(Long.valueOf(payoutId));
+                    cancelledPayouts.add(payoutId);
+                } catch (Exception ex) {
+                    log.warn("Failed to cancel payout, payoutId={}", payoutId, ex);
+                }
             }
+            return cancelledPayouts;
+        } finally {
+            log.info("End cancel payouts, payoutIds: {}", payoutIds);
         }
-        return cancelledPayouts;
     }
 
     @Override
