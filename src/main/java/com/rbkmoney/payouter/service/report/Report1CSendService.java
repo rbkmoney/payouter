@@ -24,7 +24,7 @@ public class Report1CSendService {
     private String encoding;
 
     @Value("${report.1c.timezone}")
-    private String timezone;
+    private ZoneId zoneId;
 
     @Autowired
     private Report1CService report1CService;
@@ -33,7 +33,7 @@ public class Report1CSendService {
     private ReportSendService reportSendService;
 
     public void generateAndSend(List<Payout> payouts) throws ReportException {
-        String subject = "Выплаты, сгенерированные " + DateTimeFormatter.ofPattern("dd.MM.yyyy").format(LocalDate.now(ZoneId.of(timezone)));
+        String subject = "Выплаты, сгенерированные " + DateTimeFormatter.ofPattern("dd.MM.yyyy").format(LocalDate.now(zoneId));
         try {
             Report report = report1CService.generate(payouts);
             reportSendService.sendEmail(to, subject, report, encoding);

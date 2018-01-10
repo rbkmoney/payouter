@@ -4,7 +4,6 @@ import com.rbkmoney.payouter.dao.ReportDao;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.domain.tables.pojos.Report;
 import com.rbkmoney.payouter.exception.DaoException;
-import com.rbkmoney.payouter.exception.ReportException;
 import com.rbkmoney.payouter.service.report.ReportService;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
@@ -19,6 +18,7 @@ import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -47,7 +47,7 @@ public class Report1CService implements ReportService {
     private String templateFileName;
 
     @Value("${report.1c.timezone}")
-    private String timezone;
+    private ZoneId zoneId;
 
     @Autowired
     private FreeMarkerConfigurer freeMarkerConfigurer;
@@ -76,19 +76,20 @@ public class Report1CService implements ReportService {
             payoutsAttributes.add(payout);
         }
 
+        Instant instant = Instant.now();
         final Map<String, Object> dataModel = new HashMap<>();
         dataModel.put("payouts", payoutsAttributes);
-        dataModel.put("date", currentMoscowDate());
+        dataModel.put("date", currentDate(instant));
 
         final String reportContent = processTemplate(dataModel, templateFileName);
 
         List<String> payoutIds = payoutRecords.stream().map(p -> p.getId().toString()).collect(Collectors.toList());
         Report report = new Report();
-        report.setName(prefix + "_" + currentMoscowDate() + extension);
+        report.setName(prefix + "_" + currentDate(instant) + extension);
         report.setContent(reportContent);
         report.setDescription(reportDescription.toString());
         report.setPayoutids(String.join(",", payoutIds));
-        report.setCreatedAt(currentUTC());
+        report.setCreatedAt(currentUTC(instant));
         try {
             reportDao.save(report);
         } catch (DaoException e) {
@@ -99,12 +100,12 @@ public class Report1CService implements ReportService {
         return report;
     }
 
-    private String currentMoscowDate() {
-        return DateTimeFormatter.ofPattern(DATE_FORMAT).format(LocalDateTime.now(ZoneId.of(timezone)));
+    private String currentDate(Instant instant) {
+        return DateTimeFormatter.ofPattern(DATE_FORMAT).format(instant.atZone(zoneId));
     }
 
-    private LocalDateTime currentUTC() {
-        return LocalDateTime.now(ZoneOffset.UTC);
+    private LocalDateTime currentUTC(Instant instant) {
+        return LocalDateTime.ofInstant(instant, ZoneOffset.UTC);
     }
 
     private String processTemplate(Map<String, Object> data, String templateName) {
