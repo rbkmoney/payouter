@@ -48,8 +48,6 @@ public class PayoutServiceImpl implements PayoutService {
 
     private final PayoutDao payoutDao;
 
-    private final CashFlowDescriptionService cashFlowDescriptionService;
-
     private final ShumwayService shumwayService;
 
     private final PartyManagementService partyManagementService;
@@ -62,7 +60,6 @@ public class PayoutServiceImpl implements PayoutService {
                              RefundDao refundDao,
                              AdjustmentDao adjustmentDao,
                              PayoutDao payoutDao,
-                             CashFlowDescriptionService cashFlowDescriptionService,
                              ShumwayService shumwayService,
                              PartyManagementService partyManagementService,
                              EventSinkService eventSinkService) {
@@ -71,7 +68,6 @@ public class PayoutServiceImpl implements PayoutService {
         this.refundDao = refundDao;
         this.adjustmentDao = adjustmentDao;
         this.payoutDao = payoutDao;
-        this.cashFlowDescriptionService = cashFlowDescriptionService;
         this.shumwayService = shumwayService;
         this.partyManagementService = partyManagementService;
         this.eventSinkService = eventSinkService;
@@ -128,9 +124,6 @@ public class PayoutServiceImpl implements PayoutService {
             paymentDao.includeToPayout(payoutId, payments);
             refundDao.includeToPayout(payoutId, refunds);
             adjustmentDao.includeToPayout(payoutId, adjustments);
-
-            List<CashFlowDescription> cashFlowDescriptions = buildCashFlowDescriptions(payments, refunds, adjustments, payoutId, payout.getCurrencyCode());
-            cashFlowDescriptionService.save(cashFlowDescriptions);
 
             shopMetaDao.updateLastPayoutCreatedAt(shopMeta.getPartyId(), shopMeta.getShopId(), payout.getCreatedAt());
 
@@ -367,52 +360,6 @@ public class PayoutServiceImpl implements PayoutService {
         cashFlowPosting.setAmount(payout.getAmount());
         cashFlowPosting.setCurrencyCode(payout.getCurrencyCode());
         return Arrays.asList(cashFlowPosting);
-    }
-
-    private List<CashFlowDescription> buildCashFlowDescriptions(List<Payment> payments, List<Refund> refunds, List<Adjustment> adjustments, long payoutId, String currencyCode) {
-        List<CashFlowDescription> result = new ArrayList<>();
-
-        long paymentAmount = payments.stream().mapToLong(Payment::getAmount).sum();
-        CashFlowDescription paymentCashFlow = new CashFlowDescription();
-        paymentCashFlow.setAmount(paymentAmount);
-        paymentCashFlow.setCurrencyCode(currencyCode);
-        paymentCashFlow.setCashFlowType(com.rbkmoney.payouter.domain.enums.CashFlowType.payment);
-        paymentCashFlow.setCount(payments.size());
-        paymentCashFlow.setPayoutId(payoutId);
-        result.add(paymentCashFlow);
-
-        long paymentFee = payments.stream().mapToLong(Payment::getFee).sum();
-        CashFlowDescription paymentFeeCashFlow = new CashFlowDescription();
-        paymentFeeCashFlow.setAmount(paymentFee);
-        paymentFeeCashFlow.setCurrencyCode(currencyCode);
-        paymentFeeCashFlow.setCashFlowType(com.rbkmoney.payouter.domain.enums.CashFlowType.fee);
-        paymentFeeCashFlow.setCount(payments.size());
-        paymentFeeCashFlow.setPayoutId(payoutId);
-        result.add(paymentFeeCashFlow);
-
-        if (!refunds.isEmpty()) {
-            long refundAmount = refunds.stream().mapToLong(r -> r.getAmount() + r.getFee()).sum();
-            CashFlowDescription refundCashFlow = new CashFlowDescription();
-            refundCashFlow.setAmount(refundAmount);
-            refundCashFlow.setCurrencyCode(currencyCode);
-            refundCashFlow.setCashFlowType(com.rbkmoney.payouter.domain.enums.CashFlowType.refund);
-            refundCashFlow.setCount(refunds.size());
-            refundCashFlow.setPayoutId(payoutId);
-            result.add(refundCashFlow);
-        }
-
-        if (!adjustments.isEmpty()) {
-            long adjustmentAmount = adjustments.stream().mapToLong(a -> a.getPaymentFee() - a.getNewFee()).sum();
-            CashFlowDescription adjustmentCashFlow = new CashFlowDescription();
-            adjustmentCashFlow.setAmount(adjustmentAmount);
-            adjustmentCashFlow.setCurrencyCode(currencyCode);
-            adjustmentCashFlow.setCashFlowType(com.rbkmoney.payouter.domain.enums.CashFlowType.adjustment);
-            adjustmentCashFlow.setCount(adjustments.size());
-            adjustmentCashFlow.setPayoutId(payoutId);
-            result.add(adjustmentCashFlow);
-        }
-
-        return result;
     }
 
     private long calculateAvailableAmount(List<Payment> payments, List<Refund> refunds, List<Adjustment> adjustments) {

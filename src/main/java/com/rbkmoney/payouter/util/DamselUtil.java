@@ -214,15 +214,4 @@ public class DamselUtil {
         )));
         return event;
     }
-
-    public static List<CashFlowDescription> toDamselCashFlowDescription(List<com.rbkmoney.payouter.domain.tables.pojos.CashFlowDescription> cashFlowDescriptions) {
-        return cashFlowDescriptions.stream().map(cfd -> {
-            CashFlowDescription cashFlowDescription = new CashFlowDescription();
-            cashFlowDescription.setCash(new Cash(cfd.getAmount(), new CurrencyRef(cfd.getCurrencyCode())));
-            cashFlowDescription.setCount(cfd.getCount());
-            cashFlowDescription.setCashFlowType(CashFlowType.valueOf(cfd.getCashFlowType().getLiteral()));
-            cashFlowDescription.setDetails(cfd.getDescription());
-            return cashFlowDescription;
-        }).collect(Collectors.toList());
-    }
 }
