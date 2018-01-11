@@ -94,3 +94,10 @@ CREATE TABLE sht.cash_flow_posting (
   created_at        TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT now(),
   CONSTRAINT posting_pkey PRIMARY KEY (id)
 );
+
+CREATE TYPE sht.REPORT_STATUS AS ENUM ('READY', 'SENT', 'FAILED');
+ALTER TABLE sht.report ADD COLUMN status sht.REPORT_STATUS NOT NULL DEFAULT 'READY';
+ALTER TABLE sht.report ADD COLUMN last_send_at TIMESTAMP WITHOUT TIME ZONE;
+
+UPDATE sht.report SET status = 'SENT';
+UPDATE sht.report SET last_send_at = created_at;

@@ -42,6 +42,8 @@ public class PayoutServiceImpl implements PayoutService {
 
     private final PayoutDao payoutDao;
 
+    private final ReportDao reportDao;
+
     private final ShumwayService shumwayService;
 
     private final PartyManagementService partyManagementService;
@@ -54,6 +56,7 @@ public class PayoutServiceImpl implements PayoutService {
                              RefundDao refundDao,
                              AdjustmentDao adjustmentDao,
                              PayoutDao payoutDao,
+                             ReportDao reportDao,
                              ShumwayService shumwayService,
                              PartyManagementService partyManagementService,
                              Report1CSendService report1CSendService) {
@@ -62,6 +65,7 @@ public class PayoutServiceImpl implements PayoutService {
         this.refundDao = refundDao;
         this.adjustmentDao = adjustmentDao;
         this.payoutDao = payoutDao;
+        this.reportDao = reportDao;
         this.shumwayService = shumwayService;
         this.partyManagementService = partyManagementService;
         this.report1CSendService = report1CSendService;
@@ -213,6 +217,13 @@ public class PayoutServiceImpl implements PayoutService {
         if (unpaidPayouts.isEmpty()) return;
         unpaidPayouts.forEach(p -> pay(p.getId()));
         report1CSendService.generate(unpaidPayouts);
+    }
+
+    @Scheduled(fixedDelay = 5000)
+    public void sendReports() {
+        List<Report> reportsForSend = reportDao.getForSend();
+        if (reportsForSend.isEmpty()) return;
+        report1CSendService.send(reportsForSend);
     }
 
     private Payout buildPayout(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType) {
