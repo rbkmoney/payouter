@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -33,18 +32,7 @@ public class Report1CSendService {
     private ReportDao reportDao;
 
     @Autowired
-    private Report1CService report1CService;
-
-    @Autowired
     private ReportSendService reportSendService;
-
-    public void generate(List<Payout> payouts) throws ReportException {
-        try {
-            report1CService.generate(payouts);
-        } catch (Exception e) {
-            throw new ReportException(String.format("Couldn't generate report"), e);
-        }
-    }
 
     public void send(List<Report> reports) throws ReportException {
         for (Report report : reports) {

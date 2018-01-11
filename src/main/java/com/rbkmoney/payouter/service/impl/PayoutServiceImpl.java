@@ -14,6 +14,7 @@ import com.rbkmoney.payouter.service.PartyManagementService;
 import com.rbkmoney.payouter.service.PayoutService;
 import com.rbkmoney.payouter.service.ShumwayService;
 import com.rbkmoney.payouter.service.report.Report1CSendService;
+import com.rbkmoney.payouter.service.report._1c.Report1CService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +51,8 @@ public class PayoutServiceImpl implements PayoutService {
 
     private final Report1CSendService report1CSendService;
 
+    private final Report1CService report1CService;
+
     @Autowired
     public PayoutServiceImpl(ShopMetaDao shopMetaDao,
                              PaymentDao paymentDao,
@@ -59,7 +62,8 @@ public class PayoutServiceImpl implements PayoutService {
                              ReportDao reportDao,
                              ShumwayService shumwayService,
                              PartyManagementService partyManagementService,
-                             Report1CSendService report1CSendService) {
+                             Report1CSendService report1CSendService,
+                             Report1CService report1CService) {
         this.shopMetaDao = shopMetaDao;
         this.paymentDao = paymentDao;
         this.refundDao = refundDao;
@@ -69,6 +73,7 @@ public class PayoutServiceImpl implements PayoutService {
         this.shumwayService = shumwayService;
         this.partyManagementService = partyManagementService;
         this.report1CSendService = report1CSendService;
+        this.report1CService = report1CService;
         //over
     }
 
@@ -216,7 +221,7 @@ public class PayoutServiceImpl implements PayoutService {
         List<Payout> unpaidPayouts = payoutDao.getUnpaidPayouts();
         if (unpaidPayouts.isEmpty()) return;
         unpaidPayouts.forEach(p -> pay(p.getId()));
-        report1CSendService.generate(unpaidPayouts);
+        report1CService.generate(unpaidPayouts);
     }
 
     @Scheduled(fixedDelay = 5000)
