@@ -4,7 +4,6 @@ import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.domain.tables.pojos.Report;
 import com.rbkmoney.payouter.exception.ReportException;
 import com.rbkmoney.payouter.service.report._1c.Report1CService;
-import org.apache.thrift.TException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -32,10 +31,17 @@ public class Report1CSendService {
     @Autowired
     private ReportSendService reportSendService;
 
-    public void generateAndSend(List<Payout> payouts) throws ReportException {
+    public void generate(List<Payout> payouts) throws ReportException {
+        try {
+            report1CService.generate(payouts);
+        } catch (Exception e) {
+            throw new ReportException(String.format("Couldn't generate report"), e);
+        }
+    }
+
+    public void send(Report report) throws ReportException {
         String subject = "Выплаты, сгенерированные " + DateTimeFormatter.ofPattern("dd.MM.yyyy").format(LocalDate.now(zoneId));
         try {
-            Report report = report1CService.generate(payouts);
             reportSendService.sendEmail(to, subject, report, encoding);
         } catch (Exception e) {
             throw new ReportException(String.format("Couldn't send report with subject %s", subject), e);

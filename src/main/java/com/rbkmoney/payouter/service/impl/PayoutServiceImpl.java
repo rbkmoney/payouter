@@ -212,7 +212,7 @@ public class PayoutServiceImpl implements PayoutService {
         List<Payout> unpaidPayouts = payoutDao.getUnpaidPayouts();
         if (unpaidPayouts.isEmpty()) return;
         unpaidPayouts.forEach(p -> pay(p.getId()));
-        report1CSendService.generateAndSend(unpaidPayouts);
+        report1CSendService.generate(unpaidPayouts);
     }
 
     private Payout buildPayout(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType) {
