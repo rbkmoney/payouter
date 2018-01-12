@@ -118,7 +118,7 @@ public class PayoutServiceImpl implements PayoutService {
 
             shopMetaDao.updateLastPayoutCreatedAt(shopMeta.getPartyId(), shopMeta.getShopId(), payout.getCreatedAt());
 
-            shumwayService.hold(payoutId, buildPostings(payout));
+            shumwayService.hold(payoutId);
 
             log.info("Payout successfully created, payoutId='{}', partyId={}, shopId={}, fromTime={}, toTime={}, payoutType={}",
                     payoutId, partyId, shopId, fromTime, toTime, payoutType);
@@ -165,7 +165,7 @@ public class PayoutServiceImpl implements PayoutService {
             }
 
             payoutDao.changeStatus(payoutId, PayoutStatus.CONFIRMED);
-            shumwayService.commit(payoutId, buildPostings(payout));
+            shumwayService.commit(payoutId);
             log.info("Payout have been confirmed, payoutId={}", payoutId);
         } catch (DaoException ex) {
             throw new StorageException(String.format("Failed to confirm a payout, payoutId='%d'", payoutId), ex);
@@ -183,11 +183,11 @@ public class PayoutServiceImpl implements PayoutService {
                 case UNPAID:
                 case PAID:
                     payoutDao.changeStatus(payoutId, PayoutStatus.CANCELLED);
-                    shumwayService.rollback(payoutId, buildPostings(payout));
+                    shumwayService.rollback(payoutId);
                     break;
                 case CONFIRMED:
                     payoutDao.changeStatus(payoutId, PayoutStatus.CANCELLED);
-                    shumwayService.revert(payoutId, buildPostings(payout));
+                    shumwayService.revert(payoutId);
                     break;
                 default:
                     throw new InvalidStateException(String.format("Invalid status for 'cancel' action, payoutId='%d', currentStatus='%s'", payoutId, payout.getStatus()));
@@ -242,18 +242,6 @@ public class PayoutServiceImpl implements PayoutService {
         payout.setAccountLegalAgreementSignedAt(payoutToolData.getLegalAgreementSignedAt());
 
         return payout;
-    }
-
-    private List<CashFlowPosting> buildPostings(Payout payout) {
-        CashFlowPosting cashFlowPosting = new CashFlowPosting();
-        cashFlowPosting.setFromAccountId(payout.getShopAcc());
-        cashFlowPosting.setFromAccountType(AccountType.merchant);
-        cashFlowPosting.setToAccountId(payout.getShopPayoutAcc());
-        cashFlowPosting.setFromAccountType(AccountType.merchant);
-        cashFlowPosting.setAmount(payout.getAmount());
-        cashFlowPosting.setCurrencyCode(payout.getCurrencyCode());
-        cashFlowPosting.setDescription("Payout amount");
-        return Arrays.asList(cashFlowPosting);
     }
 
     private long calculateAvailableAmount(List<Payment> payments, List<Refund> refunds, List<Adjustment> adjustments) {
