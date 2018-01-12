@@ -10,7 +10,6 @@ import com.rbkmoney.payouter.domain.enums.AccountType;
 import com.rbkmoney.payouter.domain.enums.PayoutStatus;
 import com.rbkmoney.payouter.domain.enums.PayoutType;
 import com.rbkmoney.payouter.domain.tables.pojos.*;
-import com.rbkmoney.payouter.domain.tables.pojos.CashFlowDescription;
 import com.rbkmoney.payouter.domain.tables.pojos.CashFlowPosting;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.exception.DaoException;
