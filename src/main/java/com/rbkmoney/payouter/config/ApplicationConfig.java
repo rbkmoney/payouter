@@ -29,10 +29,10 @@ public class ApplicationConfig {
     }
 
     @Bean
-    public AccounterSrv.Iface shumwayClient(@Value("${service.shumway.url}") Resource resource) throws IOException {
+    public AccounterSrv.Iface shumwayClient(@Value("${service.shumway.url}") Resource resource, @Value("${service.shumway.networkTimeout}") int networkTimeout) throws IOException {
         return new THSpawnClientBuilder()
                 .withAddress(resource.getURI())
-                .withNetworkTimeout(-1)
+                .withNetworkTimeout(networkTimeout)
                 .build(AccounterSrv.Iface.class);
     }
 

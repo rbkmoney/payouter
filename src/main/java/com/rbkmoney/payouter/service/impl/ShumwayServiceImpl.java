@@ -138,15 +138,15 @@ public class ShumwayServiceImpl implements ShumwayService {
         try {
             hold(revertPlanId, revertPostingBatch);
             commit(toRevertPlanId(payoutId), Arrays.asList(revertPostingBatch));
-        } catch (TException ex) {
+        } catch (Exception ex) {
             processRollbackRevertWhenError(revertPlanId, Arrays.asList(revertPostingBatch), ex);
         }
     }
 
-    private void processRollbackRevertWhenError(String revertPlanId, List<PostingBatch> postingBatches, TException parent) throws Exception {
+    private void processRollbackRevertWhenError(String revertPlanId, List<PostingBatch> postingBatches, Exception parent) throws Exception {
         try {
             rollback(revertPlanId, postingBatches);
-        } catch (TException ex) {
+        } catch (Exception ex) {
             log.warn("Inconsistent state of postings in shumway, revertPlanId='{}', postingBatches='{}'", revertPlanId, postingBatches, ex);
             Exception rollbackEx = new RuntimeException(String.format("Failed to rollback postings from revert action, revertPlanId='%s', postingBatches='%s'", revertPlanId, postingBatches), ex);
             rollbackEx.addSuppressed(parent);
