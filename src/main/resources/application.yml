@@ -10,6 +10,8 @@ spring:
     hikari:
       idle-timeout: 30000
       maximum-pool-size: 3
+retry-policy:
+  maxAttempts: 10
 service:
   shumway:
     url: http://localhost:8022/accounter

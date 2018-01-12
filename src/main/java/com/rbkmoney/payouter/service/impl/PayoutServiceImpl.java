@@ -6,11 +6,9 @@ import com.rbkmoney.damsel.payout_processing.*;
 import com.rbkmoney.geck.serializer.kit.json.JsonHandler;
 import com.rbkmoney.geck.serializer.kit.tbase.TBaseProcessor;
 import com.rbkmoney.payouter.dao.*;
-import com.rbkmoney.payouter.domain.enums.AccountType;
 import com.rbkmoney.payouter.domain.enums.PayoutStatus;
 import com.rbkmoney.payouter.domain.enums.PayoutType;
 import com.rbkmoney.payouter.domain.tables.pojos.*;
-import com.rbkmoney.payouter.domain.tables.pojos.CashFlowPosting;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.exception.DaoException;
 import com.rbkmoney.payouter.exception.InvalidStateException;
@@ -130,7 +128,7 @@ public class PayoutServiceImpl implements PayoutService {
             PayoutEvent payoutEvent = buildPayoutCreatedEvent(payout, userInfo);
             eventSinkService.saveEvent(payoutEvent);
 
-            shumwayService.hold(payoutId, buildPostings(payout));
+            shumwayService.hold(payoutId);
 
             log.info("Payout successfully created, payoutId='{}', partyId={}, shopId={}, fromTime={}, toTime={}, payoutType={}",
                     payoutId, partyId, shopId, fromTime, toTime, payoutType);
@@ -182,7 +180,7 @@ public class PayoutServiceImpl implements PayoutService {
             UserInfo userInfo = WoodyUtils.getUserInfo();
             PayoutEvent payoutEvent = buildPayoutConfirmedEvent(payout, userInfo);
             eventSinkService.saveEvent(payoutEvent);
-            shumwayService.commit(payoutId, buildPostings(payout));
+            shumwayService.commit(payoutId);
             log.info("Payout have been confirmed, payoutId={}", payoutId);
         } catch (DaoException ex) {
             throw new StorageException(String.format("Failed to confirm a payout, payoutId='%d'", payoutId), ex);
@@ -204,11 +202,11 @@ public class PayoutServiceImpl implements PayoutService {
                 case UNPAID:
                 case PAID:
                     payoutDao.changeStatus(payoutId, PayoutStatus.CANCELLED);
-                    shumwayService.rollback(payoutId, buildPostings(payout));
+                    shumwayService.rollback(payoutId);
                     break;
                 case CONFIRMED:
                     payoutDao.changeStatus(payoutId, PayoutStatus.CANCELLED);
-                    shumwayService.revert(payoutId, buildPostings(payout));
+                    shumwayService.revert(payoutId);
                     break;
                 default:
                     throw new InvalidStateException(String.format("Invalid status for 'cancel' action, payoutId='%d', currentStatus='%s'", payoutId, payout.getStatus()));
@@ -348,17 +346,6 @@ public class PayoutServiceImpl implements PayoutService {
         payout.setAccountLegalAgreementSignedAt(payoutToolData.getLegalAgreementSignedAt());
 
         return payout;
-    }
-
-    private List<CashFlowPosting> buildPostings(Payout payout) {
-        CashFlowPosting cashFlowPosting = new CashFlowPosting();
-        cashFlowPosting.setFromAccountId(payout.getShopAcc());
-        cashFlowPosting.setFromAccountType(AccountType.merchant);
-        cashFlowPosting.setToAccountId(payout.getShopPayoutAcc());
-        cashFlowPosting.setFromAccountType(AccountType.merchant);
-        cashFlowPosting.setAmount(payout.getAmount());
-        cashFlowPosting.setCurrencyCode(payout.getCurrencyCode());
-        return Arrays.asList(cashFlowPosting);
     }
 
     private long calculateAvailableAmount(List<Payment> payments, List<Refund> refunds, List<Adjustment> adjustments) {
