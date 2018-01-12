@@ -1,6 +1,7 @@
 package com.rbkmoney.payouter.service.impl;
 
 import com.rbkmoney.damsel.accounter.*;
+import com.rbkmoney.damsel.base.InvalidRequest;
 import com.rbkmoney.payouter.dao.PayoutDao;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.exception.AccounterException;
@@ -146,13 +147,14 @@ public class ShumwayServiceImpl implements ShumwayService {
     private void processRollbackRevertWhenError(String revertPlanId, List<PostingBatch> postingBatches, Exception parent) throws Exception {
         try {
             rollback(revertPlanId, postingBatches);
+        } catch (InvalidRequest ex) {
+            throw parent;
         } catch (Exception ex) {
-            log.warn("Inconsistent state of postings in shumway, revertPlanId='{}', postingBatches='{}'", revertPlanId, postingBatches, ex);
+            log.error("Inconsistent state of postings in shumway, revertPlanId='{}', postingBatches='{}'", revertPlanId, postingBatches, ex);
             Exception rollbackEx = new RuntimeException(String.format("Failed to rollback postings from revert action, revertPlanId='%s', postingBatches='%s'", revertPlanId, postingBatches), ex);
             rollbackEx.addSuppressed(parent);
             throw rollbackEx;
         }
-        throw parent;
     }
 
     private PostingBatch toRevertPostingBatch(Payout payout) {
