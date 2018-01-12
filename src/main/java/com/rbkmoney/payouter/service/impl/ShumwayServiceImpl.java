@@ -1,17 +1,20 @@
 package com.rbkmoney.payouter.service.impl;
 
 import com.rbkmoney.damsel.accounter.*;
-import com.rbkmoney.payouter.domain.tables.pojos.CashFlowPosting;
+import com.rbkmoney.payouter.dao.PayoutDao;
+import com.rbkmoney.payouter.domain.tables.pojos.Payout;
+import com.rbkmoney.payouter.exception.AccounterException;
+import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.service.ShumwayService;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class ShumwayServiceImpl implements ShumwayService {
@@ -20,137 +23,166 @@ public class ShumwayServiceImpl implements ShumwayService {
 
     private final AccounterSrv.Iface shumwayClient;
 
+    private final PayoutDao payoutDao;
+
+    private final RetryTemplate retryTemplate;
+
     @Autowired
-    public ShumwayServiceImpl(AccounterSrv.Iface shumwayClient) {
+    public ShumwayServiceImpl(AccounterSrv.Iface shumwayClient, PayoutDao payoutDao, RetryTemplate retryTemplate) {
         this.shumwayClient = shumwayClient;
+        this.payoutDao = payoutDao;
+        this.retryTemplate = retryTemplate;
     }
 
     @Override
-    public void hold(long payoutId, List<CashFlowPosting> postings) {
-        log.debug("Trying to hold payout postings, payoutId={}, postings={}", payoutId, postings);
+    public void hold(long payoutId) {
+        log.debug("Trying to hold payout, payoutId={}", payoutId);
         try {
-            shumwayClient.hold(new PostingPlanChange(toPlanId(payoutId), toPostingBatch(1, postings)));
-            log.info("Payout postings has been held, payoutId={}, postings={}", payoutId, postings);
-        } catch (TException ex) {
-            throw new RuntimeException(String.format("Failed to hold postings, payoutId='%d', postings='%s'", payoutId, postings), ex);
-        }
-    }
+            Payout payout = payoutDao.get(payoutId);
+            if (payout == null) {
+                throw new NotFoundException(String.format("Payout not found, payoutId='%d'", payoutId));
+            }
 
-    public void hold(String planId, List<CashFlowPosting> postings) {
-        log.debug("Trying to hold payout postings, planId={}, postings={}", planId, postings);
-        try {
-            shumwayClient.hold(new PostingPlanChange(planId, toPostingBatch(1, postings)));
-            log.info("Payout postings has been held, planId={}, postings={}", planId, postings);
-        } catch (TException ex) {
-            throw new RuntimeException(String.format("Failed to hold postings, planId='%d', postings='%s'", planId, postings), ex);
-        }
-    }
-
-    @Override
-    public void commit(long payoutId, List<CashFlowPosting> postings) {
-        log.debug("Trying to commit payout postings, payoutId={}, postings={}", payoutId, postings);
-        try {
-            shumwayClient.commitPlan(new PostingPlan(toPlanId(payoutId), toPostingBatches(postings)));
-            log.info("Payout postings has been committed, payoutId={}, postings={}", payoutId, postings);
-        } catch (TException ex) {
-            throw new RuntimeException(String.format("Failed to commit postings, payoutId='%d', postings='%s'", payoutId, postings), ex);
-        }
-    }
-
-    public void commit(String planId, List<CashFlowPosting> postings) {
-        log.debug("Trying to commit payout postings, planId={}, postings={}", planId, postings);
-        try {
-            shumwayClient.commitPlan(new PostingPlan(planId, toPostingBatches(postings)));
-            log.info("Payout postings has been committed, payoutId={}, postings={}", planId, postings);
-        } catch (TException ex) {
-            throw new RuntimeException(String.format("Failed to commit postings, payoutId='%d', postings='%s'", planId, postings), ex);
-        }
-    }
-
-    @Override
-    public void rollback(long payoutId, List<CashFlowPosting> postings) {
-        log.debug("Trying to rollback payout postings, payoutId={}, postings={}", payoutId, postings);
-        try {
-            shumwayClient.rollbackPlan(new PostingPlan(toPlanId(payoutId), toPostingBatches(postings)));
-            log.info("Payout postings has been rolled back, payoutId={}, postings={}", payoutId, postings);
-        } catch (TException ex) {
-            throw new RuntimeException(String.format("Failed to rollback postings, payoutId='%d', postings='%s'", payoutId, postings), ex);
-        }
-    }
-
-    @Override
-    public void revert(long payoutId, List<CashFlowPosting> postings) {
-        log.debug("Trying to revert payout postings, payoutId={}, postings={}", payoutId, postings);
-        List<CashFlowPosting> revertPostings = postings.stream()
-                .map(posting -> {
-                    CashFlowPosting revertPosting = new CashFlowPosting();
-                    revertPosting.setPayoutId(posting.getPayoutId());
-                    revertPosting.setPlanId(toRevertPlanId(payoutId));
-                    revertPosting.setFromAccountId(posting.getToAccountId());
-                    revertPosting.setFromAccountType(posting.getToAccountType());
-                    revertPosting.setToAccountId(posting.getFromAccountId());
-                    revertPosting.setToAccountType(posting.getFromAccountType());
-                    revertPosting.setCurrencyCode(posting.getCurrencyCode());
-                    revertPosting.setAmount(posting.getAmount());
-                    revertPosting.setDescription(
-                            Optional.ofNullable(posting.getDescription())
-                                    .map(rPosting -> "Revert " + rPosting)
-                                    .orElse(null)
-                    );
-                    return revertPosting;
-                }).collect(Collectors.toList());
-        try {
-            doRevert(payoutId, revertPostings);
-            log.info("Payout postings has been reverted, payoutId={}, postings={}", payoutId, postings);
+            hold(toPlanId(payoutId), toPostingBatch(payout));
+            log.info("Payout has been held, payoutId={}", payoutId);
         } catch (Exception ex) {
-            throw new RuntimeException(String.format("Failed to revert postings, payoutId='%d', postings='%s'", payoutId, postings), ex);
+            throw new AccounterException(String.format("Failed to hold payout, payoutId='%d'", payoutId), ex);
         }
     }
 
-    private void doRevert(long payoutId, List<CashFlowPosting> revertPostings) throws Exception {
+    public void hold(String postingPlanId, PostingBatch postingBatch) throws TException {
         try {
-            hold(toRevertPlanId(payoutId), revertPostings);
-            commit(toRevertPlanId(payoutId), revertPostings);
+            log.debug("Start hold operation, postingPlanId='{}', postingBatch='{}'", postingPlanId, postingBatch);
+            retryTemplate.execute(
+                    context -> shumwayClient.hold(new PostingPlanChange(postingPlanId, postingBatch))
+            );
+        } finally {
+            log.debug("End hold operation, postingPlanId='{}', postingBatch='{}'", postingPlanId, postingBatch);
+        }
+    }
+
+    @Override
+    public void commit(long payoutId) {
+        log.debug("Trying to commit payout, payoutId={}", payoutId);
+        try {
+            Payout payout = payoutDao.get(payoutId);
+            if (payout == null) {
+                throw new NotFoundException(String.format("Payout not found, payoutId='%d'", payoutId));
+            }
+
+            commit(toPlanId(payoutId), Arrays.asList(toPostingBatch(payout)));
+            log.info("Payout has been committed, payoutId={}", payoutId);
         } catch (Exception ex) {
-            processRollbackRevertWhenError(payoutId, revertPostings, ex);
+            throw new AccounterException(String.format("Failed to commit payout, payoutId='%d'", payoutId), ex);
         }
     }
 
-    private void processRollbackRevertWhenError(long payoutId, List<CashFlowPosting> postings, Exception parent) throws Exception {
+    public void commit(String postingPlanId, List<PostingBatch> postingBatches) throws TException {
         try {
-            rollback(payoutId, postings);
-        } catch (Throwable ex) {
-            Exception rollbackEx = new RuntimeException(String.format("Failed to rollback postings from revert action, payoutId='%d', postings='%s'", payoutId, postings), ex);
-            parent.addSuppressed(rollbackEx);
-            log.warn("Inconsistent state of postings in shumway, payoutId='{}', postings='{}'", payoutId, postings, ex);
+            log.debug("Start commit operation, postingPlanId='{}', postingBatches='{}'", postingPlanId, postingBatches);
+            retryTemplate.execute(
+                    context -> shumwayClient.commitPlan(new PostingPlan(postingPlanId, postingBatches))
+            );
+        } finally {
+            log.debug("End commit operation, postingPlanId='{}', postingBatches='{}'", postingPlanId, postingBatches);
+        }
+    }
+
+    @Override
+    public void rollback(long payoutId) {
+        log.debug("Trying to rollback payout, payoutId={}", payoutId);
+        try {
+            Payout payout = payoutDao.get(payoutId);
+            if (payout == null) {
+                throw new NotFoundException(String.format("Payout not found, payoutId='%d'", payoutId));
+            }
+
+            rollback(toPlanId(payoutId), Arrays.asList(toPostingBatch(payout)));
+            log.info("Payout has been rolled back, payoutId={}", payoutId);
+        } catch (Exception ex) {
+            throw new AccounterException(String.format("Failed to rollback payout, payoutId='%d'", payoutId), ex);
+        }
+    }
+
+    public void rollback(String postingPlanId, List<PostingBatch> postingBatches) throws TException {
+        try {
+            log.debug("Start rollback operation, postingPlanId='{}', postingBatches='{}'", postingPlanId, postingBatches);
+            retryTemplate.execute(
+                    context -> shumwayClient.rollbackPlan(new PostingPlan(postingPlanId, postingBatches))
+            );
+        } finally {
+            log.debug("End rollback operation, postingPlanId='{}', postingBatches='{}'", postingPlanId, postingBatches);
+        }
+    }
+
+    @Override
+    public void revert(long payoutId) {
+        log.debug("Trying to revert payout, payoutId={}", payoutId);
+        try {
+            Payout payout = payoutDao.get(payoutId);
+            if (payout == null) {
+                throw new NotFoundException(String.format("Payout not found, payoutId='%d'", payoutId));
+            }
+
+            doRevert(payoutId, payout);
+            log.info("Payout has been reverted, payoutId={}", payoutId);
+        } catch (Exception ex) {
+            throw new AccounterException(String.format("Failed to revert payout, payoutId='%d'", payoutId), ex);
+        }
+    }
+
+    private void doRevert(long payoutId, Payout payout) throws Exception {
+        String revertPlanId = toRevertPlanId(payoutId);
+        PostingBatch revertPostingBatch = toRevertPostingBatch(payout);
+
+        try {
+            hold(revertPlanId, revertPostingBatch);
+            commit(toRevertPlanId(payoutId), Arrays.asList(revertPostingBatch));
+        } catch (TException ex) {
+            processRollbackRevertWhenError(revertPlanId, Arrays.asList(revertPostingBatch), ex);
+        }
+    }
+
+    private void processRollbackRevertWhenError(String revertPlanId, List<PostingBatch> postingBatches, TException parent) throws Exception {
+        try {
+            rollback(revertPlanId, postingBatches);
+        } catch (TException ex) {
+            log.warn("Inconsistent state of postings in shumway, revertPlanId='{}', postingBatches='{}'", revertPlanId, postingBatches, ex);
+            Exception rollbackEx = new RuntimeException(String.format("Failed to rollback postings from revert action, revertPlanId='%s', postingBatches='%s'", revertPlanId, postingBatches), ex);
+            rollbackEx.addSuppressed(parent);
+            throw rollbackEx;
         }
         throw parent;
     }
 
-    private PostingBatch toPostingBatch(long batchId, List<CashFlowPosting> postings) {
+    private PostingBatch toRevertPostingBatch(Payout payout) {
+        Posting posting = new Posting();
+        posting.setFromId(payout.getShopPayoutAcc());
+        posting.setToId(payout.getShopAcc());
+        posting.setAmount(payout.getAmount());
+        posting.setCurrencySymCode(payout.getCurrencyCode());
+        posting.setDescription("Revert payout: " + payout.getId());
+
         return new PostingBatch(
-                batchId,
-                postings.stream()
-                        .map(cashFlowPosting -> toPosting(cashFlowPosting))
-                        .collect(Collectors.toList())
+                1L,
+                Arrays.asList(posting)
         );
     }
 
-    private List<PostingBatch> toPostingBatches(List<CashFlowPosting> postings) {
-        return postings.stream()
-                .collect(Collectors.groupingBy(CashFlowPosting::getBatchId, Collectors.toList()))
-                .entrySet().stream()
-                .map(entry -> toPostingBatch(entry.getKey(), entry.getValue()))
-                .collect(Collectors.toList());
+    private PostingBatch toPostingBatch(Payout payout) {
+        return new PostingBatch(
+                1L,
+                Arrays.asList(toPosting(payout))
+        );
     }
 
-    private Posting toPosting(CashFlowPosting cashFlowPosting) {
+    private Posting toPosting(Payout payout) {
         Posting posting = new Posting();
-        posting.setFromId(cashFlowPosting.getFromAccountId());
-        posting.setToId(cashFlowPosting.getToAccountId());
-        posting.setAmount(cashFlowPosting.getAmount());
-        posting.setCurrencySymCode(cashFlowPosting.getCurrencyCode());
-        posting.setDescription(cashFlowPosting.getDescription());
+        posting.setFromId(payout.getShopAcc());
+        posting.setToId(payout.getShopPayoutAcc());
+        posting.setAmount(payout.getAmount());
+        posting.setCurrencySymCode(payout.getCurrencyCode());
+        posting.setDescription("Payout: " + payout.getId());
 
         return posting;
     }

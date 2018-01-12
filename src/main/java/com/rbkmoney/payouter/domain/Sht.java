@@ -5,7 +5,6 @@ package com.rbkmoney.payouter.domain;
 
 
 import com.rbkmoney.payouter.domain.tables.Adjustment;
-import com.rbkmoney.payouter.domain.tables.CashFlowPosting;
 import com.rbkmoney.payouter.domain.tables.Invoice;
 import com.rbkmoney.payouter.domain.tables.Payment;
 import com.rbkmoney.payouter.domain.tables.Payout;
@@ -39,7 +38,7 @@ import org.jooq.impl.SchemaImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Sht extends SchemaImpl {
 
-    private static final long serialVersionUID = 506049305;
+    private static final long serialVersionUID = -629143862;
 
     /**
      * The reference instance of <code>sht</code>
@@ -50,11 +49,6 @@ public class Sht extends SchemaImpl {
      * The table <code>sht.adjustment</code>.
      */
     public final Adjustment ADJUSTMENT = com.rbkmoney.payouter.domain.tables.Adjustment.ADJUSTMENT;
-
-    /**
-     * The table <code>sht.cash_flow_posting</code>.
-     */
-    public final CashFlowPosting CASH_FLOW_POSTING = com.rbkmoney.payouter.domain.tables.CashFlowPosting.CASH_FLOW_POSTING;
 
     /**
      * The table <code>sht.invoice</code>.
@@ -117,7 +111,6 @@ public class Sht extends SchemaImpl {
     private final List<Sequence<?>> getSequences0() {
         return Arrays.<Sequence<?>>asList(
             Sequences.ADJUSTMENT_ID_SEQ,
-            Sequences.CASH_FLOW_POSTING_ID_SEQ,
             Sequences.PAYMENT_ID_SEQ,
             Sequences.PAYOUT_EVENT_ID_SEQUENCE,
             Sequences.PAYOUT_ID_SEQUENCE,
@@ -135,7 +128,6 @@ public class Sht extends SchemaImpl {
     private final List<Table<?>> getTables0() {
         return Arrays.<Table<?>>asList(
             Adjustment.ADJUSTMENT,
-            CashFlowPosting.CASH_FLOW_POSTING,
             Invoice.INVOICE,
             Payment.PAYMENT,
             Payout.PAYOUT,
