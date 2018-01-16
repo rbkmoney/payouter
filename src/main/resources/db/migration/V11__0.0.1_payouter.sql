@@ -82,8 +82,15 @@ CREATE TABLE sht.shop_meta (
 -- account type
 CREATE TYPE sht.ACCOUNT_TYPE AS ENUM ('merchant', 'provider', 'system', 'external');
 
+CREATE TYPE sht.REPORT_STATUS AS ENUM ('READY', 'SENT', 'FAILED');
+ALTER TABLE sht.report ADD COLUMN status sht.REPORT_STATUS NOT NULL DEFAULT 'READY';
+ALTER TABLE sht.report ADD COLUMN last_send_at TIMESTAMP WITHOUT TIME ZONE;
+
+UPDATE sht.report SET status = 'SENT';
+UPDATE sht.report SET last_send_at = created_at;
 
 CREATE TABLE sht.event_stock_meta (
   last_event_id BIGINT,
   last_event_created_at TIMESTAMP WITHOUT TIME ZONE
 );
+

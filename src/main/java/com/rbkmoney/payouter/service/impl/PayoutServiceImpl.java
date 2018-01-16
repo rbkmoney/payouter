@@ -2,19 +2,26 @@ package com.rbkmoney.payouter.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rbkmoney.damsel.domain.*;
-import com.rbkmoney.damsel.payout_processing.*;
+import com.rbkmoney.damsel.payout_processing.PaidDetails;
+import com.rbkmoney.damsel.payout_processing.PayoutChange;
+import com.rbkmoney.damsel.payout_processing.ShopParams;
+import com.rbkmoney.damsel.payout_processing.UserInfo;
 import com.rbkmoney.geck.serializer.kit.json.JsonHandler;
 import com.rbkmoney.geck.serializer.kit.tbase.TBaseProcessor;
 import com.rbkmoney.payouter.dao.*;
 import com.rbkmoney.payouter.domain.enums.PayoutStatus;
 import com.rbkmoney.payouter.domain.enums.PayoutType;
 import com.rbkmoney.payouter.domain.tables.pojos.*;
-import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.exception.DaoException;
 import com.rbkmoney.payouter.exception.InvalidStateException;
 import com.rbkmoney.payouter.exception.StorageException;
 import com.rbkmoney.payouter.model.PayoutToolData;
-import com.rbkmoney.payouter.service.*;
+import com.rbkmoney.payouter.service.EventSinkService;
+import com.rbkmoney.payouter.service.PartyManagementService;
+import com.rbkmoney.payouter.service.PayoutService;
+import com.rbkmoney.payouter.service.ShumwayService;
+import com.rbkmoney.payouter.service.report.Report1CSendService;
+import com.rbkmoney.payouter.service.report._1c.Report1CService;
 import com.rbkmoney.payouter.util.WoodyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +34,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -45,11 +55,17 @@ public class PayoutServiceImpl implements PayoutService {
 
     private final PayoutDao payoutDao;
 
+    private final ReportDao reportDao;
+
     private final ShumwayService shumwayService;
 
     private final PartyManagementService partyManagementService;
 
     private final EventSinkService eventSinkService;
+
+    private final Report1CSendService report1CSendService;
+
+    private final Report1CService report1CService;
 
     @Autowired
     public PayoutServiceImpl(ShopMetaDao shopMetaDao,
@@ -57,17 +73,23 @@ public class PayoutServiceImpl implements PayoutService {
                              RefundDao refundDao,
                              AdjustmentDao adjustmentDao,
                              PayoutDao payoutDao,
+                             ReportDao reportDao,
                              ShumwayService shumwayService,
                              PartyManagementService partyManagementService,
-                             EventSinkService eventSinkService) {
+                             EventSinkService eventSinkService,
+                             Report1CSendService report1CSendService,
+                             Report1CService report1CService) {
         this.shopMetaDao = shopMetaDao;
         this.paymentDao = paymentDao;
         this.refundDao = refundDao;
         this.adjustmentDao = adjustmentDao;
         this.payoutDao = payoutDao;
+        this.reportDao = reportDao;
         this.shumwayService = shumwayService;
         this.partyManagementService = partyManagementService;
         this.eventSinkService = eventSinkService;
+        this.report1CSendService = report1CSendService;
+        this.report1CService = report1CService;
         //over
     }
 
@@ -228,16 +250,16 @@ public class PayoutServiceImpl implements PayoutService {
     @Transactional(propagation = Propagation.REQUIRED)
     public void processUnpaidPayouts() {
         List<Payout> unpaidPayouts = payoutDao.getUnpaidPayouts();
-        List<Payout> paidPayouts = new ArrayList<>();
-        for (Payout payout : unpaidPayouts) {
-            try {
-                pay(payout.getId());
-                paidPayouts.add(payout);
-            } catch (Exception ex) {
-                log.warn(ex.getMessage(), ex);
-            }
-            //TODO mail report
-        }
+        if (unpaidPayouts.isEmpty()) return;
+        unpaidPayouts.forEach(p -> pay(p.getId()));
+        report1CService.generate(unpaidPayouts);
+    }
+
+    @Scheduled(fixedDelay = 5000)
+    public void sendReports() {
+        List<Report> reportsForSend = reportDao.getForSend();
+        if (reportsForSend.isEmpty()) return;
+        report1CSendService.send(reportsForSend);
     }
 
     public PayoutEvent buildPayoutPaidEvent(Payout payoutRecord) throws StorageException {
