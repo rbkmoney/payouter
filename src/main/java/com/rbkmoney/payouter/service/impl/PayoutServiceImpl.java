@@ -13,6 +13,8 @@ import com.rbkmoney.payouter.model.PayoutToolData;
 import com.rbkmoney.payouter.service.PartyManagementService;
 import com.rbkmoney.payouter.service.PayoutService;
 import com.rbkmoney.payouter.service.ShumwayService;
+import com.rbkmoney.payouter.service.report.Report1CSendService;
+import com.rbkmoney.payouter.service.report._1c.Report1CService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,9 +43,15 @@ public class PayoutServiceImpl implements PayoutService {
 
     private final PayoutDao payoutDao;
 
+    private final ReportDao reportDao;
+
     private final ShumwayService shumwayService;
 
     private final PartyManagementService partyManagementService;
+
+    private final Report1CSendService report1CSendService;
+
+    private final Report1CService report1CService;
 
     @Autowired
     public PayoutServiceImpl(ShopMetaDao shopMetaDao,
@@ -51,15 +59,21 @@ public class PayoutServiceImpl implements PayoutService {
                              RefundDao refundDao,
                              AdjustmentDao adjustmentDao,
                              PayoutDao payoutDao,
+                             ReportDao reportDao,
                              ShumwayService shumwayService,
-                             PartyManagementService partyManagementService) {
+                             PartyManagementService partyManagementService,
+                             Report1CSendService report1CSendService,
+                             Report1CService report1CService) {
         this.shopMetaDao = shopMetaDao;
         this.paymentDao = paymentDao;
         this.refundDao = refundDao;
         this.adjustmentDao = adjustmentDao;
         this.payoutDao = payoutDao;
+        this.reportDao = reportDao;
         this.shumwayService = shumwayService;
         this.partyManagementService = partyManagementService;
+        this.report1CSendService = report1CSendService;
+        this.report1CService = report1CService;
         //over
     }
 
@@ -207,16 +221,16 @@ public class PayoutServiceImpl implements PayoutService {
     @Transactional(propagation = Propagation.REQUIRED)
     public void processUnpaidPayouts() {
         List<Payout> unpaidPayouts = payoutDao.getUnpaidPayouts();
-        List<Payout> paidPayouts = new ArrayList<>();
-        for (Payout payout : unpaidPayouts) {
-            try {
-                pay(payout.getId());
-                paidPayouts.add(payout);
-            } catch (Exception ex) {
-                log.warn(ex.getMessage(), ex);
-            }
-            //TODO mail report
-        }
+        if (unpaidPayouts.isEmpty()) return;
+        unpaidPayouts.forEach(p -> pay(p.getId()));
+        report1CService.generate(unpaidPayouts);
+    }
+
+    @Scheduled(fixedDelay = 5000)
+    public void sendReports() {
+        List<Report> reportsForSend = reportDao.getForSend();
+        if (reportsForSend.isEmpty()) return;
+        report1CSendService.send(reportsForSend);
     }
 
     private Payout buildPayout(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType) {

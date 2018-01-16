@@ -6,6 +6,7 @@ package com.rbkmoney.payouter.domain.tables;
 
 import com.rbkmoney.payouter.domain.Keys;
 import com.rbkmoney.payouter.domain.Sht;
+import com.rbkmoney.payouter.domain.enums.ReportStatus;
 import com.rbkmoney.payouter.domain.tables.records.ReportRecord;
 
 import java.time.LocalDateTime;
@@ -36,7 +37,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Report extends TableImpl<ReportRecord> {
 
-    private static final long serialVersionUID = -889248573;
+    private static final long serialVersionUID = -224746813;
 
     /**
      * The reference instance of <code>sht.report</code>
@@ -80,6 +81,16 @@ public class Report extends TableImpl<ReportRecord> {
      * The column <code>sht.report.description</code>.
      */
     public final TableField<ReportRecord, String> DESCRIPTION = createField("description", org.jooq.impl.SQLDataType.VARCHAR.nullable(false), this, "");
+
+    /**
+     * The column <code>sht.report.status</code>.
+     */
+    public final TableField<ReportRecord, ReportStatus> STATUS = createField("status", org.jooq.util.postgres.PostgresDataType.VARCHAR.asEnumDataType(com.rbkmoney.payouter.domain.enums.ReportStatus.class), this, "");
+
+    /**
+     * The column <code>sht.report.last_send_at</code>.
+     */
+    public final TableField<ReportRecord, LocalDateTime> LAST_SEND_AT = createField("last_send_at", org.jooq.impl.SQLDataType.LOCALDATETIME, this, "");
 
     /**
      * Create a <code>sht.report</code> table reference
