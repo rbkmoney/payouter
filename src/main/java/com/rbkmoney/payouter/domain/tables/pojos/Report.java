@@ -4,6 +4,8 @@
 package com.rbkmoney.payouter.domain.tables.pojos;
 
 
+import com.rbkmoney.payouter.domain.enums.ReportStatus;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -23,7 +25,7 @@ import javax.annotation.Generated;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Report implements Serializable {
 
-    private static final long serialVersionUID = -87595167;
+    private static final long serialVersionUID = -1913627739;
 
     private Long          id;
     private LocalDateTime createdAt;
@@ -31,6 +33,8 @@ public class Report implements Serializable {
     private String        name;
     private String        content;
     private String        description;
+    private ReportStatus  status;
+    private LocalDateTime lastSendAt;
 
     public Report() {}
 
@@ -41,6 +45,8 @@ public class Report implements Serializable {
         this.name = value.name;
         this.content = value.content;
         this.description = value.description;
+        this.status = value.status;
+        this.lastSendAt = value.lastSendAt;
     }
 
     public Report(
@@ -49,7 +55,9 @@ public class Report implements Serializable {
         String        payoutids,
         String        name,
         String        content,
-        String        description
+        String        description,
+        ReportStatus  status,
+        LocalDateTime lastSendAt
     ) {
         this.id = id;
         this.createdAt = createdAt;
@@ -57,6 +65,8 @@ public class Report implements Serializable {
         this.name = name;
         this.content = content;
         this.description = description;
+        this.status = status;
+        this.lastSendAt = lastSendAt;
     }
 
     public Long getId() {
@@ -107,6 +117,22 @@ public class Report implements Serializable {
         this.description = description;
     }
 
+    public ReportStatus getStatus() {
+        return this.status;
+    }
+
+    public void setStatus(ReportStatus status) {
+        this.status = status;
+    }
+
+    public LocalDateTime getLastSendAt() {
+        return this.lastSendAt;
+    }
+
+    public void setLastSendAt(LocalDateTime lastSendAt) {
+        this.lastSendAt = lastSendAt;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj)
@@ -152,6 +178,18 @@ public class Report implements Serializable {
         }
         else if (!description.equals(other.description))
             return false;
+        if (status == null) {
+            if (other.status != null)
+                return false;
+        }
+        else if (!status.equals(other.status))
+            return false;
+        if (lastSendAt == null) {
+            if (other.lastSendAt != null)
+                return false;
+        }
+        else if (!lastSendAt.equals(other.lastSendAt))
+            return false;
         return true;
     }
 
@@ -165,6 +203,8 @@ public class Report implements Serializable {
         result = prime * result + ((this.name == null) ? 0 : this.name.hashCode());
         result = prime * result + ((this.content == null) ? 0 : this.content.hashCode());
         result = prime * result + ((this.description == null) ? 0 : this.description.hashCode());
+        result = prime * result + ((this.status == null) ? 0 : this.status.hashCode());
+        result = prime * result + ((this.lastSendAt == null) ? 0 : this.lastSendAt.hashCode());
         return result;
     }
 
@@ -178,6 +218,8 @@ public class Report implements Serializable {
         sb.append(", ").append(name);
         sb.append(", ").append(content);
         sb.append(", ").append(description);
+        sb.append(", ").append(status);
+        sb.append(", ").append(lastSendAt);
 
         sb.append(")");
         return sb.toString();

@@ -37,7 +37,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Payment extends TableImpl<PaymentRecord> {
 
-    private static final long serialVersionUID = 1363362300;
+    private static final long serialVersionUID = 843443243;
 
     /**
      * The reference instance of <code>sht.payment</code>
@@ -136,6 +136,11 @@ public class Payment extends TableImpl<PaymentRecord> {
      * The column <code>sht.payment.created_at</code>.
      */
     public final TableField<PaymentRecord, LocalDateTime> CREATED_AT = createField("created_at", org.jooq.impl.SQLDataType.LOCALDATETIME.nullable(false), this, "");
+
+    /**
+     * The column <code>sht.payment.guarantee_deposit</code>.
+     */
+    public final TableField<PaymentRecord, Long> GUARANTEE_DEPOSIT = createField("guarantee_deposit", org.jooq.impl.SQLDataType.BIGINT.defaultValue(org.jooq.impl.DSL.field("0", org.jooq.impl.SQLDataType.BIGINT)), this, "");
 
     /**
      * The column <code>sht.payment.terminal_id</code>.

@@ -25,7 +25,7 @@ import javax.annotation.Generated;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Refund implements Serializable {
 
-    private static final long serialVersionUID = -1205829968;
+    private static final long serialVersionUID = 1347940737;
 
     private Long          id;
     private Long          eventId;
@@ -41,6 +41,7 @@ public class Refund implements Serializable {
     private Long          fee;
     private Long          payoutId;
     private LocalDateTime succeededAt;
+    private Long          domainRevision;
 
     public Refund() {}
 
@@ -59,6 +60,7 @@ public class Refund implements Serializable {
         this.fee = value.fee;
         this.payoutId = value.payoutId;
         this.succeededAt = value.succeededAt;
+        this.domainRevision = value.domainRevision;
     }
 
     public Refund(
@@ -75,7 +77,8 @@ public class Refund implements Serializable {
         Long          amount,
         Long          fee,
         Long          payoutId,
-        LocalDateTime succeededAt
+        LocalDateTime succeededAt,
+        Long          domainRevision
     ) {
         this.id = id;
         this.eventId = eventId;
@@ -91,6 +94,7 @@ public class Refund implements Serializable {
         this.fee = fee;
         this.payoutId = payoutId;
         this.succeededAt = succeededAt;
+        this.domainRevision = domainRevision;
     }
 
     public Long getId() {
@@ -205,6 +209,14 @@ public class Refund implements Serializable {
         this.succeededAt = succeededAt;
     }
 
+    public Long getDomainRevision() {
+        return this.domainRevision;
+    }
+
+    public void setDomainRevision(Long domainRevision) {
+        this.domainRevision = domainRevision;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj)
@@ -298,6 +310,12 @@ public class Refund implements Serializable {
         }
         else if (!succeededAt.equals(other.succeededAt))
             return false;
+        if (domainRevision == null) {
+            if (other.domainRevision != null)
+                return false;
+        }
+        else if (!domainRevision.equals(other.domainRevision))
+            return false;
         return true;
     }
 
@@ -319,6 +337,7 @@ public class Refund implements Serializable {
         result = prime * result + ((this.fee == null) ? 0 : this.fee.hashCode());
         result = prime * result + ((this.payoutId == null) ? 0 : this.payoutId.hashCode());
         result = prime * result + ((this.succeededAt == null) ? 0 : this.succeededAt.hashCode());
+        result = prime * result + ((this.domainRevision == null) ? 0 : this.domainRevision.hashCode());
         return result;
     }
 
@@ -340,6 +359,7 @@ public class Refund implements Serializable {
         sb.append(", ").append(fee);
         sb.append(", ").append(payoutId);
         sb.append(", ").append(succeededAt);
+        sb.append(", ").append(domainRevision);
 
         sb.append(")");
         return sb.toString();

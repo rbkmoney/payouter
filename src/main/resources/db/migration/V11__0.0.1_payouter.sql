@@ -39,8 +39,6 @@ ALTER TABLE sht.payment ALTER COLUMN test SET NOT NULL;
 --refactor adjustment table
 --drop unused columns
 ALTER TABLE sht.adjustment DROP COLUMN paid;
-ALTER TABLE sht.adjustment DROP COLUMN payment_amount;
-ALTER TABLE sht.adjustment DROP COLUMN payment_fee;
 -- drop default alter column created_at
 ALTER TABLE sht.adjustment ALTER COLUMN created_at DROP DEFAULT;
 -- rename commission to fee
@@ -49,6 +47,7 @@ ALTER TABLE sht.adjustment RENAME COLUMN new_external_commission TO new_external
 -- rename updated_at to captured_at
 ALTER TABLE sht.adjustment RENAME COLUMN update_at TO captured_at;
 ALTER TABLE sht.adjustment ALTER COLUMN captured_at DROP DEFAULT;
+ALTER TABLE sht.adjustment ALTER COLUMN captured_at DROP NOT NULL;
 
 --refactor refund table
 --drop unused columns
@@ -56,4 +55,42 @@ ALTER TABLE sht.refund DROP COLUMN paid;
 -- rename updated_at to succeeded_at
 ALTER TABLE sht.refund RENAME COLUMN update_at TO succeeded_at;
 ALTER TABLE sht.refund ALTER COLUMN succeeded_at DROP DEFAULT;
+ALTER TABLE sht.refund ALTER COLUMN succeeded_at DROP NOT NULL;
+--add domain revision
+ALTER TABLE sht.refund ADD COLUMN domain_revision BIGINT;
+
+-- refactor payout table
+ALTER TABLE sht.payout DROP COLUMN cor_account;
+-- canceled -> cancelled
+UPDATE pg_enum SET enumlabel = 'CANCELLED'
+WHERE enumlabel = 'CANCELED' AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'payout_status');
+-- change payout_type names
+UPDATE pg_enum SET enumlabel = 'bank_card'
+WHERE enumlabel = 'CardPayout' AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'payout_type');
+UPDATE pg_enum SET enumlabel = 'bank_account'
+WHERE enumlabel = 'AccountPayout' AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'payout_type');
+
+-- shop_meta table
+CREATE TABLE sht.shop_meta (
+  party_id               CHARACTER VARYING           NOT NULL,
+  shop_id                CHARACTER VARYING           NOT NULL,
+  wtime                  TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+  last_payout_created_at TIMESTAMP WITHOUT TIME ZONE,
+  CONSTRAINT shop_meta_pkey PRIMARY KEY (party_id, shop_id)
+);
+
+-- account type
+CREATE TYPE sht.ACCOUNT_TYPE AS ENUM ('merchant', 'provider', 'system', 'external');
+
+CREATE TYPE sht.REPORT_STATUS AS ENUM ('READY', 'SENT', 'FAILED');
+ALTER TABLE sht.report ADD COLUMN status sht.REPORT_STATUS NOT NULL DEFAULT 'READY';
+ALTER TABLE sht.report ADD COLUMN last_send_at TIMESTAMP WITHOUT TIME ZONE;
+
+UPDATE sht.report SET status = 'SENT';
+UPDATE sht.report SET last_send_at = created_at;
+
+CREATE TABLE sht.event_stock_meta (
+  last_event_id BIGINT,
+  last_event_created_at TIMESTAMP WITHOUT TIME ZONE
+);
 

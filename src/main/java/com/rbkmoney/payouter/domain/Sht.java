@@ -5,12 +5,14 @@ package com.rbkmoney.payouter.domain;
 
 
 import com.rbkmoney.payouter.domain.tables.Adjustment;
+import com.rbkmoney.payouter.domain.tables.EventStockMeta;
 import com.rbkmoney.payouter.domain.tables.Invoice;
 import com.rbkmoney.payouter.domain.tables.Payment;
 import com.rbkmoney.payouter.domain.tables.Payout;
 import com.rbkmoney.payouter.domain.tables.PayoutEvent;
 import com.rbkmoney.payouter.domain.tables.Refund;
 import com.rbkmoney.payouter.domain.tables.Report;
+import com.rbkmoney.payouter.domain.tables.ShopMeta;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,7 +39,7 @@ import org.jooq.impl.SchemaImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Sht extends SchemaImpl {
 
-    private static final long serialVersionUID = -1881116706;
+    private static final long serialVersionUID = 701293750;
 
     /**
      * The reference instance of <code>sht</code>
@@ -48,6 +50,11 @@ public class Sht extends SchemaImpl {
      * The table <code>sht.adjustment</code>.
      */
     public final Adjustment ADJUSTMENT = com.rbkmoney.payouter.domain.tables.Adjustment.ADJUSTMENT;
+
+    /**
+     * The table <code>sht.event_stock_meta</code>.
+     */
+    public final EventStockMeta EVENT_STOCK_META = com.rbkmoney.payouter.domain.tables.EventStockMeta.EVENT_STOCK_META;
 
     /**
      * The table <code>sht.invoice</code>.
@@ -78,6 +85,11 @@ public class Sht extends SchemaImpl {
      * The table <code>sht.report</code>.
      */
     public final Report REPORT = com.rbkmoney.payouter.domain.tables.Report.REPORT;
+
+    /**
+     * The table <code>sht.shop_meta</code>.
+     */
+    public final ShopMeta SHOP_META = com.rbkmoney.payouter.domain.tables.ShopMeta.SHOP_META;
 
     /**
      * No further instances allowed
@@ -122,11 +134,13 @@ public class Sht extends SchemaImpl {
     private final List<Table<?>> getTables0() {
         return Arrays.<Table<?>>asList(
             Adjustment.ADJUSTMENT,
+            EventStockMeta.EVENT_STOCK_META,
             Invoice.INVOICE,
             Payment.PAYMENT,
             Payout.PAYOUT,
             PayoutEvent.PAYOUT_EVENT,
             Refund.REFUND,
-            Report.REPORT);
+            Report.REPORT,
+            ShopMeta.SHOP_META);
     }
 }

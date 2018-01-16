@@ -26,9 +26,9 @@ import org.jooq.Schema;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public enum PayoutType implements EnumType {
 
-    CardPayout("CardPayout"),
+    bank_card("bank_card"),
 
-    AccountPayout("AccountPayout");
+    bank_account("bank_account");
 
     private final String literal;
 

@@ -53,7 +53,7 @@ public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao {
     }
 
     @Override
-    public int includeToPayout(long payoutId, List<Payment> payments) throws DaoException {
+    public void includeToPayout(long payoutId, List<Payment> payments) throws DaoException {
         Set<Long> paymentsIds = payments.stream()
                 .map(payment -> payment.getId())
                 .collect(Collectors.toSet());
@@ -61,7 +61,7 @@ public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao {
         Query query = getDslContext().update(PAYMENT)
                 .set(PAYMENT.PAYOUT_ID, payoutId)
                 .where(PAYMENT.ID.in(paymentsIds));
-        return execute(query);
+        execute(query, paymentsIds.size());
     }
 
     @Override
@@ -79,7 +79,7 @@ public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao {
                         .and(PAYMENT.PARTY_ID.eq(partyId))
                         .and(PAYMENT.SHOP_ID.eq(shopId))
                         .and(PAYMENT.CAPTURED_AT.lessThan(to))
-                );
+                        .and(PAYMENT.PAYOUT_ID.isNull()));
         return fetch(query, paymentRowMapper);
     }
 

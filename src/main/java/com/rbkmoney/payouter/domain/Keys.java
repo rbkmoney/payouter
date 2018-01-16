@@ -11,6 +11,7 @@ import com.rbkmoney.payouter.domain.tables.Payout;
 import com.rbkmoney.payouter.domain.tables.PayoutEvent;
 import com.rbkmoney.payouter.domain.tables.Refund;
 import com.rbkmoney.payouter.domain.tables.Report;
+import com.rbkmoney.payouter.domain.tables.ShopMeta;
 import com.rbkmoney.payouter.domain.tables.records.AdjustmentRecord;
 import com.rbkmoney.payouter.domain.tables.records.InvoiceRecord;
 import com.rbkmoney.payouter.domain.tables.records.PaymentRecord;
@@ -18,6 +19,7 @@ import com.rbkmoney.payouter.domain.tables.records.PayoutEventRecord;
 import com.rbkmoney.payouter.domain.tables.records.PayoutRecord;
 import com.rbkmoney.payouter.domain.tables.records.RefundRecord;
 import com.rbkmoney.payouter.domain.tables.records.ReportRecord;
+import com.rbkmoney.payouter.domain.tables.records.ShopMetaRecord;
 
 import javax.annotation.Generated;
 
@@ -62,6 +64,7 @@ public class Keys {
     public static final UniqueKey<PayoutEventRecord> PAYOUT_EVENT_PKEY = UniqueKeys0.PAYOUT_EVENT_PKEY;
     public static final UniqueKey<RefundRecord> REFUND_PKEY = UniqueKeys0.REFUND_PKEY;
     public static final UniqueKey<ReportRecord> REPORT_PKEY = UniqueKeys0.REPORT_PKEY;
+    public static final UniqueKey<ShopMetaRecord> SHOP_META_PKEY = UniqueKeys0.SHOP_META_PKEY;
 
     // -------------------------------------------------------------------------
     // FOREIGN KEY definitions
@@ -89,5 +92,6 @@ public class Keys {
         public static final UniqueKey<PayoutEventRecord> PAYOUT_EVENT_PKEY = createUniqueKey(PayoutEvent.PAYOUT_EVENT, "payout_event_pkey", PayoutEvent.PAYOUT_EVENT.EVENT_ID);
         public static final UniqueKey<RefundRecord> REFUND_PKEY = createUniqueKey(Refund.REFUND, "refund_pkey", Refund.REFUND.ID);
         public static final UniqueKey<ReportRecord> REPORT_PKEY = createUniqueKey(Report.REPORT, "report_pkey", Report.REPORT.ID);
+        public static final UniqueKey<ShopMetaRecord> SHOP_META_PKEY = createUniqueKey(ShopMeta.SHOP_META, "shop_meta_pkey", ShopMeta.SHOP_META.PARTY_ID, ShopMeta.SHOP_META.SHOP_ID);
     }
 }

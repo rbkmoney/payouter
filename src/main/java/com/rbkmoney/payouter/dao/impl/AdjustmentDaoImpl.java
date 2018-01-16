@@ -6,6 +6,7 @@ import com.rbkmoney.payouter.domain.enums.AdjustmentStatus;
 import com.rbkmoney.payouter.domain.tables.pojos.Adjustment;
 import com.rbkmoney.payouter.exception.DaoException;
 import org.jooq.Query;
+import org.jooq.SelectQuery;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
@@ -70,14 +71,15 @@ public class AdjustmentDaoImpl extends AbstractGenericDao implements AdjustmentD
 
     @Override
     public List<Adjustment> getUnpaid(String partyId, String shopId, LocalDateTime to) throws DaoException {
-        Query query = getDslContext().select()
+        Query query = getDslContext().select(ADJUSTMENT.fields())
                 .from(ADJUSTMENT)
                 .join(PAYMENT).on(ADJUSTMENT.INVOICE_ID.eq(PAYMENT.INVOICE_ID)
                         .and(ADJUSTMENT.PAYMENT_ID.eq(PAYMENT.PAYMENT_ID))
                         .and(PAYMENT.CAPTURED_AT.lessThan(to)))
                 .where(ADJUSTMENT.STATUS.eq(AdjustmentStatus.CAPTURED)
                         .and(ADJUSTMENT.PARTY_ID.eq(partyId))
-                        .and(ADJUSTMENT.SHOP_ID.eq(shopId)));
+                        .and(ADJUSTMENT.SHOP_ID.eq(shopId))
+                        .and(ADJUSTMENT.PAYOUT_ID.isNull()));
         return fetch(query, adjustmentRowMapper);
     }
 
@@ -90,7 +92,7 @@ public class AdjustmentDaoImpl extends AbstractGenericDao implements AdjustmentD
     }
 
     @Override
-    public int includeToPayout(long payoutId, List<Adjustment> adjustments) throws DaoException {
+    public void includeToPayout(long payoutId, List<Adjustment> adjustments) throws DaoException {
         Set<Long> adjustmentsIds = adjustments.stream()
                 .map(adjustment -> adjustment.getId())
                 .collect(Collectors.toSet());
@@ -98,7 +100,7 @@ public class AdjustmentDaoImpl extends AbstractGenericDao implements AdjustmentD
         Query query = getDslContext().update(ADJUSTMENT)
                 .set(ADJUSTMENT.PAYOUT_ID, payoutId)
                 .where(ADJUSTMENT.ID.in(adjustmentsIds));
-        return execute(query);
+        execute(query, adjustmentsIds.size());
     }
 
     @Override

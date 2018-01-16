@@ -14,9 +14,11 @@ public interface RefundDao extends GenericDao {
 
     void markAsSucceeded(long eventId, String invoiceId, String paymentId, String refundId, LocalDateTime succeededAt) throws DaoException;
 
+    void markAsFailed(long eventId, String invoiceId, String paymentId, String refundId) throws DaoException;
+
     List<Refund> getUnpaid(String partyId, String shopId, LocalDateTime to) throws DaoException;
 
-    int includeToPayout(long payoutId, List<Refund> refunds) throws DaoException;
+    void includeToPayout(long payoutId, List<Refund> refunds) throws DaoException;
 
     List<Refund> getByPayoutId(long payoutId) throws DaoException;
 

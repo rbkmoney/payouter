@@ -32,7 +32,7 @@ public enum PayoutStatus implements EnumType {
 
     CONFIRMED("CONFIRMED"),
 
-    CANCELED("CANCELED");
+    CANCELLED("CANCELLED");
 
     private final String literal;
 

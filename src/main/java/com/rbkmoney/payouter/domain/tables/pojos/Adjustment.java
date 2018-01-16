@@ -25,7 +25,7 @@ import javax.annotation.Generated;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Adjustment implements Serializable {
 
-    private static final long serialVersionUID = 556237224;
+    private static final long serialVersionUID = 1313363512;
 
     private Long             id;
     private Long             eventId;
@@ -43,6 +43,8 @@ public class Adjustment implements Serializable {
     private Long             newFee;
     private Long             newExternalFee;
     private LocalDateTime    capturedAt;
+    private Long             paymentAmount;
+    private Long             paymentFee;
     private Long             payoutId;
 
     public Adjustment() {}
@@ -64,6 +66,8 @@ public class Adjustment implements Serializable {
         this.newFee = value.newFee;
         this.newExternalFee = value.newExternalFee;
         this.capturedAt = value.capturedAt;
+        this.paymentAmount = value.paymentAmount;
+        this.paymentFee = value.paymentFee;
         this.payoutId = value.payoutId;
     }
 
@@ -84,6 +88,8 @@ public class Adjustment implements Serializable {
         Long             newFee,
         Long             newExternalFee,
         LocalDateTime    capturedAt,
+        Long             paymentAmount,
+        Long             paymentFee,
         Long             payoutId
     ) {
         this.id = id;
@@ -102,6 +108,8 @@ public class Adjustment implements Serializable {
         this.newFee = newFee;
         this.newExternalFee = newExternalFee;
         this.capturedAt = capturedAt;
+        this.paymentAmount = paymentAmount;
+        this.paymentFee = paymentFee;
         this.payoutId = payoutId;
     }
 
@@ -233,6 +241,22 @@ public class Adjustment implements Serializable {
         this.capturedAt = capturedAt;
     }
 
+    public Long getPaymentAmount() {
+        return this.paymentAmount;
+    }
+
+    public void setPaymentAmount(Long paymentAmount) {
+        this.paymentAmount = paymentAmount;
+    }
+
+    public Long getPaymentFee() {
+        return this.paymentFee;
+    }
+
+    public void setPaymentFee(Long paymentFee) {
+        this.paymentFee = paymentFee;
+    }
+
     public Long getPayoutId() {
         return this.payoutId;
     }
@@ -346,6 +370,18 @@ public class Adjustment implements Serializable {
         }
         else if (!capturedAt.equals(other.capturedAt))
             return false;
+        if (paymentAmount == null) {
+            if (other.paymentAmount != null)
+                return false;
+        }
+        else if (!paymentAmount.equals(other.paymentAmount))
+            return false;
+        if (paymentFee == null) {
+            if (other.paymentFee != null)
+                return false;
+        }
+        else if (!paymentFee.equals(other.paymentFee))
+            return false;
         if (payoutId == null) {
             if (other.payoutId != null)
                 return false;
@@ -375,6 +411,8 @@ public class Adjustment implements Serializable {
         result = prime * result + ((this.newFee == null) ? 0 : this.newFee.hashCode());
         result = prime * result + ((this.newExternalFee == null) ? 0 : this.newExternalFee.hashCode());
         result = prime * result + ((this.capturedAt == null) ? 0 : this.capturedAt.hashCode());
+        result = prime * result + ((this.paymentAmount == null) ? 0 : this.paymentAmount.hashCode());
+        result = prime * result + ((this.paymentFee == null) ? 0 : this.paymentFee.hashCode());
         result = prime * result + ((this.payoutId == null) ? 0 : this.payoutId.hashCode());
         return result;
     }
@@ -399,6 +437,8 @@ public class Adjustment implements Serializable {
         sb.append(", ").append(newFee);
         sb.append(", ").append(newExternalFee);
         sb.append(", ").append(capturedAt);
+        sb.append(", ").append(paymentAmount);
+        sb.append(", ").append(paymentFee);
         sb.append(", ").append(payoutId);
 
         sb.append(")");

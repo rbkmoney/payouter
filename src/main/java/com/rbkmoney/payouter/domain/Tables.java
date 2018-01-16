@@ -5,12 +5,14 @@ package com.rbkmoney.payouter.domain;
 
 
 import com.rbkmoney.payouter.domain.tables.Adjustment;
+import com.rbkmoney.payouter.domain.tables.EventStockMeta;
 import com.rbkmoney.payouter.domain.tables.Invoice;
 import com.rbkmoney.payouter.domain.tables.Payment;
 import com.rbkmoney.payouter.domain.tables.Payout;
 import com.rbkmoney.payouter.domain.tables.PayoutEvent;
 import com.rbkmoney.payouter.domain.tables.Refund;
 import com.rbkmoney.payouter.domain.tables.Report;
+import com.rbkmoney.payouter.domain.tables.ShopMeta;
 
 import javax.annotation.Generated;
 
@@ -32,6 +34,11 @@ public class Tables {
      * The table <code>sht.adjustment</code>.
      */
     public static final Adjustment ADJUSTMENT = com.rbkmoney.payouter.domain.tables.Adjustment.ADJUSTMENT;
+
+    /**
+     * The table <code>sht.event_stock_meta</code>.
+     */
+    public static final EventStockMeta EVENT_STOCK_META = com.rbkmoney.payouter.domain.tables.EventStockMeta.EVENT_STOCK_META;
 
     /**
      * The table <code>sht.invoice</code>.
@@ -62,4 +69,9 @@ public class Tables {
      * The table <code>sht.report</code>.
      */
     public static final Report REPORT = com.rbkmoney.payouter.domain.tables.Report.REPORT;
+
+    /**
+     * The table <code>sht.shop_meta</code>.
+     */
+    public static final ShopMeta SHOP_META = com.rbkmoney.payouter.domain.tables.ShopMeta.SHOP_META;
 }
