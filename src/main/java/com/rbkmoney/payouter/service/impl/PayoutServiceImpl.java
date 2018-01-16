@@ -141,6 +141,7 @@ public class PayoutServiceImpl implements PayoutService {
             payout.setAmount(availableAmount);
 
             long payoutId = payoutDao.save(payout);
+            payout.setId(payoutId);
 
             paymentDao.includeToPayout(payoutId, payments);
             refundDao.includeToPayout(payoutId, refunds);
