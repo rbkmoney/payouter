@@ -71,7 +71,7 @@ public class AdjustmentDaoImpl extends AbstractGenericDao implements AdjustmentD
 
     @Override
     public List<Adjustment> getUnpaid(String partyId, String shopId, LocalDateTime to) throws DaoException {
-        Query query = getDslContext().select()
+        Query query = getDslContext().select(ADJUSTMENT.fields())
                 .from(ADJUSTMENT)
                 .join(PAYMENT).on(ADJUSTMENT.INVOICE_ID.eq(PAYMENT.INVOICE_ID)
                         .and(ADJUSTMENT.PAYMENT_ID.eq(PAYMENT.PAYMENT_ID))

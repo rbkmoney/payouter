@@ -47,6 +47,7 @@ ALTER TABLE sht.adjustment RENAME COLUMN new_external_commission TO new_external
 -- rename updated_at to captured_at
 ALTER TABLE sht.adjustment RENAME COLUMN update_at TO captured_at;
 ALTER TABLE sht.adjustment ALTER COLUMN captured_at DROP DEFAULT;
+ALTER TABLE sht.adjustment ALTER COLUMN captured_at DROP NOT NULL;
 
 --refactor refund table
 --drop unused columns
@@ -54,6 +55,9 @@ ALTER TABLE sht.refund DROP COLUMN paid;
 -- rename updated_at to succeeded_at
 ALTER TABLE sht.refund RENAME COLUMN update_at TO succeeded_at;
 ALTER TABLE sht.refund ALTER COLUMN succeeded_at DROP DEFAULT;
+ALTER TABLE sht.refund ALTER COLUMN succeeded_at DROP NOT NULL;
+--add domain revision
+ALTER TABLE sht.refund ADD COLUMN domain_revision BIGINT;
 
 -- refactor payout table
 ALTER TABLE sht.payout DROP COLUMN cor_account;
@@ -78,26 +82,15 @@ CREATE TABLE sht.shop_meta (
 -- account type
 CREATE TYPE sht.ACCOUNT_TYPE AS ENUM ('merchant', 'provider', 'system', 'external');
 
--- cash_flow_posting table
-CREATE TABLE sht.cash_flow_posting (
-  id                BIGSERIAL                   NOT NULL,
-  payout_id         BIGINT                      NOT NULL,
-  plan_id           CHARACTER VARYING           NOT NULL,
-  batch_id          BIGINT                      NOT NULL,
-  from_account_id   BIGINT                      NOT NULL,
-  from_account_type sht.ACCOUNT_TYPE            NOT NULL,
-  to_account_id     BIGINT                      NOT NULL,
-  to_account_type   sht.ACCOUNT_TYPE            NOT NULL,
-  amount            BIGINT                      NOT NULL,
-  currency_code     CHARACTER VARYING           NOT NULL,
-  description       CHARACTER VARYING,
-  created_at        TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT now(),
-  CONSTRAINT posting_pkey PRIMARY KEY (id)
-);
-
 CREATE TYPE sht.REPORT_STATUS AS ENUM ('READY', 'SENT', 'FAILED');
 ALTER TABLE sht.report ADD COLUMN status sht.REPORT_STATUS NOT NULL DEFAULT 'READY';
 ALTER TABLE sht.report ADD COLUMN last_send_at TIMESTAMP WITHOUT TIME ZONE;
 
 UPDATE sht.report SET status = 'SENT';
 UPDATE sht.report SET last_send_at = created_at;
+
+CREATE TABLE sht.event_stock_meta (
+  last_event_id BIGINT,
+  last_event_created_at TIMESTAMP WITHOUT TIME ZONE
+);
+

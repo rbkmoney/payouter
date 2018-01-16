@@ -110,7 +110,7 @@
         <dependency>
             <groupId>com.rbkmoney</groupId>
             <artifactId>eventstock-client</artifactId>
-            <version>1.1.7</version>
+            <version>1.1.8</version>
         </dependency>
         <dependency>
             <groupId>com.rbkmoney</groupId>
@@ -139,6 +139,12 @@
             <groupId>io.github.benas</groupId>
             <artifactId>random-beans</artifactId>
             <version>3.6.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.rbkmoney.hg-mock</groupId>
+            <artifactId>generator</artifactId>
+            <version>0.9.7</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
