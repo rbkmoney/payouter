@@ -15,7 +15,16 @@ retry-policy:
 service:
   shumway:
     url: http://localhost:8022/accounter
+    networkTimeout: 60000
   partyManagement:
     url: http://localhost:8022/v1/processing/partymgmt
   dominant:
     url: http://dominant:8022/v1/domain/repository_client
+  bustermaze:
+    url: http://localhost:8022/repo
+    polling:
+      delay: 10000
+      retryDelay: 1000
+      maxPoolSize: 1
+
+

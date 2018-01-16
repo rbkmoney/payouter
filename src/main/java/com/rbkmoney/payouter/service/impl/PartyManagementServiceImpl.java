@@ -6,58 +6,79 @@ import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.payouter.exception.InvalidStateException;
 import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.model.PayoutToolData;
+import com.rbkmoney.payouter.service.DominantService;
 import com.rbkmoney.payouter.service.PartyManagementService;
 import org.apache.thrift.TException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.Optional;
 
 @Service
 public class PartyManagementServiceImpl implements PartyManagementService {
 
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
     private final UserInfo userInfo = new UserInfo("admin", UserType.internal_user(new InternalUser()));
 
     private final PartyManagementSrv.Iface partyManagementClient;
 
+    private final DominantService dominantService;
+
     @Autowired
-    public PartyManagementServiceImpl(PartyManagementSrv.Iface partyManagementClient) {
+    public PartyManagementServiceImpl(PartyManagementSrv.Iface partyManagementClient, DominantService dominantService) {
         this.partyManagementClient = partyManagementClient;
+        this.dominantService = dominantService;
     }
 
     @Override
-    public Shop getShop(String partyId, String shopId) throws NotFoundException {
+    public Party getParty(String partyId, Instant timestamp) throws NotFoundException {
+        log.debug("Trying to get party, partyId='{}', timestamp='{}'", partyId, timestamp);
         try {
-            return partyManagementClient.getShop(userInfo, partyId, shopId);
-        } catch (PartyNotFound | ShopNotFound ex) {
+            Party party = partyManagementClient.checkout(userInfo, partyId, TypeUtil.temporalToString(timestamp));
+            log.info("Party has been found, partyId='{}', timestamp='{}'", partyId, timestamp);
+            return party;
+        } catch (PartyNotFound | PartyNotExistsYet ex) {
             throw new NotFoundException(
-                    String.format("Shop not found, partyId='%s', contractId='%s'", partyId, shopId), ex
+                    String.format("Party not found, partyId='%s', timestamp='%s'", partyId, timestamp), ex
             );
         } catch (TException ex) {
             throw new RuntimeException(
-                    String.format("Failed to get shop, partyId='%s', shopId='%s'", partyId, shopId), ex
+                    String.format("Failed to get party, partyId='%s', timestamp='%s'", partyId, timestamp), ex
             );
         }
     }
 
     @Override
-    public Contract getContract(String partyId, String contractId) throws NotFoundException {
-        try {
-            return partyManagementClient.getContract(userInfo, partyId, contractId);
-        } catch (PartyNotFound | ContractNotFound ex) {
-            throw new NotFoundException(
-                    String.format("Contract not found, partyId='%s', contractId='%s'", partyId, contractId),
-                    ex);
-        } catch (TException ex) {
-            throw new RuntimeException(
-                    String.format("Failed to get contract, partyId='%s', contractId='%s'", partyId, contractId),
-                    ex);
+    public Shop getShop(String partyId, String shopId, Instant timestamp) throws NotFoundException {
+        log.debug("Trying to get shop, partyId='{}', shopId='{}', timestamp='{}'", partyId, shopId, timestamp);
+        Party party = getParty(partyId, timestamp);
+
+        Shop shop = party.getShops().get(shopId);
+        if (shop == null) {
+            throw new NotFoundException(String.format("Shop not found, partyId='%s', contractId='%s', timestamp='%s'", partyId, shopId, timestamp));
         }
+        log.info("Shop has been founded, partyId='{}', shopId='{}', timestamp='{}'", partyId, shopId, timestamp);
+        return shop;
     }
 
     @Override
     public PayoutToolData getPayoutToolData(String partyId, String shopId) throws InvalidStateException, NotFoundException {
-        Shop shop = getShop(partyId, shopId);
+        return getPayoutToolData(partyId, shopId, Instant.now());
+    }
+
+    @Override
+    public PayoutToolData getPayoutToolData(String partyId, String shopId, Instant timestamp) throws InvalidStateException, NotFoundException {
+        log.debug("Trying to get payout tool data, partyId='{}', shopId='{}', timestamp='{}'", partyId, shopId, timestamp);
+        Party party = getParty(partyId, timestamp);
+
+        Shop shop = party.getShops().get(shopId);
+        if (shop == null) {
+            throw new NotFoundException(String.format("Shop not found, partyId='%s', contractId='%s', timestamp='%s'", partyId, shopId, timestamp));
+        }
 
         PayoutToolData payoutToolData = new PayoutToolData();
 
@@ -67,7 +88,10 @@ public class PartyManagementServiceImpl implements PartyManagementService {
         payoutToolData.setCurrencyCode(shopAccount.getCurrency().getSymbolicCode());
 
 
-        Contract contract = getContract(partyId, shop.getContractId());
+        Contract contract = party.getContracts().get(shop.getContractId());
+        if (contract == null) {
+            throw new NotFoundException(String.format("Contract not found, partyId='%s', contractId='%s', timestamp='%s'", partyId, shop.getId(), timestamp));
+        }
 
         Optional<PayoutTool> payoutToolOptional = contract.getPayoutTools().stream()
                 .filter(payoutTool ->
@@ -110,6 +134,23 @@ public class PartyManagementServiceImpl implements PartyManagementService {
                 TypeUtil.stringToLocalDateTime(contract.getLegalAgreement().getSignedAt())
         );
 
+        log.info("Payout tool data has been found, partyId='{}', shopId='{}', timestamp='{}', payoutToolData='{}'", partyId, shopId, timestamp, payoutToolData);
         return payoutToolData;
     }
+
+    @Override
+    public CategoryType getCategoryType(String partyId, String shopId, long domainRevision, Instant timestamp) throws NotFoundException {
+        log.debug("Trying to get shop category type, partyId='{}', timestamp='{}'", partyId, timestamp);
+        Shop shop = getShop(partyId, shopId, timestamp);
+
+        CategoryType categoryType = dominantService.getCategoryType(shop.getCategory(), domainRevision);
+        log.info("Shop category type has been found, categoryType='{}', partyId='{}', timestamp='{}'", categoryType, partyId, timestamp);
+        return categoryType;
+    }
+
+    @Override
+    public boolean isTestCategoryType(String partyId, String shopId, long domainRevision, Instant timestamp) throws NotFoundException {
+        return getCategoryType(partyId, shopId, domainRevision, timestamp) == CategoryType.test;
+    }
+
 }

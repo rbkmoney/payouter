@@ -47,6 +47,7 @@ ALTER TABLE sht.adjustment RENAME COLUMN new_external_commission TO new_external
 -- rename updated_at to captured_at
 ALTER TABLE sht.adjustment RENAME COLUMN update_at TO captured_at;
 ALTER TABLE sht.adjustment ALTER COLUMN captured_at DROP DEFAULT;
+ALTER TABLE sht.adjustment ALTER COLUMN captured_at DROP NOT NULL;
 
 --refactor refund table
 --drop unused columns
@@ -54,6 +55,9 @@ ALTER TABLE sht.refund DROP COLUMN paid;
 -- rename updated_at to succeeded_at
 ALTER TABLE sht.refund RENAME COLUMN update_at TO succeeded_at;
 ALTER TABLE sht.refund ALTER COLUMN succeeded_at DROP DEFAULT;
+ALTER TABLE sht.refund ALTER COLUMN succeeded_at DROP NOT NULL;
+--add domain revision
+ALTER TABLE sht.refund ADD COLUMN domain_revision BIGINT;
 
 -- refactor payout table
 ALTER TABLE sht.payout DROP COLUMN cor_account;
@@ -78,3 +82,8 @@ CREATE TABLE sht.shop_meta (
 -- account type
 CREATE TYPE sht.ACCOUNT_TYPE AS ENUM ('merchant', 'provider', 'system', 'external');
 
+
+CREATE TABLE sht.event_stock_meta (
+  last_event_id BIGINT,
+  last_event_created_at TIMESTAMP WITHOUT TIME ZONE
+);

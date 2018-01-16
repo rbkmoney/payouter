@@ -2,7 +2,7 @@ package com.rbkmoney.payouter;
 
 import org.junit.ClassRule;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.util.EnvironmentTestUtils;
@@ -36,7 +36,7 @@ public abstract class AbstractIntegrationTest {
         }
     }
 
-    @Value("${local.server.port}")
+    @LocalServerPort
     protected int port;
 
 }

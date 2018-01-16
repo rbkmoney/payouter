@@ -16,13 +16,82 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+
+import static com.rbkmoney.payouter.util.CashFlowType.*;
 
 public class DamselUtil {
 
     public final static ObjectMapper objectMapper = new ObjectMapper();
 
     public final static JsonProcessor jsonProcessor = new JsonProcessor();
+
+    public static Map<CashFlowType, Long> parseCashFlow(List<FinalCashFlowPosting> finalCashFlow) {
+        Map<CashFlowType, Long> collect = finalCashFlow.stream()
+                .collect(
+                        Collectors.groupingBy(
+                                DamselUtil::getCashFlowType,
+                                Collectors.summingLong(cashFlow -> cashFlow.getVolume().getAmount()
+                                )
+                        )
+                );
+        return collect;
+    }
+
+    public static CashFlowType getCashFlowType(FinalCashFlowPosting cashFlowPosting) {
+        if (checkRoute(
+                CashFlowAccount.provider(ProviderCashFlowAccount.settlement),
+                CashFlowAccount.merchant(MerchantCashFlowAccount.settlement),
+                cashFlowPosting)) {
+            return AMOUNT;
+        }
+        if (checkRoute(
+                CashFlowAccount.merchant(MerchantCashFlowAccount.settlement),
+                CashFlowAccount.system(SystemCashFlowAccount.settlement),
+                cashFlowPosting)) {
+            return FEE;
+        }
+        if (checkRoute(
+                CashFlowAccount.system(SystemCashFlowAccount.settlement),
+                CashFlowAccount.provider(ProviderCashFlowAccount.settlement),
+                cashFlowPosting)) {
+            return PROVIDER_FEE;
+        }
+        if (checkRoute(
+                CashFlowAccount.system(SystemCashFlowAccount.settlement),
+                CashFlowAccount.external(ExternalCashFlowAccount.income),
+                cashFlowPosting)) {
+            return EXTERNAL_FEE;
+        }
+        if (checkRoute(
+                CashFlowAccount.system(SystemCashFlowAccount.settlement),
+                CashFlowAccount.external(ExternalCashFlowAccount.outcome),
+                cashFlowPosting)) {
+            return EXTERNAL_FEE;
+        }
+        if (checkRoute(
+                CashFlowAccount.merchant(MerchantCashFlowAccount.settlement),
+                CashFlowAccount.provider(ProviderCashFlowAccount.settlement),
+                cashFlowPosting)) {
+            return REFUND_AMOUNT;
+        }
+        if (checkRoute(
+                CashFlowAccount.merchant(MerchantCashFlowAccount.settlement),
+                CashFlowAccount.merchant(MerchantCashFlowAccount.guarantee),
+                cashFlowPosting)) {
+            return GUARANTEE_DEPOSIT;
+        }
+
+        throw new UnsupportedOperationException("Unsupported cashflow");
+    }
+
+
+    public static boolean checkRoute(CashFlowAccount source, CashFlowAccount destination, FinalCashFlowPosting cashFlow) {
+        return source.equals(cashFlow.getSource().getAccountType()) &&
+                destination.equals(cashFlow.getDestination().getAccountType());
+
+    }
 
     public static <T extends TBase> T jsonToTBase(JsonNode jsonNode, Class<T> type) throws IOException {
         return jsonProcessor.process(jsonNode, new TBaseHandler<>(type));

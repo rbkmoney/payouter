@@ -116,6 +116,8 @@ public class PayoutServiceImpl implements PayoutService {
             }
 
             Payout payout = buildPayout(partyId, shopId, fromTime, toTime, payoutType);
+            payout.setAmount(availableAmount);
+
             long payoutId = payoutDao.save(payout);
 
             paymentDao.includeToPayout(payoutId, payments);
@@ -332,6 +334,7 @@ public class PayoutServiceImpl implements PayoutService {
         payout.setToTime(toTime);
         payout.setPayoutType(payoutType);
         payout.setCreatedAt(LocalDateTime.now(ZoneOffset.UTC));
+        payout.setStatus(PayoutStatus.UNPAID);
 
         PayoutToolData payoutToolData = partyManagementService.getPayoutToolData(partyId, shopId);
         payout.setCurrencyCode(payoutToolData.getCurrencyCode());
