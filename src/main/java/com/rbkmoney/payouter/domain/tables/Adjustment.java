@@ -37,7 +37,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Adjustment extends TableImpl<AdjustmentRecord> {
 
-    private static final long serialVersionUID = 736655953;
+    private static final long serialVersionUID = 2111729680;
 
     /**
      * The reference instance of <code>sht.adjustment</code>
@@ -130,7 +130,7 @@ public class Adjustment extends TableImpl<AdjustmentRecord> {
     /**
      * The column <code>sht.adjustment.captured_at</code>.
      */
-    public final TableField<AdjustmentRecord, LocalDateTime> CAPTURED_AT = createField("captured_at", org.jooq.impl.SQLDataType.LOCALDATETIME.nullable(false), this, "");
+    public final TableField<AdjustmentRecord, LocalDateTime> CAPTURED_AT = createField("captured_at", org.jooq.impl.SQLDataType.LOCALDATETIME, this, "");
 
     /**
      * The column <code>sht.adjustment.payment_amount</code>.

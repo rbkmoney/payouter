@@ -20,6 +20,7 @@ public class DominantServiceImpl implements DominantService {
 
     @Override
     public CategoryType getCategoryType(CategoryRef categoryRef, long domainRevision) throws NotFoundException {
+
         try {
             com.rbkmoney.damsel.domain.Reference reference = new com.rbkmoney.damsel.domain.Reference();
             reference.setCategory(categoryRef);
