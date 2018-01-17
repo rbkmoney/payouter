@@ -17,8 +17,8 @@ ALTER TABLE sht.payment ADD COLUMN terminal_id INT;
 --add domain revision
 ALTER TABLE sht.payment ADD COLUMN domain_revision BIGINT;
 -- rename status 'NEW' to 'PENDING'
-UPDATE pg_enum SET enumlabel = 'PENDING'
-WHERE enumlabel = 'NEW' AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'payment_status');
+ALTER TABLE sht.payment ALTER COLUMN status TYPE CHARACTER VARYING;
+UPDATE sht.payment SET status = 'PENDING' WHERE status = 'NEW';
 -- add 'cancelled' status
 ALTER TABLE sht.payment ALTER COLUMN status DROP DEFAULT;
 ALTER TYPE sht.payment_status RENAME TO old_payment_status;
@@ -62,13 +62,22 @@ ALTER TABLE sht.refund ADD COLUMN domain_revision BIGINT;
 -- refactor payout table
 ALTER TABLE sht.payout DROP COLUMN cor_account;
 -- canceled -> cancelled
-UPDATE pg_enum SET enumlabel = 'CANCELLED'
-WHERE enumlabel = 'CANCELED' AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'payout_status');
+ALTER TABLE sht.payout ALTER COLUMN status TYPE CHARACTER VARYING;
+UPDATE sht.payout SET status = 'CANCELLED' WHERE status = 'CANCELED';
+ALTER TYPE sht.payout_status RENAME TO old_payout_status;
+CREATE TYPE sht.payout_status AS ENUM ('UNPAID', 'PAID', 'CONFIRMED', 'CANCELLED');
+ALTER TABLE sht.payout
+  ALTER COLUMN status TYPE sht.payout_status USING status :: TEXT :: sht.payout_status;
+DROP TYPE sht.old_payout_status;
 -- change payout_type names
-UPDATE pg_enum SET enumlabel = 'bank_card'
-WHERE enumlabel = 'CardPayout' AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'payout_type');
-UPDATE pg_enum SET enumlabel = 'bank_account'
-WHERE enumlabel = 'AccountPayout' AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'payout_type');
+ALTER TABLE sht.payout ALTER COLUMN payout_type TYPE CHARACTER VARYING;
+UPDATE sht.payout SET payout_type = 'bank_card' WHERE payout_type = 'CardPayout';
+UPDATE sht.payout SET payout_type = 'bank_account' WHERE payout_type = 'AccountPayout';
+ALTER TYPE sht.payout_type RENAME TO old_payout_type;
+CREATE TYPE sht.payout_type AS ENUM ('bank_card', 'bank_account');
+ALTER TABLE sht.payout
+  ALTER COLUMN payout_type TYPE sht.payout_type USING payout_type :: TEXT :: sht.payout_type;
+DROP TYPE sht.old_payout_type;
 
 -- shop_meta table
 CREATE TABLE sht.shop_meta (
