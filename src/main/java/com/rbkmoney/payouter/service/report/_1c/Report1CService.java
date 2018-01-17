@@ -1,6 +1,7 @@
 package com.rbkmoney.payouter.service.report._1c;
 
 import com.rbkmoney.payouter.dao.ReportDao;
+import com.rbkmoney.payouter.domain.enums.ReportStatus;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.domain.tables.pojos.Report;
 import com.rbkmoney.payouter.exception.DaoException;
@@ -86,6 +87,7 @@ public class Report1CService implements ReportService {
         List<String> payoutIds = payoutRecords.stream().map(p -> p.getId().toString()).collect(Collectors.toList());
         Report report = new Report();
         report.setName(prefix + "_" + currentDate(instant) + extension);
+        report.setStatus(ReportStatus.READY);
         report.setContent(reportContent);
         report.setDescription(reportDescription.toString());
         report.setPayoutids(String.join(",", payoutIds));

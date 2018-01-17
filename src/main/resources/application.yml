@@ -30,7 +30,7 @@ service:
     url: http://dudoser:8022/dudos
     mail:
       from: no-reply@rbkmoney.com
-      to: platform-reports@rbkmoney.com
+      to: trash@rbkmoney.com
 report:
   1c:
     file:
