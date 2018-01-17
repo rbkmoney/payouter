@@ -57,6 +57,7 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
                     .collect(Collectors.toList());
 
         } catch (NotFoundException | InvalidStateException | IllegalArgumentException ex) {
+            log.error("Failed to generate payouts, generatePayoutParams={}", generatePayoutParams, ex);
             throw new InvalidRequest(Arrays.asList(ex.getMessage()));
         } finally {
             log.info("End generate payouts, params: {}", generatePayoutParams);
