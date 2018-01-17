@@ -106,8 +106,8 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
     public PayoutSearchResponse getPayoutsInfo(PayoutSearchRequest payoutSearchRequest) throws InvalidRequest, TException {
         PayoutSearchCriteria payoutSearchCriteria = payoutSearchRequest.getSearchCriteria();
         log.info("GetPayoutsInfo with request parameters: {}", payoutSearchRequest);
-        long fromId = payoutSearchRequest.getFromId();
-        int size = payoutSearchRequest.getSize();
+        Optional<Long> fromId = Optional.ofNullable(payoutSearchRequest.getFromId());
+        Optional<Integer> size = Optional.ofNullable(payoutSearchRequest.getSize());
         Optional<com.rbkmoney.payouter.domain.enums.PayoutStatus> payoutStatus = Optional.ofNullable(payoutSearchCriteria.getStatus()).map(ps -> com.rbkmoney.payouter.domain.enums.PayoutStatus.valueOf(ps.name().toUpperCase()));
         Optional<LocalDateTime> fromTime = Optional.ofNullable(payoutSearchCriteria.getTimeRange()).map(tr -> TypeUtil.stringToLocalDateTime(tr.getFromTime()));
         Optional<LocalDateTime> toTime = Optional.ofNullable(payoutSearchCriteria.getTimeRange()).map(tr -> TypeUtil.stringToLocalDateTime(tr.getToTime()));
@@ -123,9 +123,9 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
         return payoutSearchResponse;
     }
 
-    private void validateRequest(int size, Optional<LocalDateTime> fromTime, Optional<LocalDateTime> toTime) throws InvalidRequest {
+    private void validateRequest(Optional<Integer> size, Optional<LocalDateTime> fromTime, Optional<LocalDateTime> toTime) throws InvalidRequest {
         List<String> errorList = new ArrayList<>();
-        if (size <= 0 || size > MAX_SIZE) {
+        if (size.isPresent() && (size.get() <= 0 || size.get() > MAX_SIZE)) {
             errorList.add(String.format("Size %d must be positive and less then %d", size, MAX_SIZE));
         }
         if (toTime.isPresent() && fromTime.isPresent()) {

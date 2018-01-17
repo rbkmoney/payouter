@@ -243,8 +243,8 @@ public class PayoutServiceImpl implements PayoutService {
     }
 
     @Override
-    public List<Payout> search(Optional<PayoutStatus> payoutStatus, Optional<LocalDateTime> fromTime, Optional<LocalDateTime> toTime, Optional<List<Long>> payoutIds, long fromId, int size) {
-        return payoutDao.search(payoutStatus, fromTime, toTime, payoutIds, fromId, size);
+    public List<Payout> search(Optional<PayoutStatus> payoutStatus, Optional<LocalDateTime> fromTime, Optional<LocalDateTime> toTime, Optional<List<Long>> payoutIds, Optional<Long> fromId, Optional<Integer> size) {
+        return payoutDao.search(payoutStatus, fromTime, toTime, payoutIds, Optional<Long> fromId, Optional<Integer> size);
     }
 
     @Scheduled(fixedDelay = 5000)
