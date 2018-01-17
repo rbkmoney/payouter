@@ -34,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -368,8 +369,16 @@ public class PayoutServiceImpl implements PayoutService {
         payout.setShopAcc(payoutToolData.getShopAccountId());
         payout.setShopPayoutAcc(payoutToolData.getShopPayoutAccountId());
         payout.setBankPostAccount(payoutToolData.getBankPostAccount());
+        payout.setDescription(payoutToolData.getDescription());
         payout.setAccountLegalAgreementId(payoutToolData.getLegalAgreementId());
         payout.setAccountLegalAgreementSignedAt(payoutToolData.getLegalAgreementSignedAt());
+        payout.setPurpose(
+                String.format(
+                        "Перевод согласно договора номер %s от %s.  Без НДС",
+                        payout.getAccountLegalAgreementId(),
+                        payout.getAccountLegalAgreementSignedAt().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+                )
+        );
 
         return payout;
     }
