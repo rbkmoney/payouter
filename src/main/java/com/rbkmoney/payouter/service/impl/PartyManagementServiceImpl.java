@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 @Service
@@ -132,6 +133,13 @@ public class PartyManagementServiceImpl implements PartyManagementService {
         payoutToolData.setLegalAgreementId(contract.getLegalAgreement().getLegalAgreementId());
         payoutToolData.setLegalAgreementSignedAt(
                 TypeUtil.stringToLocalDateTime(contract.getLegalAgreement().getSignedAt())
+        );
+        payoutToolData.setPurpose(
+                String.format(
+                        "Перевод согласно договора номер %s от %s.  Без НДС",
+                        payoutToolData.getLegalAgreementId(),
+                        payoutToolData.getLegalAgreementSignedAt().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+                )
         );
 
         log.info("Payout tool data has been found, partyId='{}', shopId='{}', timestamp='{}', payoutToolData='{}'", partyId, shopId, timestamp, payoutToolData);

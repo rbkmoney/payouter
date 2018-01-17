@@ -34,7 +34,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -372,13 +371,7 @@ public class PayoutServiceImpl implements PayoutService {
         payout.setDescription(payoutToolData.getDescription());
         payout.setAccountLegalAgreementId(payoutToolData.getLegalAgreementId());
         payout.setAccountLegalAgreementSignedAt(payoutToolData.getLegalAgreementSignedAt());
-        payout.setPurpose(
-                String.format(
-                        "Перевод согласно договора номер %s от %s.  Без НДС",
-                        payout.getAccountLegalAgreementId(),
-                        payout.getAccountLegalAgreementSignedAt().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
-                )
-        );
+        payout.setPurpose(payoutToolData.getPurpose());
 
         return payout;
     }
@@ -396,7 +389,11 @@ public class PayoutServiceImpl implements PayoutService {
                 .mapToLong(adjustment -> adjustment.getPaymentFee() - adjustment.getNewFee())
                 .sum();
 
-        return paymentAmount + adjustmentAmount - refundAmount;
+        long availableAmount = paymentAmount + adjustmentAmount - refundAmount;
+
+        log.info("Available amount have been calculated, availableAmount={}, payments='{}', refunds='{}', adjustments='{}'",
+                availableAmount, payments, refunds, adjustments);
+        return availableAmount;
     }
 
 }
