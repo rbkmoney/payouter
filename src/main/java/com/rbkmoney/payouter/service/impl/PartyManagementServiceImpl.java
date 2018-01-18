@@ -1,7 +1,9 @@
 package com.rbkmoney.payouter.service.impl;
 
 import com.rbkmoney.damsel.domain.*;
+import com.rbkmoney.damsel.msgpack.Value;
 import com.rbkmoney.damsel.payment_processing.*;
+import com.rbkmoney.damsel.state_processing.NamespaceNotFound;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.payouter.exception.InvalidStateException;
 import com.rbkmoney.payouter.exception.NotFoundException;
@@ -64,6 +66,24 @@ public class PartyManagementServiceImpl implements PartyManagementService {
         }
         log.info("Shop has been founded, partyId='{}', shopId='{}', timestamp='{}'", partyId, shopId, timestamp);
         return shop;
+    }
+
+    @Override
+    public Value getMetaData(String partyId, String namespace) throws NotFoundException {
+        try {
+            return partyManagementClient.getMetaData(userInfo, partyId, namespace);
+        } catch (NamespaceNotFound ex) {
+            return null;
+        } catch (PartyNotFound ex) {
+            throw new NotFoundException(
+                    String.format("Party not found, partyId='%s', namespace='%s'", partyId, namespace),
+                    ex
+            );
+        } catch (TException ex) {
+            throw new RuntimeException(
+                    String.format("Failed to get namespace, partyId='%s', namespace='%s'", partyId, namespace), ex
+            );
+        }
     }
 
     @Override
