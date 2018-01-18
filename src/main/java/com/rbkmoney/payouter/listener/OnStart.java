@@ -29,7 +29,7 @@ public class OnStart implements ApplicationListener<ApplicationReadyEvent> {
     public void onApplicationEvent(ApplicationReadyEvent event) {
         EventConstraint.EventIDRange eventIDRange = new EventConstraint.EventIDRange();
         Optional<EventStockMeta> eventStockMetaOptional = eventStockService.getLastEventId();
-        if (eventStockMetaOptional.isPresent()) {
+        if (eventStockMetaOptional.isPresent() && eventStockMetaOptional.get().getLastEventId() != null) {
             EventStockMeta eventStockMeta = eventStockMetaOptional.get();
             eventIDRange.setFromExclusive(eventStockMeta.getLastEventId());
         }
