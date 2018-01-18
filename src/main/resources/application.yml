@@ -46,5 +46,6 @@ scheduler:
   timezone: Europe/Moscow
   delayDays: 3
   periodDays: 1
+  user-id: test
 
 

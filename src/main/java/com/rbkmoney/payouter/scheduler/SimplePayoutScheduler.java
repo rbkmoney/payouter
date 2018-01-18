@@ -1,11 +1,14 @@
 package com.rbkmoney.payouter.scheduler;
 
-import com.rbkmoney.damsel.payout_processing.TimeRange;
+import com.rbkmoney.damsel.payout_processing.InternalUser;
+import com.rbkmoney.damsel.payout_processing.UserType;
 import com.rbkmoney.glock.calendar.DefaultWorkingDayCalendar;
 import com.rbkmoney.glock.calendar.WorkingDayCalendar;
 import com.rbkmoney.glock.utils.CalendarUtils;
 import com.rbkmoney.payouter.domain.enums.PayoutType;
 import com.rbkmoney.payouter.service.PayoutService;
+import com.rbkmoney.payouter.util.WoodyUtils;
+import com.rbkmoney.woody.api.flow.WFlow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,11 +29,16 @@ public class SimplePayoutScheduler {
 
     private final WorkingDayCalendar workingDayCalendar;
 
+    private final WFlow wFlow;
+
     @Value("${scheduler.enabled}")
     private boolean schedulerEnabled;
 
     @Value("${scheduler.timezone}")
     private ZoneId schedulerTimezone;
+
+    @Value("${scheduler.user-id}")
+    private String userId;
 
     @Value("${scheduler.delayDays}")
     private int delayDays;
@@ -42,10 +50,11 @@ public class SimplePayoutScheduler {
     public SimplePayoutScheduler(PayoutService payoutService) {
         this.payoutService = payoutService;
         this.workingDayCalendar = new DefaultWorkingDayCalendar();
+        this.wFlow = new WFlow();
     }
 
     @Scheduled(cron = "${scheduler.cron}", zone = "${scheduler.timezone}")
-    public void generateDailyPayout() {
+    public void generateDailyPayout() throws Exception {
         if (!schedulerEnabled) {
             log.info("Scheduler disabled. Do nothing.");
             return;
@@ -57,7 +66,13 @@ public class SimplePayoutScheduler {
             return;
         }
         TimeRange timeRange = buildTimeRange(now, delayDays, periodDays);
-        List<Long> payoutIds = payoutService.createPayouts(timeRange.getFrom(), timeRange.getTo(), PayoutType.bank_account);
+        List<Long> payoutIds = wFlow.createServiceFork(
+                () -> {
+                    WoodyUtils.setUserInfo(userId, UserType.internal_user(new InternalUser()));
+                    return payoutService.createPayouts(timeRange.getFrom(), timeRange.getTo(), PayoutType.bank_account);
+                }
+        ).call();
+
         log.info("Scheduled generate payout end. PayoutIds='{}'", payoutIds);
     }
 

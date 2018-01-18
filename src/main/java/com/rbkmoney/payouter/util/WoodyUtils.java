@@ -25,6 +25,21 @@ public class WoodyUtils {
         return new UserInfo(userId, getUserTypeByRealm(realmName));
     }
 
+    public static void setUserInfo(String userId, UserType userType) {
+        ContextUtils.setCustomMetadataValue(UserIdentityIdExtensionKit.INSTANCE.getKey(), userId);
+        ContextUtils.setCustomMetadataValue(UserIdentityIdExtensionKit.INSTANCE.getKey(), getRealmNameByUserType(userType));
+    }
+
+    public static String getRealmNameByUserType(UserType userType) {
+        if (userType.isSetInternalUser()) {
+            return "internal";
+        }
+        if (userType.isSetExternalUser()) {
+            return "external";
+        }
+        throw new NotFoundException(String.format("Failed to get realm by user type, userType=%s", userType));
+    }
+
     public static UserType getUserTypeByRealm(String realmName) {
         switch (realmName) {
             case "internal":
