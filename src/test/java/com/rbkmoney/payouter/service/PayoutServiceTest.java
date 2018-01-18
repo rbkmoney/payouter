@@ -3,6 +3,7 @@ package com.rbkmoney.payouter.service;
 import com.rbkmoney.damsel.base.InvalidRequest;
 import com.rbkmoney.damsel.event_stock.SourceEvent;
 import com.rbkmoney.damsel.event_stock.StockEvent;
+import com.rbkmoney.damsel.msgpack.Value;
 import com.rbkmoney.damsel.payment_processing.Event;
 import com.rbkmoney.damsel.payout_processing.GeneratePayoutParams;
 import com.rbkmoney.damsel.payout_processing.PayoutManagementSrv;
@@ -16,6 +17,7 @@ import com.rbkmoney.generation.RefundGenerator;
 import com.rbkmoney.payouter.AbstractIntegrationTest;
 import com.rbkmoney.payouter.dao.PayoutDao;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
+import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.meta.UserIdentityIdExtensionKit;
 import com.rbkmoney.payouter.meta.UserIdentityRealmExtensionKit;
 import com.rbkmoney.payouter.model.PayoutToolData;
@@ -42,6 +44,7 @@ import static com.rbkmoney.payouter.domain.enums.PayoutStatus.*;
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Matchers.any;
 
 public class PayoutServiceTest extends AbstractIntegrationTest {
 
@@ -77,6 +80,11 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
                 .withAddress(new URI("http://localhost:" + port + "/payout/management"))
                 .withNetworkTimeout(0)
                 .build(PayoutManagementSrv.Iface.class);
+
+        given(partyManagementService.getPayoutToolData(any(), any()))
+                .willReturn(random(PayoutToolData.class));
+        given(partyManagementService.getMetaData(any(), any()))
+                .willReturn(null);
     }
 
     @After
@@ -87,9 +95,6 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
 
     @Test
     public void testCreatePayoutWithAdjustment() throws Exception {
-        given(partyManagementService.getPayoutToolData(partyId, shopId))
-                .willReturn(random(PayoutToolData.class));
-
         addCapturedPayment("adjustment-id");
         addCapturedAdjustment("adjustment-id");
 
@@ -114,9 +119,6 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
 
     @Test
     public void createPayoutWithRefund() throws Exception {
-        given(partyManagementService.getPayoutToolData(partyId, shopId))
-                .willReturn(random(PayoutToolData.class));
-
         addCapturedPayment("refund-id");
         addCapturedRefund("refund-id");
         addCapturedPayment();
@@ -157,9 +159,6 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
 
     @Test
     public void testCreatePaidConfirmAndCancelPayout() throws Exception {
-        given(partyManagementService.getPayoutToolData(partyId, shopId))
-                .willReturn(random(PayoutToolData.class));
-
         addCapturedPayment();
 
         GeneratePayoutParams generatePayoutParams = new GeneratePayoutParams();

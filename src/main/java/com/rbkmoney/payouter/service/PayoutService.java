@@ -22,6 +22,6 @@ public interface PayoutService {
 
     void cancel(long payoutId, String details) throws InvalidStateException, StorageException;
 
-    List<Payout> search(Optional<PayoutStatus> payoutStatus, Optional<LocalDateTime> fromTime, Optional<LocalDateTime> toTimer, Optional<List<Long>> payoutIds, long fromId, int size);
+    List<Payout> search(Optional<PayoutStatus> payoutStatus, Optional<LocalDateTime> fromTime, Optional<LocalDateTime> toTime, Optional<List<Long>> payoutIds, Optional<Long> fromId, Optional<Integer> size);
 
 }

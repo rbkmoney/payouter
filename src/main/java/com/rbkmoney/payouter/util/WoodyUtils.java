@@ -8,6 +8,7 @@ import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.meta.UserIdentityIdExtensionKit;
 import com.rbkmoney.payouter.meta.UserIdentityRealmExtensionKit;
 import com.rbkmoney.woody.api.trace.ContextUtils;
+import com.rbkmoney.woody.api.trace.context.metadata.MetadataExtension;
 
 import java.util.Objects;
 
@@ -23,6 +24,21 @@ public class WoodyUtils {
         Objects.requireNonNull(realmName, "Realm not found");
 
         return new UserInfo(userId, getUserTypeByRealm(realmName));
+    }
+
+    public static void setUserInfo(String userId, UserType userType) {
+        ContextUtils.setCustomMetadataValue(UserIdentityIdExtensionKit.INSTANCE.getKey(), userId);
+        ContextUtils.setCustomMetadataValue(UserIdentityRealmExtensionKit.INSTANCE.getKey(), getRealmNameByUserType(userType));
+    }
+
+    public static String getRealmNameByUserType(UserType userType) {
+        if (userType.isSetInternalUser()) {
+            return "internal";
+        }
+        if (userType.isSetExternalUser()) {
+            return "external";
+        }
+        throw new NotFoundException(String.format("Failed to get realm by user type, userType=%s", userType));
     }
 
     public static UserType getUserTypeByRealm(String realmName) {

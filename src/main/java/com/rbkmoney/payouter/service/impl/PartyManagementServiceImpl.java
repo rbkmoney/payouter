@@ -1,7 +1,9 @@
 package com.rbkmoney.payouter.service.impl;
 
 import com.rbkmoney.damsel.domain.*;
+import com.rbkmoney.damsel.msgpack.Value;
 import com.rbkmoney.damsel.payment_processing.*;
+import com.rbkmoney.damsel.state_processing.NamespaceNotFound;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.payouter.exception.InvalidStateException;
 import com.rbkmoney.payouter.exception.NotFoundException;
@@ -15,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 @Service
@@ -63,6 +66,24 @@ public class PartyManagementServiceImpl implements PartyManagementService {
         }
         log.info("Shop has been founded, partyId='{}', shopId='{}', timestamp='{}'", partyId, shopId, timestamp);
         return shop;
+    }
+
+    @Override
+    public Value getMetaData(String partyId, String namespace) throws NotFoundException {
+        try {
+            return partyManagementClient.getMetaData(userInfo, partyId, namespace);
+        } catch (PartyMetaNamespaceNotFound ex) {
+            return null;
+        } catch (PartyNotFound ex) {
+            throw new NotFoundException(
+                    String.format("Party not found, partyId='%s', namespace='%s'", partyId, namespace),
+                    ex
+            );
+        } catch (TException ex) {
+            throw new RuntimeException(
+                    String.format("Failed to get namespace, partyId='%s', namespace='%s'", partyId, namespace), ex
+            );
+        }
     }
 
     @Override
@@ -132,6 +153,13 @@ public class PartyManagementServiceImpl implements PartyManagementService {
         payoutToolData.setLegalAgreementId(contract.getLegalAgreement().getLegalAgreementId());
         payoutToolData.setLegalAgreementSignedAt(
                 TypeUtil.stringToLocalDateTime(contract.getLegalAgreement().getSignedAt())
+        );
+        payoutToolData.setPurpose(
+                String.format(
+                        "Перевод согласно договора номер %s от %s.  Без НДС",
+                        payoutToolData.getLegalAgreementId(),
+                        payoutToolData.getLegalAgreementSignedAt().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+                )
         );
 
         log.info("Payout tool data has been found, partyId='{}', shopId='{}', timestamp='{}', payoutToolData='{}'", partyId, shopId, timestamp, payoutToolData);

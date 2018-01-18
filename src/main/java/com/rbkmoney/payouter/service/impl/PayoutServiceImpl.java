@@ -2,6 +2,7 @@ package com.rbkmoney.payouter.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rbkmoney.damsel.domain.*;
+import com.rbkmoney.damsel.msgpack.Value;
 import com.rbkmoney.damsel.payout_processing.PaidDetails;
 import com.rbkmoney.damsel.payout_processing.PayoutChange;
 import com.rbkmoney.damsel.payout_processing.ShopParams;
@@ -14,6 +15,7 @@ import com.rbkmoney.payouter.domain.enums.PayoutType;
 import com.rbkmoney.payouter.domain.tables.pojos.*;
 import com.rbkmoney.payouter.exception.DaoException;
 import com.rbkmoney.payouter.exception.InvalidStateException;
+import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.exception.StorageException;
 import com.rbkmoney.payouter.model.PayoutToolData;
 import com.rbkmoney.payouter.service.EventSinkService;
@@ -98,7 +100,10 @@ public class PayoutServiceImpl implements PayoutService {
     public List<Long> createPayouts(LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType) throws InvalidStateException, StorageException {
         log.info("Trying to create payouts, fromTime={}, toTime={}, payoutType={}", fromTime, toTime, payoutType);
         try {
-            List<ShopParams> shops = payoutDao.getUnpaidShops(fromTime, toTime);
+            List<ShopParams> shops = payoutDao.getUnpaidShops(fromTime, toTime)
+                    .stream()
+                    .filter(shop -> !isBlockedForPayouts(shop.getPartyId()))
+                    .collect(Collectors.toList());
 
             if (shops.isEmpty()) {
                 log.info("No shops found for creating payouts, fromTime={}, toTime={}, payoutType={}", fromTime, toTime, payoutType);
@@ -125,6 +130,12 @@ public class PayoutServiceImpl implements PayoutService {
         log.info("Trying to create payout, partyId={}, shopId={}, fromTime={}, toTime={}, payoutType={}",
                 partyId, shopId, fromTime, toTime, payoutType);
         try {
+            if (isBlockedForPayouts(partyId)) {
+                throw new InvalidStateException(
+                        String.format("Party is blocked for payouts, partyId='%s', shopId='%s'", partyId, shopId)
+                );
+            }
+
             ShopMeta shopMeta = shopMetaDao.getExclusive(partyId, shopId);
 
             List<Payment> payments = paymentDao.getUnpaid(partyId, shopId, toTime);
@@ -164,6 +175,11 @@ public class PayoutServiceImpl implements PayoutService {
                     String.format("Failed to create payout, partyId='%s', shopId='%s', fromTime='%s', toTime='%s', payoutType='%s'",
                             partyId, shopId, fromTime, toTime, payoutType), ex);
         }
+    }
+
+    private boolean isBlockedForPayouts(String partyId) {
+            Value metaDataValue = partyManagementService.getMetaData(partyId, "payout_blocking");
+            return metaDataValue != null && metaDataValue.isSetB() && metaDataValue.getB();
     }
 
     @Override
@@ -243,7 +259,7 @@ public class PayoutServiceImpl implements PayoutService {
     }
 
     @Override
-    public List<Payout> search(Optional<PayoutStatus> payoutStatus, Optional<LocalDateTime> fromTime, Optional<LocalDateTime> toTime, Optional<List<Long>> payoutIds, long fromId, int size) {
+    public List<Payout> search(Optional<PayoutStatus> payoutStatus, Optional<LocalDateTime> fromTime, Optional<LocalDateTime> toTime, Optional<List<Long>> payoutIds, Optional<Long> fromId, Optional<Integer> size) {
         return payoutDao.search(payoutStatus, fromTime, toTime, payoutIds, fromId, size);
     }
 
@@ -368,8 +384,10 @@ public class PayoutServiceImpl implements PayoutService {
         payout.setShopAcc(payoutToolData.getShopAccountId());
         payout.setShopPayoutAcc(payoutToolData.getShopPayoutAccountId());
         payout.setBankPostAccount(payoutToolData.getBankPostAccount());
+        payout.setDescription(payoutToolData.getDescription());
         payout.setAccountLegalAgreementId(payoutToolData.getLegalAgreementId());
         payout.setAccountLegalAgreementSignedAt(payoutToolData.getLegalAgreementSignedAt());
+        payout.setPurpose(payoutToolData.getPurpose());
 
         return payout;
     }
@@ -387,7 +405,11 @@ public class PayoutServiceImpl implements PayoutService {
                 .mapToLong(adjustment -> adjustment.getPaymentFee() - adjustment.getNewFee())
                 .sum();
 
-        return paymentAmount + adjustmentAmount - refundAmount;
+        long availableAmount = paymentAmount + adjustmentAmount - refundAmount;
+
+        log.info("Available amount have been calculated, availableAmount={}, payments='{}', refunds='{}', adjustments='{}'",
+                availableAmount, payments, refunds, adjustments);
+        return availableAmount;
     }
 
 }
