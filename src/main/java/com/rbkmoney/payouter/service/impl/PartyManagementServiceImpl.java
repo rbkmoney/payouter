@@ -72,7 +72,7 @@ public class PartyManagementServiceImpl implements PartyManagementService {
     public Value getMetaData(String partyId, String namespace) throws NotFoundException {
         try {
             return partyManagementClient.getMetaData(userInfo, partyId, namespace);
-        } catch (NamespaceNotFound ex) {
+        } catch (PartyMetaNamespaceNotFound ex) {
             return null;
         } catch (PartyNotFound ex) {
             throw new NotFoundException(
