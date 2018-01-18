@@ -8,6 +8,7 @@ import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.meta.UserIdentityIdExtensionKit;
 import com.rbkmoney.payouter.meta.UserIdentityRealmExtensionKit;
 import com.rbkmoney.woody.api.trace.ContextUtils;
+import com.rbkmoney.woody.api.trace.context.metadata.MetadataExtension;
 
 import java.util.Objects;
 
@@ -27,7 +28,7 @@ public class WoodyUtils {
 
     public static void setUserInfo(String userId, UserType userType) {
         ContextUtils.setCustomMetadataValue(UserIdentityIdExtensionKit.INSTANCE.getKey(), userId);
-        ContextUtils.setCustomMetadataValue(UserIdentityIdExtensionKit.INSTANCE.getKey(), getRealmNameByUserType(userType));
+        ContextUtils.setCustomMetadataValue(UserIdentityRealmExtensionKit.INSTANCE.getKey(), getRealmNameByUserType(userType));
     }
 
     public static String getRealmNameByUserType(UserType userType) {
