@@ -207,7 +207,7 @@ public class DamselUtil {
                 legalAgreement.setSignedAt(TypeUtil.temporalToString(payoutEvent.getPayoutAccountLegalAgreementSignedAt()));
 
                 return PayoutType.bank_account(new PayoutAccount(
-                        new BankAccount(
+                        new RussianBankAccount(
                                 payoutEvent.getPayoutAccountId(),
                                 payoutEvent.getPayoutAccountBankName(),
                                 payoutEvent.getPayoutAccountBankPostId(),
