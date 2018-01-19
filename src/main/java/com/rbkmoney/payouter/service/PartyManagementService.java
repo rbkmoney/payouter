@@ -4,6 +4,7 @@ import com.rbkmoney.damsel.domain.CategoryType;
 import com.rbkmoney.damsel.domain.Party;
 import com.rbkmoney.damsel.domain.Shop;
 import com.rbkmoney.damsel.msgpack.Value;
+import com.rbkmoney.damsel.payment_processing.PartyRevisionParam;
 import com.rbkmoney.payouter.exception.InvalidStateException;
 import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.model.PayoutToolData;
@@ -13,6 +14,10 @@ import java.time.Instant;
 public interface PartyManagementService {
 
     Party getParty(String partyId, Instant timestamp) throws NotFoundException;
+
+    Party getParty(String partyId, long partyRevision) throws NotFoundException;
+
+    Party getParty(String partyId, PartyRevisionParam partyRevisionParam) throws NotFoundException;
 
     Shop getShop(String partyId, String shopId, Instant timestamp) throws NotFoundException;
 

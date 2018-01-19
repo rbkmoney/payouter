@@ -3,7 +3,6 @@ package com.rbkmoney.payouter.service.impl;
 import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.msgpack.Value;
 import com.rbkmoney.damsel.payment_processing.*;
-import com.rbkmoney.damsel.state_processing.NamespaceNotFound;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.payouter.exception.InvalidStateException;
 import com.rbkmoney.payouter.exception.NotFoundException;
@@ -39,18 +38,32 @@ public class PartyManagementServiceImpl implements PartyManagementService {
 
     @Override
     public Party getParty(String partyId, Instant timestamp) throws NotFoundException {
-        log.debug("Trying to get party, partyId='{}', timestamp='{}'", partyId, timestamp);
+        return getParty(partyId, PartyRevisionParam.timestamp(TypeUtil.temporalToString(timestamp)));
+    }
+
+    @Override
+    public Party getParty(String partyId, long partyRevision) throws NotFoundException {
+        return getParty(partyId, PartyRevisionParam.revision(partyRevision));
+    }
+
+    @Override
+    public Party getParty(String partyId, PartyRevisionParam partyRevisionParam) throws NotFoundException {
+        log.debug("Trying to get party, partyId='{}', partyRevisionParam='{}'", partyId, partyRevisionParam);
         try {
-            Party party = partyManagementClient.checkout(userInfo, partyId, TypeUtil.temporalToString(timestamp));
-            log.info("Party has been found, partyId='{}', timestamp='{}'", partyId, timestamp);
+            Party party = partyManagementClient.checkout(userInfo, partyId, partyRevisionParam);
+            log.info("Party has been found, partyId='{}', partyRevisionParam='{}'", partyId, partyRevisionParam);
             return party;
-        } catch (PartyNotFound | PartyNotExistsYet ex) {
+        } catch (PartyNotFound ex) {
             throw new NotFoundException(
-                    String.format("Party not found, partyId='%s', timestamp='%s'", partyId, timestamp), ex
+                    String.format("Party not found, partyId='%s', partyRevisionParam='%s'", partyId, partyRevisionParam), ex
+            );
+        } catch (InvalidPartyRevision ex) {
+            throw new NotFoundException(
+                    String.format("Invalid party revision, partyId='%s', partyRevisionParam='%s'", partyId, partyRevisionParam), ex
             );
         } catch (TException ex) {
             throw new RuntimeException(
-                    String.format("Failed to get party, partyId='%s', timestamp='%s'", partyId, timestamp), ex
+                    String.format("Failed to get party, partyId='%s', partyRevisionParam='%s'", partyId, partyRevisionParam), ex
             );
         }
     }
@@ -116,7 +129,7 @@ public class PartyManagementServiceImpl implements PartyManagementService {
 
         Optional<PayoutTool> payoutToolOptional = contract.getPayoutTools().stream()
                 .filter(payoutTool ->
-                        payoutTool.getPayoutToolInfo().isSetBankAccount()
+                        payoutTool.getPayoutToolInfo().isSetRussianBankAccount()
                                 && payoutTool.getId().equals(shop.getPayoutToolId()))
                 .findFirst();
 
@@ -131,7 +144,7 @@ public class PartyManagementServiceImpl implements PartyManagementService {
             throw new InvalidStateException("Shop account and payout tool currency must be equals");
         }
 
-        BankAccount bankAccount = payoutTool.getPayoutToolInfo().getBankAccount();
+        RussianBankAccount bankAccount = payoutTool.getPayoutToolInfo().getRussianBankAccount();
 
         payoutToolData.setBankAccount(bankAccount.getAccount());
         payoutToolData.setBankBik(bankAccount.getBankBik());

@@ -1,8 +1,8 @@
 package com.rbkmoney.payouter.handler;
 
 import com.rbkmoney.damsel.base.InvalidRequest;
-import com.rbkmoney.damsel.domain.BankAccount;
 import com.rbkmoney.damsel.domain.LegalAgreement;
+import com.rbkmoney.damsel.domain.RussianBankAccount;
 import com.rbkmoney.damsel.payout_processing.*;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.payouter.domain.enums.PayoutType;
@@ -145,7 +145,7 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
         payoutInfo.setShopId(record.getShopId());
         payoutInfo.setAmount(record.getAmount());
         if (record.getPayoutType().equals(PayoutType.bank_account)) {
-            BankAccount bankAccount = new BankAccount();
+            RussianBankAccount bankAccount = new RussianBankAccount();
             bankAccount.setBankBik(record.getBankBik());
             bankAccount.setAccount(record.getBankAccount());
             bankAccount.setBankPostAccount(record.getBankPostAccount());
