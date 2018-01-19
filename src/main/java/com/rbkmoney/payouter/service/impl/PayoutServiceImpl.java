@@ -36,11 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.*;
 
 @Service
 public class PayoutServiceImpl implements PayoutService {
@@ -97,23 +93,26 @@ public class PayoutServiceImpl implements PayoutService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
-    public List<Long> createPayouts(LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType) throws InvalidStateException, StorageException {
+    public List<Long> createPayouts(LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType) throws InvalidStateException, NotFoundException, StorageException {
         log.info("Trying to create payouts, fromTime={}, toTime={}, payoutType={}", fromTime, toTime, payoutType);
         try {
-            List<ShopParams> shops = payoutDao.getUnpaidShops(fromTime, toTime)
-                    .stream()
-                    .filter(shop -> !isBlockedForPayouts(shop.getPartyId()))
-                    .collect(Collectors.toList());
+            List<ShopParams> shops = payoutDao.getUnpaidShops(fromTime, toTime);
 
             if (shops.isEmpty()) {
                 log.info("No shops found for creating payouts, fromTime={}, toTime={}, payoutType={}", fromTime, toTime, payoutType);
                 return Collections.emptyList();
             }
 
-            List<Long> payoutIds = shops.stream()
-                    .map(shopParams ->
-                            createPayout(shopParams.getPartyId(), shopParams.getShopId(), fromTime, toTime, payoutType))
-                    .collect(Collectors.toList());
+            List<Long> payoutIds = new ArrayList<>();
+            for (ShopParams shopParams : shops) {
+                try {
+                    long payoutId = createPayout(shopParams.getPartyId(), shopParams.getShopId(), fromTime, toTime, payoutType);
+                    payoutIds.add(payoutId);
+                } catch (InvalidStateException ex) {
+                    log.warn("Failed to create payout for shop, shopParams='{}', fromTime='{}', toTime='{}', payoutType='{}'",
+                            shopParams, fromTime, toTime, payoutType, ex);
+                }
+            }
             log.info("Payouts successfully created, payoutIds='{}', fromTime={}, toTime={}, payoutType={}",
                     payoutIds, fromTime, toTime, payoutType);
 
@@ -126,7 +125,7 @@ public class PayoutServiceImpl implements PayoutService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
-    public long createPayout(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType) throws InvalidStateException, StorageException {
+    public long createPayout(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType) throws InvalidStateException, NotFoundException, StorageException {
         log.info("Trying to create payout, partyId={}, shopId={}, fromTime={}, toTime={}, payoutType={}",
                 partyId, shopId, fromTime, toTime, payoutType);
         try {
@@ -178,8 +177,8 @@ public class PayoutServiceImpl implements PayoutService {
     }
 
     private boolean isBlockedForPayouts(String partyId) {
-            Value metaDataValue = partyManagementService.getMetaData(partyId, "payout_blocking");
-            return metaDataValue != null && metaDataValue.isSetB() && metaDataValue.getB();
+        Value metaDataValue = partyManagementService.getMetaData(partyId, "payout_blocking");
+        return metaDataValue != null && metaDataValue.isSetB() && metaDataValue.getB();
     }
 
     @Override
