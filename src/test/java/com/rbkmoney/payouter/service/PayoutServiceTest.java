@@ -43,6 +43,7 @@ import java.util.concurrent.Callable;
 import static com.rbkmoney.payouter.domain.enums.PayoutStatus.*;
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
 
@@ -155,6 +156,19 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         generatePayoutParams.setTimeRange(timeRange);
 
         callService(() -> client.generatePayouts(generatePayoutParams));
+    }
+
+    @Test
+    public void testCreatePayoutsWithInvalidStateException() throws Exception {
+        given(partyManagementService.getMetaData(any(), any()))
+                .willReturn(Value.b(true));
+        addCapturedPayment("payment-id");
+
+        GeneratePayoutParams generatePayoutParams = new GeneratePayoutParams();
+        generatePayoutParams.setTimeRange(new TimeRange("2015-06-17T00:00:00Z", "2018-06-17T00:00:00Z"));
+
+        List<String> payoutIds = callService(() -> client.generatePayouts(generatePayoutParams));
+        assertTrue(payoutIds.isEmpty());
     }
 
     @Test
