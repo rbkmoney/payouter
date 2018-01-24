@@ -61,7 +61,7 @@ public class PartyManagementServiceImpl implements PartyManagementService {
             throw new NotFoundException(
                     String.format("Invalid party revision, partyId='%s', partyRevisionParam='%s'", partyId, partyRevisionParam), ex
             );
-        } catch (TException ex) {
+        } catch (Exception ex) {
             throw new RuntimeException(
                     String.format("Failed to get party, partyId='%s', partyRevisionParam='%s'", partyId, partyRevisionParam), ex
             );
@@ -69,15 +69,25 @@ public class PartyManagementServiceImpl implements PartyManagementService {
     }
 
     @Override
+    public Shop getShop(String partyId, String shopId, long partyRevision) throws NotFoundException {
+        return getShop(partyId, shopId, PartyRevisionParam.revision(partyRevision));
+    }
+
+    @Override
     public Shop getShop(String partyId, String shopId, Instant timestamp) throws NotFoundException {
-        log.debug("Trying to get shop, partyId='{}', shopId='{}', timestamp='{}'", partyId, shopId, timestamp);
-        Party party = getParty(partyId, timestamp);
+        return getShop(partyId, shopId, PartyRevisionParam.timestamp(TypeUtil.temporalToString(timestamp)));
+    }
+
+    @Override
+    public Shop getShop(String partyId, String shopId, PartyRevisionParam partyRevisionParam) throws NotFoundException {
+        log.debug("Trying to get shop, partyId='{}', shopId='{}', partyRevisionParam='{}'", partyId, shopId, partyRevisionParam);
+        Party party = getParty(partyId, partyRevisionParam);
 
         Shop shop = party.getShops().get(shopId);
         if (shop == null) {
-            throw new NotFoundException(String.format("Shop not found, partyId='%s', contractId='%s', timestamp='%s'", partyId, shopId, timestamp));
+            throw new NotFoundException(String.format("Shop not found, partyId='%s', contractId='%s', partyRevisionParam='%s'", partyId, shopId, partyRevisionParam));
         }
-        log.info("Shop has been founded, partyId='{}', shopId='{}', timestamp='{}'", partyId, shopId, timestamp);
+        log.info("Shop has been found, partyId='{}', shopId='{}', partyRevisionParam='{}'", partyId, shopId, partyRevisionParam);
         return shop;
     }
 
@@ -92,7 +102,7 @@ public class PartyManagementServiceImpl implements PartyManagementService {
                     String.format("Party not found, partyId='%s', namespace='%s'", partyId, namespace),
                     ex
             );
-        } catch (TException ex) {
+        } catch (Exception ex) {
             throw new RuntimeException(
                     String.format("Failed to get namespace, partyId='%s', namespace='%s'", partyId, namespace), ex
             );

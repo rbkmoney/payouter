@@ -29,7 +29,7 @@
         <db.password>postgres</db.password>
         <db.schema>sht</db.schema>
         <flyway.version>4.2.0</flyway.version>
-        <damsel.version>1.212-284cb1a</damsel.version>
+        <damsel.version>1.213-69cfd45-epic</damsel.version>
     </properties>
 
     <dependencies>

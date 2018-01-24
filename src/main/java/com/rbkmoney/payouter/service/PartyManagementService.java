@@ -19,7 +19,11 @@ public interface PartyManagementService {
 
     Party getParty(String partyId, PartyRevisionParam partyRevisionParam) throws NotFoundException;
 
+    Shop getShop(String partyId, String shopId, long partyRevision) throws NotFoundException;
+
     Shop getShop(String partyId, String shopId, Instant timestamp) throws NotFoundException;
+
+    Shop getShop(String partyId, String shopId, PartyRevisionParam partyRevisionParam) throws NotFoundException;
 
     Value getMetaData(String partyId, String namespace) throws NotFoundException;
 
