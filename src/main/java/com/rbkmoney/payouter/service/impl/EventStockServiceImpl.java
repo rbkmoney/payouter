@@ -4,7 +4,6 @@ import com.rbkmoney.damsel.event_stock.SourceEvent;
 import com.rbkmoney.damsel.event_stock.StockEvent;
 import com.rbkmoney.damsel.payment_processing.Event;
 import com.rbkmoney.damsel.payment_processing.EventPayload;
-import com.rbkmoney.damsel.payment_processing.InvoiceChange;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.payouter.dao.EventStockMetaDao;
 import com.rbkmoney.payouter.domain.tables.pojos.EventStockMeta;
@@ -68,29 +67,31 @@ public class EventStockServiceImpl implements EventStockService {
             setLastEventId(event.getId(), TypeUtil.stringToLocalDateTime(event.getCreatedAt()));
 
             EventPayload payload = event.getPayload();
-            if (payload.isSetInvoiceChanges()) {
-                for (InvoiceChange invoiceChange : payload.getInvoiceChanges()) {
-                    Handler handler = getHandler(invoiceChange);
-                    if (handler != null) {
-                        if (log.isDebugEnabled()) {
-                            log.debug("Trying to handle invoice change, invoiceChange={}, eventId={}", invoiceChange, event.getId());
-                        }
-                        try {
-                            handler.handle(invoiceChange, stockEvent);
-                            log.info("Invoice change have been handled, eventId={}", event.getId());
-                        } catch (DaoException ex) {
-                            throw new StorageException(String.format("Failed to save event, eventId=%d", event.getId()), ex);
-                        }
-                    }
-                }
-            }
+            processChanges((List) payload.getFieldValue(), event);
             log.info("Event id have been saved, eventId={}, eventCreatedAt={}", event.getId(), event.getCreatedAt());
         }
     }
 
-    private Handler getHandler(InvoiceChange invoiceChange) {
+    private <T> void processChanges(List<T> changes, Event event) {
+        for (T change : changes) {
+            Handler handler = getHandler(change);
+            if (handler != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug("Trying to handle change, change='{}', event='{}'", change, event);
+                }
+                try {
+                    handler.handle(change, event);
+                    log.info("Change have been handled, eventId='{}', change='{}'", event.getId(), change);
+                } catch (DaoException ex) {
+                    throw new StorageException(String.format("Failed to save event, eventId='%d', change='%s'", event.getId(), change), ex);
+                }
+            }
+        }
+    }
+
+    private <T> Handler getHandler(T change) {
         for (Handler handler : handlers) {
-            if (handler.accept(invoiceChange)) {
+            if (handler.accept(change)) {
                 return handler;
             }
         }

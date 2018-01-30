@@ -41,11 +41,6 @@ report:
     templateFileName: 1c_payout.ftl
     timezone: Europe/Moscow
 scheduler:
-  enabled: true
-  cron: "0 0 9 * * *"
-  timezone: Europe/Moscow
-  delayDays: 3
-  periodDays: 1
   user-id: test
 
 

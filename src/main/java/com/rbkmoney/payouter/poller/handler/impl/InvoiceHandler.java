@@ -1,7 +1,7 @@
 package com.rbkmoney.payouter.poller.handler.impl;
 
 import com.rbkmoney.damsel.domain.Invoice;
-import com.rbkmoney.damsel.event_stock.StockEvent;
+import com.rbkmoney.damsel.payment_processing.Event;
 import com.rbkmoney.damsel.payment_processing.InvoiceChange;
 import com.rbkmoney.geck.filter.Filter;
 import com.rbkmoney.payouter.dao.InvoiceDao;
@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class InvoiceHandler implements Handler {
+public class InvoiceHandler implements Handler<InvoiceChange, Event> {
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -28,9 +28,9 @@ public class InvoiceHandler implements Handler {
     }
 
     @Override
-    public void handle(InvoiceChange invoiceChange, StockEvent stockEvent) {
+    public void handle(InvoiceChange invoiceChange, Event event) {
         Invoice invoice = invoiceChange.getInvoiceCreated().getInvoice();
-        long eventId = stockEvent.getSourceEvent().getProcessingEvent().getId();
+        long eventId = event.getId();
 
         shopMetaDao.save(invoice.getOwnerId(), invoice.getShopId());
         log.info("Merchant shop have been saved, eventId={}, invoiceId={}, partyId={}, shopId={}",

@@ -1,7 +1,6 @@
 package com.rbkmoney.payouter.poller.handler.impl;
 
 import com.rbkmoney.damsel.domain.InvoicePaymentRefund;
-import com.rbkmoney.damsel.event_stock.StockEvent;
 import com.rbkmoney.damsel.payment_processing.*;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.geck.filter.Filter;
@@ -26,7 +25,7 @@ import static com.rbkmoney.payouter.util.CashFlowType.FEE;
 import static com.rbkmoney.payouter.util.CashFlowType.REFUND_AMOUNT;
 
 @Component
-public class InvoicePaymentRefundHandler implements Handler {
+public class InvoicePaymentRefundHandler implements Handler<InvoiceChange, Event> {
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -44,8 +43,7 @@ public class InvoicePaymentRefundHandler implements Handler {
     }
 
     @Override
-    public void handle(InvoiceChange invoiceChange, StockEvent stockEvent) {
-        Event event = stockEvent.getSourceEvent().getProcessingEvent();
+    public void handle(InvoiceChange invoiceChange, Event event) {
         long eventId = event.getId();
         String invoiceId = event.getSource().getInvoiceId();
 

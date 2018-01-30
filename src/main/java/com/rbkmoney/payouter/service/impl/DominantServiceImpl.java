@@ -1,12 +1,11 @@
 package com.rbkmoney.payouter.service.impl;
 
-import com.rbkmoney.damsel.domain.CategoryRef;
-import com.rbkmoney.damsel.domain.CategoryType;
-import com.rbkmoney.damsel.domain.Schedule;
-import com.rbkmoney.damsel.domain.ScheduleRef;
+import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.domain_config.*;
+import com.rbkmoney.damsel.domain_config.Reference;
 import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.service.DominantService;
+import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,8 +41,62 @@ public class DominantServiceImpl implements DominantService {
             return schedule;
         } catch (VersionNotFound | ObjectNotFound ex) {
             throw new NotFoundException(String.format("Version not found, scheduleRef='%s', revisionReference='%s'", scheduleRef, revisionReference), ex);
-        } catch (Exception ex) {
+        } catch (TException ex) {
             throw new RuntimeException(String.format("Failed to get schedule, scheduleRef='%s', revisionReference='%s'", scheduleRef, revisionReference), ex);
+        }
+    }
+
+    @Override
+    public PaymentInstitution getPaymentInstitution(PaymentInstitutionRef paymentInstitutionRef) throws NotFoundException {
+        return getPaymentInstitution(paymentInstitutionRef, Reference.head(new Head()));
+    }
+
+    @Override
+    public PaymentInstitution getPaymentInstitution(PaymentInstitutionRef paymentInstitutionRef, long domainRevision) throws NotFoundException {
+        return getPaymentInstitution(paymentInstitutionRef, Reference.version(domainRevision));
+    }
+
+    @Override
+    public PaymentInstitution getPaymentInstitution(PaymentInstitutionRef paymentInstitutionRef, Reference revisionReference) throws NotFoundException {
+        log.debug("Trying to get payment institution, paymentInstitutionRef='{}', revisionReference='{}'", paymentInstitutionRef, revisionReference);
+        try {
+            com.rbkmoney.damsel.domain.Reference reference = new com.rbkmoney.damsel.domain.Reference();
+            reference.setPaymentInstitution(paymentInstitutionRef);
+            VersionedObject versionedObject = dominantClient.checkoutObject(revisionReference, reference);
+            PaymentInstitution paymentInstitution = versionedObject.getObject().getPaymentInstitution().getData();
+            log.info("Payment institution has been found, PaymentInstitutionRef='{}', revisionReference='{}', paymentInstitution='{}'", paymentInstitutionRef, revisionReference, paymentInstitution);
+            return paymentInstitution;
+        } catch (VersionNotFound | ObjectNotFound ex) {
+            throw new NotFoundException(String.format("Version not found, paymentInstitutionRef='%s', revisionReference='%s'", paymentInstitutionRef, revisionReference), ex);
+        } catch (TException ex) {
+            throw new RuntimeException(String.format("Failed to get payment institution, paymentInstitutionRef='%s', revisionReference='%s'", paymentInstitutionRef, revisionReference), ex);
+        }
+    }
+
+    @Override
+    public Calendar getCalendar(CalendarRef calendarRef) throws NotFoundException {
+        return getCalendar(calendarRef, Reference.head(new Head()));
+    }
+
+    @Override
+    public Calendar getCalendar(CalendarRef calendarRef, long domainRevision) throws NotFoundException {
+        return getCalendar(calendarRef, Reference.version(domainRevision));
+    }
+
+    @Override
+    public Calendar getCalendar(CalendarRef calendarRef, Reference revisionReference) throws NotFoundException {
+        log.debug("Trying to get calendar, calendarRef='{}', revisionReference='{}'", calendarRef, revisionReference);
+        try {
+            com.rbkmoney.damsel.domain.Reference reference = new com.rbkmoney.damsel.domain.Reference();
+            reference.setCalendar(calendarRef);
+            VersionedObject versionedObject = dominantClient.checkoutObject(revisionReference, reference);
+            Calendar calendar = versionedObject.getObject().getCalendar().getData();
+            log.info("Calendar has been found, calendarRef='{}', revisionReference='{}', calendar='{}'", calendarRef, revisionReference, calendar);
+            return calendar;
+        } catch (VersionNotFound | ObjectNotFound ex) {
+            throw new NotFoundException(String.format("Version not found, calendarRef='%s', revisionReference='%s'", calendarRef, revisionReference), ex);
+        } catch (TException ex) {
+            throw new RuntimeException(String.format("Failed to get calendar, calendarRef='%s', revisionReference='%s'", calendarRef, revisionReference), ex);
         }
     }
 
@@ -69,7 +122,7 @@ public class DominantServiceImpl implements DominantService {
             return categoryType;
         } catch (VersionNotFound | ObjectNotFound ex) {
             throw new NotFoundException(String.format("Version not found, categoryRef='%s', revisionReference='%s'", categoryRef, revisionReference), ex);
-        } catch (Exception ex) {
+        } catch (TException ex) {
             throw new RuntimeException(String.format("Failed to get category type, categoryRef='%s', revisionReference='%s'", categoryRef, revisionReference), ex);
         }
     }
