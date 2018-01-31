@@ -38,7 +38,7 @@ public class SchedulerUtilTest {
                 timeSpan,
                 SchedulerUtil.buildCalendar(buildTestCalendar())
         );
-        assertEquals("2017-02-08T20:25:05Z", instant.toString());
+        assertEquals("2017-03-23T20:25:05Z", instant.toString());
     }
 
     @Test
