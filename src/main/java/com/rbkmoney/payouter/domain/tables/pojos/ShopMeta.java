@@ -23,12 +23,14 @@ import javax.annotation.Generated;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class ShopMeta implements Serializable {
 
-    private static final long serialVersionUID = -1688008076;
+    private static final long serialVersionUID = 1464010793;
 
     private String        partyId;
     private String        shopId;
     private LocalDateTime wtime;
     private LocalDateTime lastPayoutCreatedAt;
+    private Integer       calendarId;
+    private Integer       schedulerId;
 
     public ShopMeta() {}
 
@@ -37,18 +39,24 @@ public class ShopMeta implements Serializable {
         this.shopId = value.shopId;
         this.wtime = value.wtime;
         this.lastPayoutCreatedAt = value.lastPayoutCreatedAt;
+        this.calendarId = value.calendarId;
+        this.schedulerId = value.schedulerId;
     }
 
     public ShopMeta(
         String        partyId,
         String        shopId,
         LocalDateTime wtime,
-        LocalDateTime lastPayoutCreatedAt
+        LocalDateTime lastPayoutCreatedAt,
+        Integer       calendarId,
+        Integer       schedulerId
     ) {
         this.partyId = partyId;
         this.shopId = shopId;
         this.wtime = wtime;
         this.lastPayoutCreatedAt = lastPayoutCreatedAt;
+        this.calendarId = calendarId;
+        this.schedulerId = schedulerId;
     }
 
     public String getPartyId() {
@@ -81,6 +89,22 @@ public class ShopMeta implements Serializable {
 
     public void setLastPayoutCreatedAt(LocalDateTime lastPayoutCreatedAt) {
         this.lastPayoutCreatedAt = lastPayoutCreatedAt;
+    }
+
+    public Integer getCalendarId() {
+        return this.calendarId;
+    }
+
+    public void setCalendarId(Integer calendarId) {
+        this.calendarId = calendarId;
+    }
+
+    public Integer getSchedulerId() {
+        return this.schedulerId;
+    }
+
+    public void setSchedulerId(Integer schedulerId) {
+        this.schedulerId = schedulerId;
     }
 
     @Override
@@ -116,6 +140,18 @@ public class ShopMeta implements Serializable {
         }
         else if (!lastPayoutCreatedAt.equals(other.lastPayoutCreatedAt))
             return false;
+        if (calendarId == null) {
+            if (other.calendarId != null)
+                return false;
+        }
+        else if (!calendarId.equals(other.calendarId))
+            return false;
+        if (schedulerId == null) {
+            if (other.schedulerId != null)
+                return false;
+        }
+        else if (!schedulerId.equals(other.schedulerId))
+            return false;
         return true;
     }
 
@@ -127,6 +163,8 @@ public class ShopMeta implements Serializable {
         result = prime * result + ((this.shopId == null) ? 0 : this.shopId.hashCode());
         result = prime * result + ((this.wtime == null) ? 0 : this.wtime.hashCode());
         result = prime * result + ((this.lastPayoutCreatedAt == null) ? 0 : this.lastPayoutCreatedAt.hashCode());
+        result = prime * result + ((this.calendarId == null) ? 0 : this.calendarId.hashCode());
+        result = prime * result + ((this.schedulerId == null) ? 0 : this.schedulerId.hashCode());
         return result;
     }
 
@@ -138,6 +176,8 @@ public class ShopMeta implements Serializable {
         sb.append(", ").append(shopId);
         sb.append(", ").append(wtime);
         sb.append(", ").append(lastPayoutCreatedAt);
+        sb.append(", ").append(calendarId);
+        sb.append(", ").append(schedulerId);
 
         sb.append(")");
         return sb.toString();

@@ -119,23 +119,24 @@ public class PartyManagementServiceImpl implements PartyManagementService {
     }
 
     @Override
-    public TermSet computeContractTerms(String partyId, String contractId) throws NotFoundException {
-        return computeContractTerms(partyId, contractId, Instant.now());
+    public TermSet computeShopTerms(String partyId, String shopId) throws NotFoundException {
+        return computeShopTerms(partyId, shopId, Instant.now());
     }
 
     @Override
-    public TermSet computeContractTerms(String partyId, String contractId, Instant timestamp) throws NotFoundException {
-        log.debug("Trying to compute contract terms, partyId='{}', contractId='{}', timestamp='{}'", partyId, contractId, timestamp);
+    public TermSet computeShopTerms(String partyId, String shopId, Instant timestamp) throws NotFoundException {
+        log.debug("Trying to compute shop terms, partyId='{}', shopId='{}', timestamp='{}'", partyId, shopId, timestamp);
         try {
-            TermSet termSet = partyManagementClient.computeContractTerms(userInfo, partyId, contractId, TypeUtil.temporalToString(timestamp));
+            TermSet termSet = partyManagementClient.computeShopTerms(userInfo, partyId, shopId, TypeUtil.temporalToString(timestamp));
+            log.info("Shop terms has been computed, partyId='{}', shopId='{}', timestamp='{}', terms='{}'", partyId, shopId, timestamp, termSet);
             return termSet;
-        } catch (PartyNotFound | PartyNotExistsYet | ContractNotFound ex) {
+        } catch (PartyNotFound | PartyNotExistsYet | ShopNotFound ex) {
             throw new NotFoundException(
-                    String.format("%s, partyId='%s', contractId='%s', timestamp='%s'", ex.getClass().getSimpleName(), partyId, contractId, timestamp),
+                    String.format("%s, partyId='%s', shopId='%s', timestamp='%s'", ex.getClass().getSimpleName(), partyId, shopId, timestamp),
                     ex);
         } catch (TException ex) {
             throw new RuntimeException(
-                    String.format("Failed to compute contract terms, partyId='%s', contractId='%s', timestamp='%s'", partyId, contractId, timestamp), ex
+                    String.format("Failed to compute shop terms, partyId='%s', shopId='%s', timestamp='%s'", partyId, shopId, timestamp), ex
             );
         }
     }

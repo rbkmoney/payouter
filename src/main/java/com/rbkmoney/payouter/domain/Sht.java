@@ -7,7 +7,6 @@ package com.rbkmoney.payouter.domain;
 import com.rbkmoney.payouter.domain.tables.Adjustment;
 import com.rbkmoney.payouter.domain.tables.EventStockMeta;
 import com.rbkmoney.payouter.domain.tables.Invoice;
-import com.rbkmoney.payouter.domain.tables.JobMeta;
 import com.rbkmoney.payouter.domain.tables.Payment;
 import com.rbkmoney.payouter.domain.tables.Payout;
 import com.rbkmoney.payouter.domain.tables.PayoutEvent;
@@ -40,7 +39,7 @@ import org.jooq.impl.SchemaImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Sht extends SchemaImpl {
 
-    private static final long serialVersionUID = 1222231482;
+    private static final long serialVersionUID = 701293750;
 
     /**
      * The reference instance of <code>sht</code>
@@ -61,11 +60,6 @@ public class Sht extends SchemaImpl {
      * The table <code>sht.invoice</code>.
      */
     public final Invoice INVOICE = com.rbkmoney.payouter.domain.tables.Invoice.INVOICE;
-
-    /**
-     * The table <code>sht.job_meta</code>.
-     */
-    public final JobMeta JOB_META = com.rbkmoney.payouter.domain.tables.JobMeta.JOB_META;
 
     /**
      * The table <code>sht.payment</code>.
@@ -142,7 +136,6 @@ public class Sht extends SchemaImpl {
             Adjustment.ADJUSTMENT,
             EventStockMeta.EVENT_STOCK_META,
             Invoice.INVOICE,
-            JobMeta.JOB_META,
             Payment.PAYMENT,
             Payout.PAYOUT,
             PayoutEvent.PAYOUT_EVENT,

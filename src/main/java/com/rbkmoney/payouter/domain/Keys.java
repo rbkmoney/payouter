@@ -6,7 +6,6 @@ package com.rbkmoney.payouter.domain;
 
 import com.rbkmoney.payouter.domain.tables.Adjustment;
 import com.rbkmoney.payouter.domain.tables.Invoice;
-import com.rbkmoney.payouter.domain.tables.JobMeta;
 import com.rbkmoney.payouter.domain.tables.Payment;
 import com.rbkmoney.payouter.domain.tables.Payout;
 import com.rbkmoney.payouter.domain.tables.PayoutEvent;
@@ -15,7 +14,6 @@ import com.rbkmoney.payouter.domain.tables.Report;
 import com.rbkmoney.payouter.domain.tables.ShopMeta;
 import com.rbkmoney.payouter.domain.tables.records.AdjustmentRecord;
 import com.rbkmoney.payouter.domain.tables.records.InvoiceRecord;
-import com.rbkmoney.payouter.domain.tables.records.JobMetaRecord;
 import com.rbkmoney.payouter.domain.tables.records.PaymentRecord;
 import com.rbkmoney.payouter.domain.tables.records.PayoutEventRecord;
 import com.rbkmoney.payouter.domain.tables.records.PayoutRecord;
@@ -61,7 +59,6 @@ public class Keys {
 
     public static final UniqueKey<AdjustmentRecord> ADJUSTMENT_PKEY = UniqueKeys0.ADJUSTMENT_PKEY;
     public static final UniqueKey<InvoiceRecord> INVOICE_PKEY = UniqueKeys0.INVOICE_PKEY;
-    public static final UniqueKey<JobMetaRecord> JOB_META_PKEY = UniqueKeys0.JOB_META_PKEY;
     public static final UniqueKey<PaymentRecord> PAYMENT_PKEY = UniqueKeys0.PAYMENT_PKEY;
     public static final UniqueKey<PayoutRecord> PAYOUT_PKEY1 = UniqueKeys0.PAYOUT_PKEY1;
     public static final UniqueKey<PayoutEventRecord> PAYOUT_EVENT_PKEY = UniqueKeys0.PAYOUT_EVENT_PKEY;
@@ -90,7 +87,6 @@ public class Keys {
     private static class UniqueKeys0 extends AbstractKeys {
         public static final UniqueKey<AdjustmentRecord> ADJUSTMENT_PKEY = createUniqueKey(Adjustment.ADJUSTMENT, "adjustment_pkey", Adjustment.ADJUSTMENT.ID);
         public static final UniqueKey<InvoiceRecord> INVOICE_PKEY = createUniqueKey(Invoice.INVOICE, "invoice_pkey", Invoice.INVOICE.ID);
-        public static final UniqueKey<JobMetaRecord> JOB_META_PKEY = createUniqueKey(JobMeta.JOB_META, "job_meta_pkey", JobMeta.JOB_META.PARTY_ID, JobMeta.JOB_META.CONTRACT_ID, JobMeta.JOB_META.PAYOUT_TOOL_ID);
         public static final UniqueKey<PaymentRecord> PAYMENT_PKEY = createUniqueKey(Payment.PAYMENT, "payment_pkey", Payment.PAYMENT.ID);
         public static final UniqueKey<PayoutRecord> PAYOUT_PKEY1 = createUniqueKey(Payout.PAYOUT, "payout_pkey1", Payout.PAYOUT.ID);
         public static final UniqueKey<PayoutEventRecord> PAYOUT_EVENT_PKEY = createUniqueKey(PayoutEvent.PAYOUT_EVENT, "payout_event_pkey", PayoutEvent.PAYOUT_EVENT.EVENT_ID);

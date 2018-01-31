@@ -41,10 +41,6 @@ public class SchedulerUtil {
             toTime = toTime.minusMonths(timeSpan.getMonths());
         }
 
-        if (timeSpan.isSetWeeks()) {
-            toTime = toTime.minusWeeks(timeSpan.getWeeks());
-        }
-
         if (timeSpan.isSetDays()) {
             toTime = toTime.minusDays(timeSpan.getDays());
         }

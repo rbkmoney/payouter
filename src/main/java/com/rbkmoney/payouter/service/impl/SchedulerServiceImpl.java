@@ -2,8 +2,8 @@ package com.rbkmoney.payouter.service.impl;
 
 import com.rbkmoney.damsel.domain.Calendar;
 import com.rbkmoney.damsel.domain.*;
-import com.rbkmoney.payouter.dao.JobMetaDao;
-import com.rbkmoney.payouter.domain.tables.pojos.JobMeta;
+import com.rbkmoney.payouter.dao.ShopMetaDao;
+import com.rbkmoney.payouter.domain.tables.pojos.ShopMeta;
 import com.rbkmoney.payouter.exception.DaoException;
 import com.rbkmoney.payouter.exception.ScheduleProcessingException;
 import com.rbkmoney.payouter.exception.StorageException;
@@ -34,7 +34,7 @@ public class SchedulerServiceImpl implements SchedulerService {
 
     private final Scheduler scheduler;
 
-    private final JobMetaDao jobMetaDao;
+    private final ShopMetaDao shopMetaDao;
 
     private final PartyManagementService partyManagementService;
 
@@ -42,11 +42,11 @@ public class SchedulerServiceImpl implements SchedulerService {
 
     @Autowired
     public SchedulerServiceImpl(Scheduler scheduler,
-                                JobMetaDao jobMetaDao,
+                                ShopMetaDao shopMetaDao,
                                 PartyManagementService partyManagementService,
                                 DominantService dominantService) {
         this.scheduler = scheduler;
-        this.jobMetaDao = jobMetaDao;
+        this.shopMetaDao = shopMetaDao;
         this.partyManagementService = partyManagementService;
         this.dominantService = dominantService;
     }
@@ -54,47 +54,49 @@ public class SchedulerServiceImpl implements SchedulerService {
     @PostConstruct
     public void initJobs() {
         log.info("Starting jobs...");
-        List<Map.Entry<Integer, Integer>> activeJobs = jobMetaDao.getAllActiveJobs();
-        if (activeJobs.isEmpty()) {
-            log.info("No jobs found, nothing to do");
+        List<Map.Entry<Integer, Integer>> activeShops = shopMetaDao.getAllActiveShops();
+        if (activeShops.isEmpty()) {
+            log.info("No shops found, nothing to do");
             return;
         }
 
-        for (Map.Entry<Integer, Integer> job : activeJobs) {
+        for (Map.Entry<Integer, Integer> job : activeShops) {
             updateJobs(new CalendarRef(job.getKey()), new ScheduleRef(job.getValue()));
         }
-        log.info("Jobs have been successfully started, jobsCount='{}'", activeJobs.size());
+        log.info("Jobs have been successfully started, jobsCount='{}'", activeShops.size());
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
-    public void registerJob(String partyId, String contractId, String payoutToolId, ScheduleRef scheduleRef) {
+    public void registerJob(String partyId, String shopId, ScheduleRef scheduleRef) {
         try {
-            log.info("Trying to register job, partyId='{}', contractId='{}', payoutToolId='{}', scheduleRef='{}'",
-                    partyId, contractId, payoutToolId, scheduleRef);
-            PaymentInstitutionRef paymentInstitutionRef = partyManagementService.getPaymentInstitutionRef(partyId, contractId);
+            log.info("Trying to register job, partyId='{}', shopId='{}', scheduleRef='{}'",
+                    partyId, shopId, scheduleRef);
+
+            Shop shop = partyManagementService.getShop(partyId, shopId);
+            PaymentInstitutionRef paymentInstitutionRef = partyManagementService.getPaymentInstitutionRef(partyId, shop.getContractId());
             PaymentInstitution paymentInstitution = dominantService.getPaymentInstitution(paymentInstitutionRef);
             CalendarRef calendarRef = paymentInstitution.getCalendar();
 
-            jobMetaDao.save(partyId, contractId, payoutToolId, calendarRef.getId(), scheduleRef.getId());
+            shopMetaDao.save(partyId, shopId, calendarRef.getId(), scheduleRef.getId());
 
             updateJobs(calendarRef, scheduleRef);
-            log.info("Job have been successfully enabled, partyId='{}', contractId='{}', payoutToolId='{}', scheduleRef='{}', calendarRef='{}'",
-                    partyId, contractId, payoutToolId, scheduleRef, calendarRef);
+            log.info("Job have been successfully enabled, partyId='{}', shopId='{}', scheduleRef='{}', calendarRef='{}'",
+                    partyId, shopId, scheduleRef, calendarRef);
         } catch (DaoException ex) {
             throw new StorageException(
                     String.format(
-                            "Failed to save job on storage, partyId='%s', contractId='%s', payoutToolId='%s', scheduleRef='%s'",
-                            partyId, contractId, payoutToolId, scheduleRef), ex);
+                            "Failed to save job on storage, partyId='%s', shopId='%s', scheduleRef='%s'",
+                            partyId, shopId, scheduleRef), ex);
         }
     }
 
     private void updateJobs(CalendarRef calendarRef, ScheduleRef scheduleRef) {
         log.info("Trying to update jobs, calendarRef='{}', scheduleRef='{}'", calendarRef, scheduleRef);
         try {
-            List<JobMeta> jobs = jobMetaDao.getByCalendarAndSchedulerId(calendarRef.getId(), scheduleRef.getId());
+            List<ShopMeta> shops = shopMetaDao.getByCalendarAndSchedulerId(calendarRef.getId(), scheduleRef.getId());
 
-            if (jobs.isEmpty()) {
+            if (shops.isEmpty()) {
                 cleanUpJobs(calendarRef, scheduleRef);
                 return;
             }
@@ -108,7 +110,7 @@ public class SchedulerServiceImpl implements SchedulerService {
             log.info("New calendar was saved, calendarRef='{}', calendarId='{}'", calendarRef, calendarId);
 
             JobDataMap jobDataMap = new JobDataMap();
-            jobDataMap.put("jobs", jobs);
+            jobDataMap.put("shops", shops);
 
             JobDetail jobDetail = JobBuilder.newJob(GeneratePayoutJob.class)
                     .withIdentity(buildJobKey(calendarRef, scheduleRef))
@@ -166,18 +168,20 @@ public class SchedulerServiceImpl implements SchedulerService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
-    public void deregisterJob(String partyId, String contractId, String payoutToolId) {
+    public void deregisterJob(String partyId, String shopId) {
         try {
-            log.info("Trying to deregister job, partyId='{}', contractId='{}', payoutToolId='{}'", partyId, contractId, payoutToolId);
-            JobMeta jobMeta = jobMetaDao.get(partyId, contractId, payoutToolId);
-            jobMetaDao.disableScheduler(partyId, contractId, payoutToolId);
-            updateJobs(new CalendarRef(jobMeta.getCalendarId()), new ScheduleRef(jobMeta.getSchedulerId()));
-            log.info("Job have been successfully disabled, partyId='{}', contractId='{}', payoutToolId='{}', scheduleId='{}', calendarId='{}'",
-                    partyId, contractId, payoutToolId, jobMeta.getSchedulerId(), jobMeta.getCalendarId());
+            log.info("Trying to deregister job, partyId='{}', contractId='{}', payoutToolId='{}'", partyId, shopId);
+            ShopMeta shopMeta = shopMetaDao.get(partyId, shopId);
+            shopMetaDao.disableShop(partyId, shopId);
+            if (shopMeta.getCalendarId() != null && shopMeta.getSchedulerId() != null) {
+                updateJobs(new CalendarRef(shopMeta.getCalendarId()), new ScheduleRef(shopMeta.getSchedulerId()));
+            }
+            log.info("Job have been successfully disabled, partyId='{}', shopId='{}', scheduleId='{}', calendarId='{}'",
+                    partyId, shopId, shopMeta.getSchedulerId(), shopMeta.getCalendarId());
         } catch (DaoException ex) {
             throw new StorageException(
-                    String.format("Failed to disable job on storage, partyId='%s', contractId='%s', payoutToolId='%s'",
-                            partyId, contractId, payoutToolId), ex);
+                    String.format("Failed to disable job on storage, partyId='%s', shopId='%s'",
+                            partyId, shopId), ex);
         }
     }
 

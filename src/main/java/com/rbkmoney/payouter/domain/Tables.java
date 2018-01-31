@@ -7,7 +7,6 @@ package com.rbkmoney.payouter.domain;
 import com.rbkmoney.payouter.domain.tables.Adjustment;
 import com.rbkmoney.payouter.domain.tables.EventStockMeta;
 import com.rbkmoney.payouter.domain.tables.Invoice;
-import com.rbkmoney.payouter.domain.tables.JobMeta;
 import com.rbkmoney.payouter.domain.tables.Payment;
 import com.rbkmoney.payouter.domain.tables.Payout;
 import com.rbkmoney.payouter.domain.tables.PayoutEvent;
@@ -45,11 +44,6 @@ public class Tables {
      * The table <code>sht.invoice</code>.
      */
     public static final Invoice INVOICE = com.rbkmoney.payouter.domain.tables.Invoice.INVOICE;
-
-    /**
-     * The table <code>sht.job_meta</code>.
-     */
-    public static final JobMeta JOB_META = com.rbkmoney.payouter.domain.tables.JobMeta.JOB_META;
 
     /**
      * The table <code>sht.payment</code>.

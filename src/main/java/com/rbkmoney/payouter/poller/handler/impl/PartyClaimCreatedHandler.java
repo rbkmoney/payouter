@@ -27,26 +27,20 @@ public class PartyClaimCreatedHandler implements Handler<PartyChange, Event> {
                 .getEffects();
 
         for (ClaimEffect claimEffect : claimEffects) {
-            if (claimEffect.isSetContractEffect()) {
-                ContractEffectUnit contractEffectUnit = claimEffect.getContractEffect();
-                String contractId = contractEffectUnit.getContractId();
-                ContractEffect contractEffect = contractEffectUnit.getEffect();
-                if (contractEffect.isSetPayoutToolEffect()) {
-                    PayoutToolEffectUnit payoutToolEffectUnit = contractEffect.getPayoutToolEffect();
-                    String payoutToolId = payoutToolEffectUnit.getPayoutToolId();
-                    PayoutToolEffect payoutToolEffect = payoutToolEffectUnit.getEffect();
-                    if (payoutToolEffect.isSetScheduleChanged()) {
-                        ScheduleChanged scheduleChanged = payoutToolEffect.getScheduleChanged();
-                        if (scheduleChanged.isSetSchedule()) {
-                            schedulerService.registerJob(partyId, contractId, payoutToolId, scheduleChanged.getSchedule());
+            if (claimEffect.isSetShopEffect()) {
+                ShopEffectUnit shopEffectUnit = claimEffect.getShopEffect();
+                String shopId = shopEffectUnit.getShopId();
+                ShopEffect shopEffect = shopEffectUnit.getEffect();
+                if (shopEffect.isSetPayoutScheduleChanged()) {
+                    ScheduleChanged scheduleChanged = shopEffect.getPayoutScheduleChanged();
+                    if (scheduleChanged.isSetSchedule()) {
+                            schedulerService.registerJob(partyId, shopId, scheduleChanged.getSchedule());
                         } else {
-                            schedulerService.deregisterJob(partyId, contractId, payoutToolId);
+                            schedulerService.deregisterJob(partyId, shopId);
                         }
-                        return;
                     }
                 }
             }
-        }
     }
 
     @Override

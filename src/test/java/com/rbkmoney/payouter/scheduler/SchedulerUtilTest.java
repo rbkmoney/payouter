@@ -27,7 +27,6 @@ public class SchedulerUtilTest {
         TimeSpan timeSpan = new TimeSpan();
         timeSpan.setYears((short) 1);
         timeSpan.setMonths((short) 2);
-        timeSpan.setWeeks((short) 4);
         timeSpan.setDays((short) 3);
         timeSpan.setHours((short) 3);
         timeSpan.setMinutes((short) 34);

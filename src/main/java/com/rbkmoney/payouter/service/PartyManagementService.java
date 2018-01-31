@@ -29,9 +29,9 @@ public interface PartyManagementService {
 
     Shop getShopByContractAndPayoutToolIds(String partyId, String contractId, String payoutToolId) throws NotFoundException;
 
-    TermSet computeContractTerms(String partyId, String contractId) throws NotFoundException;
+    TermSet computeShopTerms(String partyId, String shopId) throws NotFoundException;
 
-    TermSet computeContractTerms(String partyId, String contractId, Instant timestamp) throws NotFoundException;
+    TermSet computeShopTerms(String partyId, String shopId, Instant timestamp) throws NotFoundException;
 
     Contract getContract(String partyId, String contractId) throws NotFoundException;
 
