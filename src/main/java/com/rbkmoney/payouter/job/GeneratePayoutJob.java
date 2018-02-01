@@ -46,23 +46,24 @@ public class GeneratePayoutJob implements Job {
         log.info("Start shops processing, shops='{}'", shops);
         try {
             for (ShopMeta shopMeta : shops) {
-                TermSet termSet = partyManagementService.computeShopTerms(shopMeta.getPartyId(), shopMeta.getShopId());
-
-                TimeSpan timeSpan = termSet.getPayouts().getPolicy().getAssetsFreezeFor();
-                Instant toTime = SchedulerUtil.computeToTimeBound(
-                        jobExecutionContext.getFireTime().toInstant(),
-                        timeSpan,
-                        (HolidayCalendar) calendar);
                 try {
+                    TermSet termSet = partyManagementService.computeShopTerms(shopMeta.getPartyId(), shopMeta.getShopId());
+
+                    TimeSpan timeSpan = termSet.getPayouts().getPolicy().getAssetsFreezeFor();
+                    Instant toTime = SchedulerUtil.computeToTimeBound(
+                            jobExecutionContext.getFireTime().toInstant(),
+                            timeSpan,
+                            (HolidayCalendar) calendar);
+
                     payoutService.createPayout(
                             shopMeta.getPartyId(),
                             shopMeta.getShopId(),
-                            LocalDateTime.ofInstant(toTime, ZoneOffset.UTC),
+                            LocalDateTime.ofInstant(toTime, ZoneOffset.UTC).minusDays(1),
                             LocalDateTime.ofInstant(toTime, ZoneOffset.UTC),
                             PayoutType.bank_account
                     );
                 } catch (NotFoundException | InvalidStateException ex) {
-                    log.warn("Failed to create payout for shop, skipped. shopMeta='{}', toTime='{}'", shopMeta, toTime, ex);
+                    log.warn("Failed to create payout for shop, skipped. shopMeta='{}', fireTime='{}'", shopMeta, jobExecutionContext.getFireTime(), ex);
                 }
             }
         } catch (StorageException | WRuntimeException ex) {

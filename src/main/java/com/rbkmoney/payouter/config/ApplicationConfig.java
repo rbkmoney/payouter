@@ -38,6 +38,12 @@ public class ApplicationConfig {
     }
 
     @Bean
+    public MessageSenderSrv.Iface dudoser(@Value("${service.dudoser.url}") Resource resource) throws IOException {
+        return new THSpawnClientBuilder()
+                .withAddress(resource.getURI()).build(MessageSenderSrv.Iface.class);
+    }
+
+    @Bean
     public Schema schema() {
         return Sht.SHT;
     }

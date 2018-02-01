@@ -31,7 +31,7 @@ public class DominantServiceImpl implements DominantService {
 
     @Override
     public Schedule getSchedule(ScheduleRef scheduleRef, Reference revisionReference) throws NotFoundException {
-        log.debug("Trying to get schedule, scheduleRef='{}', revisionReference='{}'", scheduleRef, revisionReference);
+        log.info("Trying to get schedule, scheduleRef='{}', revisionReference='{}'", scheduleRef, revisionReference);
         try {
             com.rbkmoney.damsel.domain.Reference reference = new com.rbkmoney.damsel.domain.Reference();
             reference.setSchedule(scheduleRef);
@@ -58,7 +58,7 @@ public class DominantServiceImpl implements DominantService {
 
     @Override
     public PaymentInstitution getPaymentInstitution(PaymentInstitutionRef paymentInstitutionRef, Reference revisionReference) throws NotFoundException {
-        log.debug("Trying to get payment institution, paymentInstitutionRef='{}', revisionReference='{}'", paymentInstitutionRef, revisionReference);
+        log.info("Trying to get payment institution, paymentInstitutionRef='{}', revisionReference='{}'", paymentInstitutionRef, revisionReference);
         try {
             com.rbkmoney.damsel.domain.Reference reference = new com.rbkmoney.damsel.domain.Reference();
             reference.setPaymentInstitution(paymentInstitutionRef);
@@ -85,7 +85,7 @@ public class DominantServiceImpl implements DominantService {
 
     @Override
     public Calendar getCalendar(CalendarRef calendarRef, Reference revisionReference) throws NotFoundException {
-        log.debug("Trying to get calendar, calendarRef='{}', revisionReference='{}'", calendarRef, revisionReference);
+        log.info("Trying to get calendar, calendarRef='{}', revisionReference='{}'", calendarRef, revisionReference);
         try {
             com.rbkmoney.damsel.domain.Reference reference = new com.rbkmoney.damsel.domain.Reference();
             reference.setCalendar(calendarRef);
@@ -112,7 +112,7 @@ public class DominantServiceImpl implements DominantService {
 
     @Override
     public CategoryType getCategoryType(CategoryRef categoryRef, Reference revisionReference) throws NotFoundException {
-        log.debug("Trying to get category type, categoryRef='{}', revisionReference='{}'", categoryRef, revisionReference);
+        log.info("Trying to get category type, categoryRef='{}', revisionReference='{}'", categoryRef, revisionReference);
         try {
             com.rbkmoney.damsel.domain.Reference reference = new com.rbkmoney.damsel.domain.Reference();
             reference.setCategory(categoryRef);

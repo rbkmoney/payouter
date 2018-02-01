@@ -53,7 +53,7 @@ public class PartyManagementServiceImpl implements PartyManagementService {
 
     @Override
     public Party getParty(String partyId, PartyRevisionParam partyRevisionParam) throws NotFoundException {
-        log.debug("Trying to get party, partyId='{}', partyRevisionParam='{}'", partyId, partyRevisionParam);
+        log.info("Trying to get party, partyId='{}', partyRevisionParam='{}'", partyId, partyRevisionParam);
         try {
             Party party = partyManagementClient.checkout(userInfo, partyId, partyRevisionParam);
             log.info("Party has been found, partyId='{}', partyRevisionParam='{}'", partyId, partyRevisionParam);
@@ -90,7 +90,7 @@ public class PartyManagementServiceImpl implements PartyManagementService {
 
     @Override
     public Shop getShop(String partyId, String shopId, PartyRevisionParam partyRevisionParam) throws NotFoundException {
-        log.debug("Trying to get shop, partyId='{}', shopId='{}', partyRevisionParam='{}'", partyId, shopId, partyRevisionParam);
+        log.info("Trying to get shop, partyId='{}', shopId='{}', partyRevisionParam='{}'", partyId, shopId, partyRevisionParam);
         Party party = getParty(partyId, partyRevisionParam);
 
         Shop shop = party.getShops().get(shopId);
@@ -103,7 +103,7 @@ public class PartyManagementServiceImpl implements PartyManagementService {
 
     @Override
     public Shop getShopByContractAndPayoutToolIds(String partyId, String contractId, String payoutToolId) throws NotFoundException {
-        log.debug("Trying to get shop by contract and payoutTool ids, partyId='{}', contractId='{}', payoutToolId='{}'", partyId, contractId, payoutToolId);
+        log.info("Trying to get shop by contract and payoutTool ids, partyId='{}', contractId='{}', payoutToolId='{}'", partyId, contractId, payoutToolId);
         Party party = getParty(partyId);
 
         Shop shop = party.getShops().values().stream()
@@ -125,7 +125,7 @@ public class PartyManagementServiceImpl implements PartyManagementService {
 
     @Override
     public TermSet computeShopTerms(String partyId, String shopId, Instant timestamp) throws NotFoundException {
-        log.debug("Trying to compute shop terms, partyId='{}', shopId='{}', timestamp='{}'", partyId, shopId, timestamp);
+        log.info("Trying to compute shop terms, partyId='{}', shopId='{}', timestamp='{}'", partyId, shopId, timestamp);
         try {
             TermSet termSet = partyManagementClient.computeShopTerms(userInfo, partyId, shopId, TypeUtil.temporalToString(timestamp));
             log.info("Shop terms has been computed, partyId='{}', shopId='{}', timestamp='{}', terms='{}'", partyId, shopId, timestamp, termSet);
@@ -158,7 +158,7 @@ public class PartyManagementServiceImpl implements PartyManagementService {
 
     @Override
     public Contract getContract(String partyId, String contractId, PartyRevisionParam partyRevisionParam) throws NotFoundException {
-        log.debug("Trying to get contract, partyId='{}', contractId='{}', partyRevisionParam='{}'", partyId, contractId, partyRevisionParam);
+        log.info("Trying to get contract, partyId='{}', contractId='{}', partyRevisionParam='{}'", partyId, contractId, partyRevisionParam);
         Party party = getParty(partyId, partyRevisionParam);
 
         Contract contract = party.getContracts().get(contractId);
@@ -223,7 +223,7 @@ public class PartyManagementServiceImpl implements PartyManagementService {
 
     @Override
     public PayoutToolData getPayoutToolData(String partyId, String shopId, Instant timestamp) throws InvalidStateException, NotFoundException {
-        log.debug("Trying to get payout tool data, partyId='{}', shopId='{}', timestamp='{}'", partyId, shopId, timestamp);
+        log.info("Trying to get payout tool data, partyId='{}', shopId='{}', timestamp='{}'", partyId, shopId, timestamp);
         Party party = getParty(partyId, timestamp);
 
         Shop shop = party.getShops().get(shopId);
@@ -298,7 +298,7 @@ public class PartyManagementServiceImpl implements PartyManagementService {
 
     @Override
     public CategoryType getCategoryType(String partyId, String shopId, long domainRevision, Instant timestamp) throws NotFoundException {
-        log.debug("Trying to get shop category type, partyId='{}', timestamp='{}'", partyId, timestamp);
+        log.info("Trying to get shop category type, partyId='{}', timestamp='{}'", partyId, timestamp);
         Shop shop = getShop(partyId, shopId, timestamp);
 
         CategoryType categoryType = dominantService.getCategoryType(shop.getCategory(), domainRevision);
