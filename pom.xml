@@ -22,7 +22,7 @@
         <shared.resources.version>0.2.1</shared.resources.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <postgresql.jdbc.version>9.4.1212</postgresql.jdbc.version>
-        <dockerfile.base.service.tag>fe3741dc82cd694143baf6d1a1969bd4a537c280</dockerfile.base.service.tag>
+        <dockerfile.base.service.tag>22c57470c4fc47161894f036b7cf9d70f42b75f5</dockerfile.base.service.tag>
         <server.port>8022</server.port>
         <db.url>jdbc:postgresql://localhost:5432/payouter</db.url>
         <db.user>postgres</db.user>
