@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -213,6 +214,25 @@ public class PartyManagementServiceImpl implements PartyManagementService {
             throw new RuntimeException(
                     String.format("Failed to get namespace, partyId='%s', namespace='%s'", partyId, namespace), ex
             );
+        }
+    }
+
+    @Override
+    public List<FinalCashFlowPosting> computePayoutCashFlow(String partyId, String shopId, Cash amount, Instant timestamp) throws NotFoundException {
+        return computePayoutCashFlow(partyId, new PayoutParams(shopId, amount, TypeUtil.temporalToString(timestamp)));
+    }
+
+    @Override
+    public List<FinalCashFlowPosting> computePayoutCashFlow(String partyId, PayoutParams payoutParams) throws NotFoundException {
+        log.debug("Trying to compute payout cash flow, partyId='{}', payoutParams='{}'", partyId, payoutParams);
+        try {
+            List<FinalCashFlowPosting> finalCashFlowPostings = partyManagementClient.computePayoutCashFlow(userInfo, partyId, payoutParams);
+            log.info("Payout cash flow has been computed, partyId='{}', payoutParams='{}', postings='{}'", partyId, payoutParams, finalCashFlowPostings);
+            return finalCashFlowPostings;
+        } catch (PartyNotFound | PartyNotExistsYet | ShopNotFound ex) {
+            throw new NotFoundException(String.format("%s, partyId='%s', payoutParams='%s'", ex.getClass().getSimpleName(), partyId, payoutParams), ex);
+        } catch (TException ex) {
+            throw new RuntimeException(String.format("Failed to compute payout cash flow, partyId='%s', payoutParams='%s'", partyId, payoutParams), ex);
         }
     }
 

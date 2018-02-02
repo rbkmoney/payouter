@@ -13,6 +13,7 @@ import com.rbkmoney.payouter.dao.*;
 import com.rbkmoney.payouter.domain.enums.PayoutStatus;
 import com.rbkmoney.payouter.domain.enums.PayoutType;
 import com.rbkmoney.payouter.domain.tables.pojos.*;
+import com.rbkmoney.payouter.domain.tables.pojos.CashFlowPosting;
 import com.rbkmoney.payouter.exception.DaoException;
 import com.rbkmoney.payouter.exception.InvalidStateException;
 import com.rbkmoney.payouter.exception.NotFoundException;
@@ -163,7 +164,13 @@ public class PayoutServiceImpl implements PayoutService {
             PayoutEvent payoutEvent = buildPayoutCreatedEvent(payout, userInfo);
             eventSinkService.saveEvent(payoutEvent);
 
-            shumwayService.hold(payoutId);
+            List<FinalCashFlowPosting> cashFlowPostings = partyManagementService.computePayoutCashFlow(
+                    partyId,
+                    shopId,
+                    new Cash(availableAmount, new CurrencyRef(payout.getCurrencyCode())),
+                    payout.getCreatedAt().toInstant(ZoneOffset.UTC)
+            );
+            shumwayService.hold(payoutId, cashFlowPostings);
 
             log.info("Payout successfully created, payoutId='{}', partyId={}, shopId={}, fromTime={}, toTime={}, payoutType={}",
                     payoutId, partyId, shopId, fromTime, toTime, payoutType);

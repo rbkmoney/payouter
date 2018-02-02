@@ -2,7 +2,10 @@ package com.rbkmoney.payouter.service.impl;
 
 import com.rbkmoney.damsel.accounter.*;
 import com.rbkmoney.damsel.base.InvalidRequest;
-import com.rbkmoney.payouter.dao.PayoutDao;
+import com.rbkmoney.damsel.domain.*;
+import com.rbkmoney.payouter.dao.CashFlowPostingDao;
+import com.rbkmoney.payouter.domain.enums.AccountType;
+import com.rbkmoney.payouter.domain.tables.pojos.CashFlowPosting;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.exception.AccounterException;
 import com.rbkmoney.payouter.exception.NotFoundException;
@@ -16,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ShumwayServiceImpl implements ShumwayService {
@@ -24,28 +28,35 @@ public class ShumwayServiceImpl implements ShumwayService {
 
     private final AccounterSrv.Iface shumwayClient;
 
-    private final PayoutDao payoutDao;
+    private final CashFlowPostingDao cashFlowPostingDao;
 
     private final RetryTemplate retryTemplate;
 
     @Autowired
-    public ShumwayServiceImpl(AccounterSrv.Iface shumwayClient, PayoutDao payoutDao, RetryTemplate retryTemplate) {
+    public ShumwayServiceImpl(AccounterSrv.Iface shumwayClient, CashFlowPostingDao cashFlowPostingDao, RetryTemplate retryTemplate) {
         this.shumwayClient = shumwayClient;
-        this.payoutDao = payoutDao;
+        this.cashFlowPostingDao = cashFlowPostingDao;
         this.retryTemplate = retryTemplate;
     }
 
     @Override
-    public void hold(long payoutId) {
-        log.debug("Trying to hold payout, payoutId={}", payoutId);
-        try {
-            Payout payout = payoutDao.get(payoutId);
-            if (payout == null) {
-                throw new NotFoundException(String.format("Payout not found, payoutId='%d'", payoutId));
-            }
+    public void hold(long payoutId, List<FinalCashFlowPosting> finalCashFlowPostings) {
+        hold(payoutId, toPlanId(payoutId), 1L, toCashFlowPostings(finalCashFlowPostings));
+    }
 
-            hold(toPlanId(payoutId), toPostingBatch(payout));
-            log.info("Payout has been held, payoutId={}", payoutId);
+    public void hold(long payoutId, String planId, long batchId, List<CashFlowPosting> cashFlowPostings) {
+        log.debug("Trying to hold payout postings, payoutId='{}', cashFlowPostings='{}'", payoutId, cashFlowPostings);
+        List<CashFlowPosting> newCashFlowPostings = cashFlowPostings.stream().map(cashFlowPosting -> {
+            cashFlowPosting.setPayoutId(payoutId);
+            cashFlowPosting.setPlanId(planId);
+            cashFlowPosting.setBatchId(batchId);
+            return cashFlowPosting;
+        }).collect(Collectors.toList());
+
+        try {
+            cashFlowPostingDao.save(cashFlowPostings);
+            hold(planId, toPostingBatch(batchId, newCashFlowPostings));
+            log.info("Payout has been held, payoutId='{}', cashFlowPostings='{}'", payoutId, newCashFlowPostings);
         } catch (Exception ex) {
             throw new AccounterException(String.format("Failed to hold payout, payoutId='%d'", payoutId), ex);
         }
@@ -64,15 +75,15 @@ public class ShumwayServiceImpl implements ShumwayService {
 
     @Override
     public void commit(long payoutId) {
-        log.debug("Trying to commit payout, payoutId={}", payoutId);
+        log.debug("Trying to commit payout postings, payoutId='{}'", payoutId);
         try {
-            Payout payout = payoutDao.get(payoutId);
-            if (payout == null) {
-                throw new NotFoundException(String.format("Payout not found, payoutId='%d'", payoutId));
+            List<CashFlowPosting> cashFlowPostings = cashFlowPostingDao.getByPayoutId(payoutId);
+            if (cashFlowPostings.isEmpty()) {
+                throw new NotFoundException(String.format("Cash flow posting for commit not found, payoutId='%d'", payoutId));
             }
 
-            commit(toPlanId(payoutId), Arrays.asList(toPostingBatch(payout)));
-            log.info("Payout has been committed, payoutId={}", payoutId);
+            commit(toPlanId(payoutId), toPostingBatches(cashFlowPostings));
+            log.info("Payout has been committed, payoutId='{}', cashFlowPostings='{}'", payoutId, cashFlowPostings);
         } catch (Exception ex) {
             throw new AccounterException(String.format("Failed to commit payout, payoutId='%d'", payoutId), ex);
         }
@@ -91,14 +102,14 @@ public class ShumwayServiceImpl implements ShumwayService {
 
     @Override
     public void rollback(long payoutId) {
-        log.debug("Trying to rollback payout, payoutId={}", payoutId);
+        log.debug("Trying to rollback payout postings, payoutId='{}'", payoutId);
         try {
-            Payout payout = payoutDao.get(payoutId);
-            if (payout == null) {
-                throw new NotFoundException(String.format("Payout not found, payoutId='%d'", payoutId));
+            List<CashFlowPosting> cashFlowPostings = cashFlowPostingDao.getByPayoutId(payoutId);
+            if (cashFlowPostings.isEmpty()) {
+                throw new NotFoundException(String.format("Cash flow posting for rollback not found, payoutId='%d'", payoutId));
             }
 
-            rollback(toPlanId(payoutId), Arrays.asList(toPostingBatch(payout)));
+            rollback(toPlanId(payoutId), toPostingBatches(cashFlowPostings));
             log.info("Payout has been rolled back, payoutId={}", payoutId);
         } catch (Exception ex) {
             throw new AccounterException(String.format("Failed to rollback payout, payoutId='%d'", payoutId), ex);
@@ -120,27 +131,29 @@ public class ShumwayServiceImpl implements ShumwayService {
     public void revert(long payoutId) {
         log.debug("Trying to revert payout, payoutId={}", payoutId);
         try {
-            Payout payout = payoutDao.get(payoutId);
-            if (payout == null) {
-                throw new NotFoundException(String.format("Payout not found, payoutId='%d'", payoutId));
+            List<CashFlowPosting> cashFlowPostings = cashFlowPostingDao.getByPayoutId(payoutId);
+            if (cashFlowPostings.isEmpty()) {
+                throw new NotFoundException(String.format("Cash flow posting for revert not found, payoutId='%d'", payoutId));
             }
 
-            doRevert(payoutId, payout);
+            doRevert(payoutId, cashFlowPostings);
             log.info("Payout has been reverted, payoutId={}", payoutId);
         } catch (Exception ex) {
             throw new AccounterException(String.format("Failed to revert payout, payoutId='%d'", payoutId), ex);
         }
     }
 
-    private void doRevert(long payoutId, Payout payout) throws Exception {
+    private void doRevert(long payoutId, List<CashFlowPosting> cashFlowPostings) throws Exception {
         String revertPlanId = toRevertPlanId(payoutId);
-        PostingBatch revertPostingBatch = toRevertPostingBatch(payout);
+        List<CashFlowPosting> revertCashFlowPostings = cashFlowPostings.stream()
+                .map(cashFlowPosting -> toRevertCashFlowPosting(cashFlowPosting))
+                .collect(Collectors.toList());
 
         try {
-            hold(revertPlanId, revertPostingBatch);
-            commit(toRevertPlanId(payoutId), Arrays.asList(revertPostingBatch));
+            hold(revertPlanId, toPostingBatch(1L, revertCashFlowPostings));
+            commit(revertPlanId, toPostingBatches(revertCashFlowPostings));
         } catch (Exception ex) {
-            processRollbackRevertWhenError(revertPlanId, Arrays.asList(revertPostingBatch), ex);
+            processRollbackRevertWhenError(revertPlanId, toPostingBatches(revertCashFlowPostings), ex);
         }
     }
 
@@ -158,36 +171,121 @@ public class ShumwayServiceImpl implements ShumwayService {
         throw parent;
     }
 
-    private PostingBatch toRevertPostingBatch(Payout payout) {
-        Posting posting = new Posting();
-        posting.setFromId(payout.getShopPayoutAcc());
-        posting.setToId(payout.getShopAcc());
-        posting.setAmount(payout.getAmount());
-        posting.setCurrencySymCode(payout.getCurrencyCode());
-        posting.setDescription("Revert payout: " + payout.getId());
+    private CashFlowPosting toRevertCashFlowPosting(CashFlowPosting cashFlowPosting) {
+        CashFlowPosting revertCashFlowPosting = new CashFlowPosting();
+        revertCashFlowPosting.setBatchId(1L);
+        revertCashFlowPosting.setFromAccountId(cashFlowPosting.getToAccountId());
+        revertCashFlowPosting.setFromAccountType(cashFlowPosting.getToAccountType());
+        revertCashFlowPosting.setToAccountId(cashFlowPosting.getFromAccountId());
+        revertCashFlowPosting.setToAccountType(cashFlowPosting.getFromAccountType());
+        revertCashFlowPosting.setAmount(cashFlowPosting.getAmount());
+        revertCashFlowPosting.setCurrencyCode(cashFlowPosting.getCurrencyCode());
+        revertCashFlowPosting.setDescription("Revert payout: " + cashFlowPosting.getPayoutId());
+        return revertCashFlowPosting;
+    }
 
+    private List<PostingBatch> toPostingBatches(List<CashFlowPosting> postings) {
+        return postings.stream()
+                .collect(Collectors.groupingBy(CashFlowPosting::getBatchId, Collectors.toList()))
+                .entrySet().stream()
+                .map(entry -> toPostingBatch(entry.getKey(), entry.getValue()))
+                .collect(Collectors.toList());
+    }
+
+    private PostingBatch toPostingBatch(long batchId, List<CashFlowPosting> postings) {
         return new PostingBatch(
-                1L,
-                Arrays.asList(posting)
+                batchId,
+                postings.stream()
+                        .map(cashFlowPosting -> toPosting(cashFlowPosting))
+                        .collect(Collectors.toList())
         );
     }
 
-    private PostingBatch toPostingBatch(Payout payout) {
-        return new PostingBatch(
-                1L,
-                Arrays.asList(toPosting(payout))
-        );
-    }
-
-    private Posting toPosting(Payout payout) {
+    private Posting toPosting(CashFlowPosting cashFlowPosting) {
         Posting posting = new Posting();
-        posting.setFromId(payout.getShopAcc());
-        posting.setToId(payout.getShopPayoutAcc());
-        posting.setAmount(payout.getAmount());
-        posting.setCurrencySymCode(payout.getCurrencyCode());
-        posting.setDescription("Payout: " + payout.getId());
+        posting.setFromId(cashFlowPosting.getFromAccountId());
+        posting.setToId(cashFlowPosting.getToAccountId());
+        posting.setAmount(cashFlowPosting.getAmount());
+        posting.setCurrencySymCode(cashFlowPosting.getCurrencyCode());
+        posting.setDescription(cashFlowPosting.getDescription());
 
         return posting;
+    }
+
+    private List<CashFlowPosting> toCashFlowPostings(List<FinalCashFlowPosting> finalCashFlowPostings) {
+        return finalCashFlowPostings.stream()
+                .map(finalCashFlowPosting -> {
+                    CashFlowPosting cashFlowPosting = new CashFlowPosting();
+                    FinalCashFlowAccount source = finalCashFlowPosting.getSource();
+                    cashFlowPosting.setFromAccountId(source.getAccountId());
+                    cashFlowPosting.setFromAccountType(toAccountType(source.getAccountType()));
+                    FinalCashFlowAccount destination = finalCashFlowPosting.getDestination();
+                    cashFlowPosting.setToAccountId(destination.getAccountId());
+                    cashFlowPosting.setToAccountType(toAccountType(destination.getAccountType()));
+                    cashFlowPosting.setAmount(finalCashFlowPosting.getVolume().getAmount());
+                    cashFlowPosting.setCurrencyCode(finalCashFlowPosting.getVolume().getCurrency().getSymbolicCode());
+                    cashFlowPosting.setDescription(finalCashFlowPosting.getDetails());
+                    return cashFlowPosting;
+                }).collect(Collectors.toList());
+    }
+
+    private AccountType toAccountType(CashFlowAccount cashFlowAccount) {
+        CashFlowAccount._Fields cashFlowAccountType = cashFlowAccount.getSetField();
+        switch (cashFlowAccountType) {
+            case SYSTEM:
+                switch (cashFlowAccount.getSystem()) {
+                    case settlement:
+                        return AccountType.SYSTEM_SETTLEMENT;
+                    default:
+                        throw new IllegalArgumentException();
+                }
+            case EXTERNAL:
+                switch (cashFlowAccount.getExternal()) {
+                    case income:
+                        return AccountType.EXTERNAL_INCOME;
+                    case outcome:
+                        return AccountType.EXTERNAL_OUTCOME;
+                    default:
+                        throw new IllegalArgumentException();
+                }
+            case MERCHANT:
+                switch (cashFlowAccount.getMerchant()) {
+                    case settlement:
+                        return AccountType.MERCHANT_SETTLEMENT;
+                    case guarantee:
+                        return AccountType.MERCHANT_GUARANTEE;
+                    default:
+                        throw new IllegalArgumentException();
+                }
+            case PROVIDER:
+                switch (cashFlowAccount.getProvider()) {
+                    case settlement:
+                        return AccountType.PROVIDER_SETTLEMENT;
+                    default:
+                        throw new IllegalArgumentException();
+                }
+            default:
+                throw new IllegalArgumentException();
+        }
+    }
+
+    private CashFlowAccount toCashFlowAccount(AccountType accountType) {
+        switch (accountType) {
+            case PROVIDER_SETTLEMENT:
+                return CashFlowAccount.provider(ProviderCashFlowAccount.settlement);
+            case MERCHANT_SETTLEMENT:
+                return CashFlowAccount.merchant(MerchantCashFlowAccount.settlement);
+            case MERCHANT_GUARANTEE:
+                return CashFlowAccount.merchant(MerchantCashFlowAccount.guarantee);
+            case SYSTEM_SETTLEMENT:
+                return CashFlowAccount.system(SystemCashFlowAccount.settlement);
+            case EXTERNAL_INCOME:
+                return CashFlowAccount.external(ExternalCashFlowAccount.income);
+            case EXTERNAL_OUTCOME:
+                return CashFlowAccount.external(ExternalCashFlowAccount.outcome);
+            default:
+                throw new IllegalArgumentException();
+        }
     }
 
     private String toPlanId(long payoutId) {

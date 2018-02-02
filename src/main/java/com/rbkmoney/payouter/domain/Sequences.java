@@ -29,6 +29,11 @@ public class Sequences {
     public static final Sequence<Long> ADJUSTMENT_ID_SEQ = new SequenceImpl<Long>("adjustment_id_seq", Sht.SHT, org.jooq.impl.SQLDataType.BIGINT.nullable(false));
 
     /**
+     * The sequence <code>sht.cash_flow_posting_id_seq</code>
+     */
+    public static final Sequence<Long> CASH_FLOW_POSTING_ID_SEQ = new SequenceImpl<Long>("cash_flow_posting_id_seq", Sht.SHT, org.jooq.impl.SQLDataType.BIGINT.nullable(false));
+
+    /**
      * The sequence <code>sht.payment_id_seq</code>
      */
     public static final Sequence<Long> PAYMENT_ID_SEQ = new SequenceImpl<Long>("payment_id_seq", Sht.SHT, org.jooq.impl.SQLDataType.BIGINT.nullable(false));
