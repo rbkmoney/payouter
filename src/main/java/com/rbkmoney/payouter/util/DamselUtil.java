@@ -1,8 +1,15 @@
 package com.rbkmoney.payouter.util;
 
+import com.cronutils.builder.CronBuilder;
+import com.cronutils.model.CronType;
+import com.cronutils.model.definition.CronDefinitionBuilder;
+import com.cronutils.model.field.expression.And;
+import com.cronutils.model.field.expression.FieldExpression;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
+import com.rbkmoney.damsel.base.*;
+import com.rbkmoney.damsel.base.Schedule;
 import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.payout_processing.*;
 import com.rbkmoney.geck.common.util.TypeUtil;
@@ -13,12 +20,12 @@ import com.rbkmoney.payouter.exception.NotFoundException;
 import org.apache.thrift.TBase;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.cronutils.model.field.expression.FieldExpression.always;
+import static com.cronutils.model.field.expression.FieldExpressionFactory.every;
+import static com.cronutils.model.field.expression.FieldExpressionFactory.on;
 import static com.rbkmoney.payouter.util.CashFlowType.*;
 
 public class DamselUtil {

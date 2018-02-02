@@ -6,8 +6,11 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class ShopMetaDaoTest extends AbstractIntegrationTest {
@@ -28,6 +31,37 @@ public class ShopMetaDaoTest extends AbstractIntegrationTest {
 
         shopMetaDao.save(partyId, shopId);
         assertTrue(shopMeta.getWtime().isBefore(shopMetaDao.get(partyId, shopId).getWtime()));
+
+        shopMetaDao.save(partyId, shopId, 1, 2);
+        shopMeta = shopMetaDao.get(partyId, shopId);
+
+        assertEquals(partyId, shopMeta.getPartyId());
+        assertEquals(shopId, shopMeta.getShopId());
+        assertEquals(1, (int) shopMeta.getCalendarId());
+        assertEquals(2, (int) shopMeta.getSchedulerId());
+
+        shopMetaDao.save(partyId, shopId, 2, 1);
+        shopMeta = shopMetaDao.get(partyId, shopId);
+        assertEquals(partyId, shopMeta.getPartyId());
+        assertEquals(shopId, shopMeta.getShopId());
+        assertEquals(2, (int) shopMeta.getCalendarId());
+        assertEquals(1, (int) shopMeta.getSchedulerId());
+
+        shopMetaDao.save("test2", "test2", 2, 1);
+        List<Map.Entry<Integer, Integer>> activeShops = shopMetaDao.getAllActiveShops();
+        assertEquals(1, activeShops.size());
+
+        List<ShopMeta> shopMetaList = shopMetaDao.getByCalendarAndSchedulerId(2, 1);
+        assertEquals(2, shopMetaList.size());
+
+        shopMetaDao.disableShop(partyId, shopId);
+        shopMeta = shopMetaDao.get(partyId, shopId);
+        assertEquals(partyId, shopMeta.getPartyId());
+        assertEquals(shopId, shopMeta.getShopId());
+        assertEquals(null, shopMeta.getCalendarId());
+        assertEquals(null, shopMeta.getSchedulerId());
+
+        assertEquals(1, shopMetaDao.getByCalendarAndSchedulerId(2, 1).size());
     }
 
     @Test

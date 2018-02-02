@@ -2,6 +2,7 @@ package com.rbkmoney.payouter.config;
 
 import com.rbkmoney.damsel.accounter.AccounterSrv;
 import com.rbkmoney.damsel.domain_config.RepositoryClientSrv;
+import com.rbkmoney.damsel.message_sender.MessageSenderSrv;
 import com.rbkmoney.damsel.payment_processing.PartyManagementSrv;
 import com.rbkmoney.payouter.domain.Sht;
 import com.rbkmoney.woody.thrift.impl.http.THSpawnClientBuilder;
@@ -34,6 +35,12 @@ public class ApplicationConfig {
                 .withAddress(resource.getURI())
                 .withNetworkTimeout(networkTimeout)
                 .build(AccounterSrv.Iface.class);
+    }
+
+    @Bean
+    public MessageSenderSrv.Iface dudoser(@Value("${service.dudoser.url}") Resource resource) throws IOException {
+        return new THSpawnClientBuilder()
+                .withAddress(resource.getURI()).build(MessageSenderSrv.Iface.class);
     }
 
     @Bean

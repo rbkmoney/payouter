@@ -1,6 +1,5 @@
 package com.rbkmoney.payouter.poller.handler.impl;
 
-import com.rbkmoney.damsel.event_stock.StockEvent;
 import com.rbkmoney.damsel.payment_processing.Event;
 import com.rbkmoney.damsel.payment_processing.InvoiceChange;
 import com.rbkmoney.damsel.payment_processing.InvoicePaymentChange;
@@ -17,7 +16,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 
 @Component
-public class InvoicePaymentRefundSucceededHandler implements Handler {
+public class InvoicePaymentRefundSucceededHandler implements Handler<InvoiceChange, Event> {
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -29,8 +28,7 @@ public class InvoicePaymentRefundSucceededHandler implements Handler {
     }
 
     @Override
-    public void handle(InvoiceChange invoiceChange, StockEvent stockEvent) {
-        Event event = stockEvent.getSourceEvent().getProcessingEvent();
+    public void handle(InvoiceChange invoiceChange, Event event) {
         long eventId = event.getId();
         LocalDateTime succeededAt = TypeUtil.stringToLocalDateTime(event.getCreatedAt());
         String invoiceId = event.getSource().getInvoiceId();
