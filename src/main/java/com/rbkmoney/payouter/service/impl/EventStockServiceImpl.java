@@ -76,9 +76,7 @@ public class EventStockServiceImpl implements EventStockService {
         for (T change : changes) {
             Handler handler = getHandler(change);
             if (handler != null) {
-                if (log.isDebugEnabled()) {
-                    log.debug("Trying to handle change, change='{}', event='{}'", change, event);
-                }
+                log.debug("Trying to handle change, change='{}', event='{}'", change, event);
                 try {
                     handler.handle(change, event);
                     log.info("Change have been handled, eventId='{}', change='{}'", event.getId(), change);
