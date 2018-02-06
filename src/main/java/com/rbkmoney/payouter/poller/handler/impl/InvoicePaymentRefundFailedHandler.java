@@ -5,6 +5,9 @@ import com.rbkmoney.damsel.payment_processing.InvoiceChange;
 import com.rbkmoney.damsel.payment_processing.InvoicePaymentChange;
 import com.rbkmoney.damsel.payment_processing.InvoicePaymentRefundChange;
 import com.rbkmoney.geck.filter.Filter;
+import com.rbkmoney.geck.filter.PathConditionFilter;
+import com.rbkmoney.geck.filter.condition.IsNullCondition;
+import com.rbkmoney.geck.filter.rule.PathConditionRule;
 import com.rbkmoney.payouter.dao.RefundDao;
 import com.rbkmoney.payouter.poller.handler.Handler;
 import org.slf4j.Logger;
@@ -19,9 +22,14 @@ public class InvoicePaymentRefundFailedHandler implements Handler<InvoiceChange,
 
     private final RefundDao refundDao;
 
+    private final Filter filter;
+
     @Autowired
     public InvoicePaymentRefundFailedHandler(RefundDao refundDao) {
         this.refundDao = refundDao;
+        this.filter = new PathConditionFilter(new PathConditionRule(
+                "invoice_payment_change.payload.invoice_payment_refund_change.payload.invoice_payment_refund_status_changed.status.failed",
+                new IsNullCondition().not()));
     }
 
     @Override
@@ -44,12 +52,7 @@ public class InvoicePaymentRefundFailedHandler implements Handler<InvoiceChange,
 
     @Override
     public Filter<InvoiceChange> getFilter() {
-        return invoiceChange -> invoiceChange.isSetInvoicePaymentChange()
-                && invoiceChange.getInvoicePaymentChange().getPayload().isSetInvoicePaymentRefundChange()
-                && invoiceChange.getInvoicePaymentChange().getPayload().getInvoicePaymentRefundChange()
-                .getPayload().isSetInvoicePaymentRefundStatusChanged()
-                && invoiceChange.getInvoicePaymentChange().getPayload().getInvoicePaymentRefundChange()
-                .getPayload().getInvoicePaymentRefundStatusChanged().getStatus().isSetFailed();
+        return filter;
     }
 
 }

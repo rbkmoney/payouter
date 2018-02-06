@@ -4,6 +4,9 @@ import com.rbkmoney.damsel.domain.Invoice;
 import com.rbkmoney.damsel.payment_processing.Event;
 import com.rbkmoney.damsel.payment_processing.InvoiceChange;
 import com.rbkmoney.geck.filter.Filter;
+import com.rbkmoney.geck.filter.PathConditionFilter;
+import com.rbkmoney.geck.filter.condition.IsNullCondition;
+import com.rbkmoney.geck.filter.rule.PathConditionRule;
 import com.rbkmoney.payouter.dao.InvoiceDao;
 import com.rbkmoney.payouter.dao.ShopMetaDao;
 import com.rbkmoney.payouter.poller.handler.Handler;
@@ -21,10 +24,15 @@ public class InvoiceHandler implements Handler<InvoiceChange, Event> {
 
     private final InvoiceDao invoiceDao;
 
+    private final Filter filter;
+
     @Autowired
     public InvoiceHandler(ShopMetaDao shopMetaDao, InvoiceDao invoiceDao) {
         this.shopMetaDao = shopMetaDao;
         this.invoiceDao = invoiceDao;
+        this.filter = new PathConditionFilter(new PathConditionRule(
+                "invoice_created",
+                new IsNullCondition().not()));
     }
 
     @Override
@@ -43,6 +51,6 @@ public class InvoiceHandler implements Handler<InvoiceChange, Event> {
 
     @Override
     public Filter<InvoiceChange> getFilter() {
-        return invoiceChange -> invoiceChange.isSetInvoiceCreated();
+        return filter;
     }
 }

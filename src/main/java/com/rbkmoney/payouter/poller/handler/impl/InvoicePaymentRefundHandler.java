@@ -4,6 +4,9 @@ import com.rbkmoney.damsel.domain.InvoicePaymentRefund;
 import com.rbkmoney.damsel.payment_processing.*;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.geck.filter.Filter;
+import com.rbkmoney.geck.filter.PathConditionFilter;
+import com.rbkmoney.geck.filter.condition.IsNullCondition;
+import com.rbkmoney.geck.filter.rule.PathConditionRule;
 import com.rbkmoney.payouter.dao.PaymentDao;
 import com.rbkmoney.payouter.dao.RefundDao;
 import com.rbkmoney.payouter.domain.enums.RefundStatus;
@@ -33,13 +36,15 @@ public class InvoicePaymentRefundHandler implements Handler<InvoiceChange, Event
 
     private final PaymentDao paymentDao;
 
-    private final PartyManagementService partyManagementService;
+    private final Filter filter;
 
     @Autowired
-    public InvoicePaymentRefundHandler(RefundDao refundDao, PaymentDao paymentDao, PartyManagementService partyManagementService) {
+    public InvoicePaymentRefundHandler(RefundDao refundDao, PaymentDao paymentDao) {
         this.refundDao = refundDao;
         this.paymentDao = paymentDao;
-        this.partyManagementService = partyManagementService;
+        this.filter = new PathConditionFilter(new PathConditionRule(
+                "invoice_payment_change.payload.invoice_payment_refund_change.payload.invoice_payment_refund_created",
+                new IsNullCondition().not()));
     }
 
     @Override
@@ -88,9 +93,6 @@ public class InvoicePaymentRefundHandler implements Handler<InvoiceChange, Event
 
     @Override
     public Filter<InvoiceChange> getFilter() {
-        return invoiceChange -> invoiceChange.isSetInvoicePaymentChange()
-                && invoiceChange.getInvoicePaymentChange().getPayload().isSetInvoicePaymentRefundChange()
-                && invoiceChange.getInvoicePaymentChange().getPayload().getInvoicePaymentRefundChange()
-                .getPayload().isSetInvoicePaymentRefundCreated();
+        return filter;
     }
 }

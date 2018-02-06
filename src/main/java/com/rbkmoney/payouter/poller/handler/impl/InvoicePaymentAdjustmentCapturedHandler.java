@@ -6,6 +6,9 @@ import com.rbkmoney.damsel.payment_processing.InvoicePaymentAdjustmentChange;
 import com.rbkmoney.damsel.payment_processing.InvoicePaymentChange;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.geck.filter.Filter;
+import com.rbkmoney.geck.filter.PathConditionFilter;
+import com.rbkmoney.geck.filter.condition.IsNullCondition;
+import com.rbkmoney.geck.filter.rule.PathConditionRule;
 import com.rbkmoney.payouter.dao.AdjustmentDao;
 import com.rbkmoney.payouter.poller.handler.Handler;
 import org.slf4j.Logger;
@@ -22,9 +25,14 @@ public class InvoicePaymentAdjustmentCapturedHandler implements Handler<InvoiceC
 
     private final AdjustmentDao adjustmentDao;
 
+    private final Filter filter;
+
     @Autowired
     public InvoicePaymentAdjustmentCapturedHandler(AdjustmentDao adjustmentDao) {
         this.adjustmentDao = adjustmentDao;
+        this.filter = new PathConditionFilter(new PathConditionRule(
+                "invoice_payment_change.payload.invoice_payment_adjustment_change.payload.invoice_payment_adjustment_status_changed.status.captured",
+                new IsNullCondition().not()));
     }
 
     @Override
@@ -48,11 +56,6 @@ public class InvoicePaymentAdjustmentCapturedHandler implements Handler<InvoiceC
 
     @Override
     public Filter<InvoiceChange> getFilter() {
-        return invoiceChange -> invoiceChange.isSetInvoicePaymentChange()
-                && invoiceChange.getInvoicePaymentChange().getPayload().isSetInvoicePaymentAdjustmentChange()
-                && invoiceChange.getInvoicePaymentChange().getPayload().getInvoicePaymentAdjustmentChange()
-                .getPayload().isSetInvoicePaymentAdjustmentStatusChanged()
-                && invoiceChange.getInvoicePaymentChange().getPayload().getInvoicePaymentAdjustmentChange()
-                .getPayload().getInvoicePaymentAdjustmentStatusChanged().getStatus().isSetCaptured();
+        return filter;
     }
 }

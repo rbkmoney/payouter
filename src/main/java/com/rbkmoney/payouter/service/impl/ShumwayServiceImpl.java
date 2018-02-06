@@ -16,6 +16,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.List;
@@ -44,6 +46,7 @@ public class ShumwayServiceImpl implements ShumwayService {
         hold(payoutId, toPlanId(payoutId), 1L, toCashFlowPostings(finalCashFlowPostings));
     }
 
+    @Transactional(propagation = Propagation.REQUIRED)
     public void hold(long payoutId, String planId, long batchId, List<CashFlowPosting> cashFlowPostings) {
         log.debug("Trying to hold payout postings, payoutId='{}', cashFlowPostings='{}'", payoutId, cashFlowPostings);
         List<CashFlowPosting> newCashFlowPostings = cashFlowPostings.stream().map(cashFlowPosting -> {

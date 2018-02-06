@@ -7,6 +7,9 @@ import com.rbkmoney.damsel.payment_processing.InvoicePaymentAdjustmentChange;
 import com.rbkmoney.damsel.payment_processing.InvoicePaymentChange;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.geck.filter.Filter;
+import com.rbkmoney.geck.filter.PathConditionFilter;
+import com.rbkmoney.geck.filter.condition.IsNullCondition;
+import com.rbkmoney.geck.filter.rule.PathConditionRule;
 import com.rbkmoney.payouter.dao.AdjustmentDao;
 import com.rbkmoney.payouter.dao.PaymentDao;
 import com.rbkmoney.payouter.domain.enums.AdjustmentStatus;
@@ -34,10 +37,15 @@ public class InvoicePaymentAdjustmentHandler implements Handler<InvoiceChange, E
 
     private final PaymentDao paymentDao;
 
+    private final Filter filter;
+
     @Autowired
     public InvoicePaymentAdjustmentHandler(AdjustmentDao adjustmentDao, PaymentDao paymentDao) {
         this.adjustmentDao = adjustmentDao;
         this.paymentDao = paymentDao;
+        this.filter = new PathConditionFilter(new PathConditionRule(
+                "invoice_payment_change.payload.invoice_payment_adjustment_change.payload.invoice_payment_adjustment_created",
+                new IsNullCondition().not()));
     }
 
     @Override
@@ -88,9 +96,6 @@ public class InvoicePaymentAdjustmentHandler implements Handler<InvoiceChange, E
 
     @Override
     public Filter<InvoiceChange> getFilter() {
-        return invoiceChange -> invoiceChange.isSetInvoicePaymentChange()
-                && invoiceChange.getInvoicePaymentChange().getPayload().isSetInvoicePaymentAdjustmentChange()
-                && invoiceChange.getInvoicePaymentChange().getPayload().getInvoicePaymentAdjustmentChange()
-                .getPayload().isSetInvoicePaymentAdjustmentCreated();
+        return filter;
     }
 }

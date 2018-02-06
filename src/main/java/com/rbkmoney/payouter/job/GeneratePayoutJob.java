@@ -16,25 +16,23 @@ import org.quartz.impl.calendar.HolidayCalendar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 
+@Component
 public class GeneratePayoutJob implements Job {
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    private final PayoutService payoutService;
-
-    private final PartyManagementService partyManagementService;
+    @Autowired
+    private PayoutService payoutService;
 
     @Autowired
-    public GeneratePayoutJob(PayoutService payoutService, PartyManagementService partyManagementService) {
-        this.payoutService = payoutService;
-        this.partyManagementService = partyManagementService;
-    }
+    private PartyManagementService partyManagementService;
 
     @Override
     public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
@@ -67,10 +65,10 @@ public class GeneratePayoutJob implements Job {
                 }
             }
         } catch (StorageException | WRuntimeException ex) {
-            throw new JobExecutionException(String.format("Job execution failed, retry. jobExecutionContext='%s'", jobExecutionContext), ex, true);
+            throw new JobExecutionException(String.format("Job execution failed, shops='%s', retry='%s'. jobExecutionContext='%s'", shops, jobExecutionContext), ex, true);
         } catch (Exception ex) {
             JobExecutionException jobExecutionException = new JobExecutionException(
-                    String.format("Job execution failed, stop scheduler. jobExecutionContext='%s'", jobExecutionContext),
+                    String.format("Job execution failed, stop. shops='%s', jobExecutionContext='%s'", shops, jobExecutionContext),
                     ex);
             jobExecutionException.setUnscheduleFiringTrigger(true);
             throw jobExecutionException;

@@ -5,6 +5,7 @@ import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.payouter.dao.ShopMetaDao;
 import com.rbkmoney.payouter.domain.tables.pojos.ShopMeta;
 import com.rbkmoney.payouter.exception.DaoException;
+import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.exception.ScheduleProcessingException;
 import com.rbkmoney.payouter.exception.StorageException;
 import com.rbkmoney.payouter.job.GeneratePayoutJob;
@@ -68,7 +69,7 @@ public class SchedulerServiceImpl implements SchedulerService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
-    public void registerJob(String partyId, String shopId, ScheduleRef scheduleRef) {
+    public void registerJob(String partyId, String shopId, ScheduleRef scheduleRef) throws NotFoundException, ScheduleProcessingException, StorageException {
         try {
             log.info("Trying to register job, partyId='{}', shopId='{}', scheduleRef='{}'",
                     partyId, shopId, scheduleRef);
@@ -91,7 +92,7 @@ public class SchedulerServiceImpl implements SchedulerService {
         }
     }
 
-    private void updateJobs(CalendarRef calendarRef, ScheduleRef scheduleRef) {
+    private void updateJobs(CalendarRef calendarRef, ScheduleRef scheduleRef) throws NotFoundException, ScheduleProcessingException, StorageException {
         log.info("Trying to update jobs, calendarRef='{}', scheduleRef='{}'", calendarRef, scheduleRef);
         try {
             List<ShopMeta> shops = shopMetaDao.getByCalendarAndSchedulerId(calendarRef.getId(), scheduleRef.getId());
@@ -147,7 +148,7 @@ public class SchedulerServiceImpl implements SchedulerService {
         }
     }
 
-    private void cleanUpJobs(CalendarRef calendarRef, ScheduleRef scheduleRef) {
+    private void cleanUpJobs(CalendarRef calendarRef, ScheduleRef scheduleRef) throws ScheduleProcessingException {
         try {
             log.info("Starting clean-up for jobs, calendarRef='{}', scheduleRef='{}'", calendarRef, scheduleRef);
             JobKey jobKey = buildJobKey(calendarRef, scheduleRef);
@@ -168,7 +169,7 @@ public class SchedulerServiceImpl implements SchedulerService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
-    public void deregisterJob(String partyId, String shopId) {
+    public void deregisterJob(String partyId, String shopId) throws NotFoundException, ScheduleProcessingException, StorageException {
         try {
             log.info("Trying to deregister job, partyId='{}', contractId='{}', payoutToolId='{}'", partyId, shopId);
             ShopMeta shopMeta = shopMetaDao.get(partyId, shopId);
