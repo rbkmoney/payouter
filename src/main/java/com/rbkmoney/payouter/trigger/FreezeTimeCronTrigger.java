@@ -1,9 +1,14 @@
 package com.rbkmoney.payouter.trigger;
 
+import com.cronutils.model.definition.CronDefinitionBuilder;
+import com.cronutils.model.time.ExecutionTime;
+import com.cronutils.parser.CronParser;
 import org.quartz.Calendar;
+import org.quartz.CronExpression;
 import org.quartz.Trigger;
 import org.quartz.impl.triggers.CronTriggerImpl;
 
+import java.text.ParseException;
 import java.time.*;
 import java.time.temporal.TemporalUnit;
 import java.util.Arrays;
@@ -11,11 +16,17 @@ import java.util.Date;
 import java.util.Objects;
 import java.util.Optional;
 
+import static com.cronutils.model.CronType.QUARTZ;
 import static java.time.temporal.ChronoUnit.*;
 
 public class FreezeTimeCronTrigger extends CronTriggerImpl {
 
-    private Period period;
+
+    private int years;
+
+    private int months;
+
+    private int days;
 
     private long hours;
 
@@ -23,33 +34,46 @@ public class FreezeTimeCronTrigger extends CronTriggerImpl {
 
     private long seconds;
 
+    private ExecutionTime executionTime;
+
     public FreezeTimeCronTrigger() {
         super();
-        period = Period.ZERO;
+    }
+
+    @Override
+    public void setCronExpression(String cronExpression) throws ParseException {
+        super.setCronExpression(cronExpression);
+        initExecutionTime();
+    }
+
+    @Override
+    public void setCronExpression(CronExpression cronExpression) {
+        super.setCronExpression(cronExpression);
+        initExecutionTime();
     }
 
     public void withYears(int years) {
-        this.period = period.withYears(years);
+        this.years = years;
     }
 
     public int getYears() {
-        return this.period.getYears();
+        return this.years;
     }
 
     public void withMonths(int months) {
-        this.period = period.withMonths(months);
+        this.months = months;
     }
 
     public int getMonths() {
-        return this.period.getMonths();
+        return this.months;
     }
 
     public void withDays(int days) {
-        this.period = period.withDays(days);
+        this.days = days;
     }
 
     public int getDays() {
-        return this.period.getDays();
+        return this.days;
     }
 
     public void withHours(long hours) {
@@ -76,6 +100,12 @@ public class FreezeTimeCronTrigger extends CronTriggerImpl {
         return seconds;
     }
 
+    private void initExecutionTime() {
+        this.executionTime = ExecutionTime
+                .forCron(new CronParser(CronDefinitionBuilder.instanceDefinitionFor(QUARTZ))
+                        .parse(getCronExpression()));
+    }
+
     @Override
     public void updateAfterMisfire(Calendar calendar) {
         int instr = getMisfireInstruction();
@@ -97,7 +127,20 @@ public class FreezeTimeCronTrigger extends CronTriggerImpl {
     @Override
     public void triggered(Calendar calendar) {
         setPreviousFireTime(getNextFireTime());
-        setNextFireTime(computeNextFireTime(getNextFireTime(), calendar));
+        setNextFireTime(computeNextFireTime(getTimeBefore(getNextFireTime()), calendar));
+    }
+
+    @Override
+    protected Date getTimeBefore(Date eTime) {
+        return Optional.ofNullable(executionTime)
+                .map(execution -> getTimeBefore(eTime, execution))
+                .orElse(null);
+    }
+
+    private Date getTimeBefore(Date eTime, ExecutionTime executionTime) {
+        return executionTime.lastExecution(ZonedDateTime.ofInstant(eTime.toInstant(), getTimeZone().toZoneId()))
+                .map(time -> Date.from(time.toInstant()))
+                .orElse(null);
     }
 
     @Override
@@ -106,7 +149,7 @@ public class FreezeTimeCronTrigger extends CronTriggerImpl {
         setNextFireTime(computeNextFireTime(getPreviousFireTime(), calendar));
 
         if (getNextFireTime() != null && getNextFireTime().toInstant().isBefore(now)) {
-            long diff = Duration.between(now, getNextFireTime().toInstant()).toMillis();
+            long diff = Duration.between(getNextFireTime().toInstant(), now).toMillis();
             if (diff >= misfireThreshold) {
                 setNextFireTime(computeNextFireTime(getNextFireTime(), calendar));
             }
@@ -130,28 +173,32 @@ public class FreezeTimeCronTrigger extends CronTriggerImpl {
         LocalDateTime fireTime = LocalDateTime.ofInstant(nextFireTime.toInstant(), ZoneOffset.UTC);
 
         Duration between = Duration.between(
-                fireTime
-                        .plusYears(period.getYears())
-                        .plusMonths(period.getMonths())
-                        .plusDays(period.getDays())
+                fireTime,
+                fireTime.plusYears(years)
+                        .plusMonths(months)
+                        .plusDays(days)
                         .plusHours(hours)
                         .plusMinutes(minutes)
-                        .plusSeconds(seconds),
-                fireTime
+                        .plusSeconds(seconds)
         );
 
         for (TemporalUnit temporalUnit : Arrays.asList(DAYS, HOURS, MINUTES, SECONDS)) {
             long unitCount = between.getSeconds() / temporalUnit.getDuration().getSeconds();
             for (int unit = 0; unit < unitCount; unit++) {
-                fireTime = fireTime.plus(1, temporalUnit);
-                while (calendar != null && !calendar.isTimeIncluded(fireTime.toInstant(ZoneOffset.UTC).toEpochMilli())) {
-                    fireTime = fireTime.plus(1, temporalUnit);
-                }
+                fireTime = skipExcludedTimes(fireTime, temporalUnit, calendar).plus(1, temporalUnit);
+                fireTime = skipExcludedTimes(fireTime, temporalUnit, calendar);
             }
             between = between.minus(unitCount, temporalUnit);
         }
 
         return Date.from(fireTime.toInstant(ZoneOffset.UTC));
+    }
+
+    public LocalDateTime skipExcludedTimes(LocalDateTime time, TemporalUnit temporalUnit, Calendar calendar) {
+        while (calendar != null && !calendar.isTimeIncluded(time.toInstant(ZoneOffset.UTC).toEpochMilli())) {
+            time = time.plus(1, temporalUnit);
+        }
+        return time;
     }
 
 }

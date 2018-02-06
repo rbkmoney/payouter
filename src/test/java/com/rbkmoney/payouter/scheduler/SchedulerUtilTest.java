@@ -5,6 +5,7 @@ import com.rbkmoney.damsel.base.Month;
 import com.rbkmoney.damsel.base.*;
 import com.rbkmoney.damsel.domain.Calendar;
 import com.rbkmoney.damsel.domain.CalendarHoliday;
+import com.rbkmoney.payouter.trigger.FreezeTimeCronTrigger;
 import com.rbkmoney.payouter.util.SchedulerUtil;
 import org.junit.Test;
 import org.quartz.CronExpression;
@@ -13,6 +14,7 @@ import org.springframework.core.io.ClassPathResource;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.text.ParseException;
 import java.time.*;
 import java.util.*;
 
@@ -39,6 +41,145 @@ public class SchedulerUtilTest {
                 SchedulerUtil.buildCalendar(buildTestCalendar())
         );
         assertEquals("2017-03-23T20:25:05Z", instant.toString());
+    }
+
+    @Test
+    public void testStartOfWeekOnThirdWorkingDay() throws ParseException, IOException {
+        FreezeTimeCronTrigger trigger = new FreezeTimeCronTrigger();
+        trigger.setCronExpression(new CronExpression("0 0 0 ? * MON *"));
+        trigger.setStartTime(
+                Date.from(
+                        LocalDate.of(2018, java.time.Month.APRIL, 24)
+                                .atStartOfDay(ZoneId.of("Europe/Moscow"))
+                                .toInstant()
+                )
+        );
+        trigger.setTimeZone(TimeZone.getTimeZone("Europe/Moscow"));
+        trigger.withDays(2);
+
+        HolidayCalendar calendar = SchedulerUtil.buildCalendar(buildTestCalendar());
+        trigger.computeFirstFireTime(calendar);
+
+        //since April 24, 2018
+        assertEquals(
+                LocalDate.of(2018, java.time.Month.MAY, 7)
+                        .atStartOfDay(ZoneId.of("Europe/Moscow"))
+                        .toInstant(),
+                trigger.getNextFireTime().toInstant()
+        );
+
+        //continue from 7 May, 2018
+        trigger.triggered(calendar);
+
+        assertEquals(
+                LocalDate.of(2018, java.time.Month.MAY, 10)
+                        .atStartOfDay(ZoneId.of("Europe/Moscow"))
+                        .toInstant(),
+                trigger.getNextFireTime().toInstant()
+        );
+
+        //since December 29, 2017
+        trigger.setStartTime(
+                Date.from(
+                        LocalDate.of(2017, java.time.Month.DECEMBER, 29)
+                                .atStartOfDay(ZoneId.of("Europe/Moscow"))
+                                .toInstant()
+                )
+        );
+
+        trigger.computeFirstFireTime(calendar);
+        assertEquals(
+                LocalDate.of(2018, java.time.Month.JANUARY, 11)
+                        .atStartOfDay(ZoneId.of("Europe/Moscow"))
+                        .toInstant(),
+                trigger.getNextFireTime().toInstant()
+        );
+
+        //continue 11 january, 2018
+        trigger.triggered(calendar);
+        assertEquals(
+                LocalDate.of(2018, java.time.Month.JANUARY, 17)
+                        .atStartOfDay(ZoneId.of("Europe/Moscow"))
+                        .toInstant(),
+                trigger.getNextFireTime().toInstant()
+        );
+
+        trigger.updateWithNewCalendar(calendar, 1000L);
+        assertEquals(
+                LocalDate.of(2018, java.time.Month.JANUARY, 24)
+                        .atStartOfDay(ZoneId.of("Europe/Moscow"))
+                        .toInstant(),
+                trigger.getNextFireTime().toInstant()
+        );
+    }
+
+    @Test
+    public void testStartOfMonthOnThirdWorkingDay() throws ParseException, IOException {
+        FreezeTimeCronTrigger trigger = new FreezeTimeCronTrigger();
+        trigger.setCronExpression(new CronExpression("0 0 0 1 * ? *"));
+        trigger.setStartTime(
+                Date.from(
+                        LocalDate.of(2018, java.time.Month.APRIL, 24)
+                                .atStartOfDay(ZoneId.of("Europe/Moscow"))
+                                .toInstant()
+                )
+        );
+        trigger.setTimeZone(TimeZone.getTimeZone("Europe/Moscow"));
+        trigger.withDays(2);
+
+        HolidayCalendar calendar = SchedulerUtil.buildCalendar(buildTestCalendar());
+        trigger.computeFirstFireTime(calendar);
+
+        //since April 24, 2018
+        assertEquals(
+                LocalDate.of(2018, java.time.Month.MAY, 7)
+                        .atStartOfDay(ZoneId.of("Europe/Moscow"))
+                        .toInstant(),
+                trigger.getNextFireTime().toInstant()
+        );
+
+        //continue from 7 May, 2018
+        trigger.triggered(calendar);
+        assertEquals(
+                LocalDate.of(2018, java.time.Month.JUNE, 5)
+                        .atStartOfDay(ZoneId.of("Europe/Moscow"))
+                        .toInstant(),
+                trigger.getNextFireTime().toInstant()
+        );
+
+        //since December 29, 2017
+        trigger.setStartTime(
+                Date.from(
+                        LocalDate.of(2017, java.time.Month.DECEMBER, 29)
+                                .atStartOfDay(ZoneId.of("Europe/Moscow"))
+                                .toInstant()
+                )
+        );
+
+        trigger.computeFirstFireTime(calendar);
+        assertEquals(
+                LocalDate.of(2018, java.time.Month.JANUARY, 11)
+                        .atStartOfDay(ZoneId.of("Europe/Moscow"))
+                        .toInstant(),
+                trigger.getNextFireTime().toInstant()
+        );
+
+        //continue 11 january, 2018
+        trigger.triggered(calendar);
+        assertEquals(
+                LocalDate.of(2018, java.time.Month.FEBRUARY, 5)
+                        .atStartOfDay(ZoneId.of("Europe/Moscow"))
+                        .toInstant(),
+                trigger.getNextFireTime().toInstant()
+        );
+
+        trigger.updateWithNewCalendar(calendar, 1000L);
+        assertEquals(
+                LocalDate.of(2018, java.time.Month.MARCH, 5)
+                        .atStartOfDay(ZoneId.of("Europe/Moscow"))
+                        .toInstant(),
+                trigger.getNextFireTime().toInstant()
+        );
     }
 
     @Test
