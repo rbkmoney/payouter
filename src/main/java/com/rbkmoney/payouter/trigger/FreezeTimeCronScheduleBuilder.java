@@ -7,6 +7,8 @@ import org.quartz.Trigger;
 import org.quartz.spi.MutableTrigger;
 
 import java.text.ParseException;
+import java.util.Objects;
+import java.util.TimeZone;
 
 public class FreezeTimeCronScheduleBuilder extends ScheduleBuilder<FreezeTimeCronTrigger> {
 
@@ -27,6 +29,7 @@ public class FreezeTimeCronScheduleBuilder extends ScheduleBuilder<FreezeTimeCro
     private long seconds;
 
     protected FreezeTimeCronScheduleBuilder(CronExpression cronExpression) {
+        Objects.requireNonNull(cronExpression, "Cron expression cannot be null");
         this.cronExpression = cronExpression;
     }
 
@@ -52,6 +55,15 @@ public class FreezeTimeCronScheduleBuilder extends ScheduleBuilder<FreezeTimeCro
         } catch (ParseException ex) {
             throw new IllegalArgumentException(String.format("CronExpression '%s' is invalid.", cronExpression), ex);
         }
+    }
+
+    public static FreezeTimeCronScheduleBuilder cronSchedule(CronExpression cronExpression) {
+        return new FreezeTimeCronScheduleBuilder(cronExpression);
+    }
+
+    public FreezeTimeCronScheduleBuilder inTimeZone(TimeZone timezone) {
+        cronExpression.setTimeZone(timezone);
+        return this;
     }
 
     public FreezeTimeCronScheduleBuilder withYears(int years) {
@@ -82,10 +94,6 @@ public class FreezeTimeCronScheduleBuilder extends ScheduleBuilder<FreezeTimeCro
     public FreezeTimeCronScheduleBuilder withSeconds(long seconds) {
         this.seconds = seconds;
         return this;
-    }
-
-    public static FreezeTimeCronScheduleBuilder cronSchedule(CronExpression cronExpression) {
-        return new FreezeTimeCronScheduleBuilder(cronExpression);
     }
 
     public FreezeTimeCronScheduleBuilder withMisfireHandlingInstructionIgnoreMisfires() {

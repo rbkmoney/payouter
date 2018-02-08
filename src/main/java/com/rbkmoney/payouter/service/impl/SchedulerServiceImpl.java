@@ -1,5 +1,6 @@
 package com.rbkmoney.payouter.service.impl;
 
+import com.rbkmoney.damsel.base.TimeSpan;
 import com.rbkmoney.damsel.domain.Calendar;
 import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.payouter.dao.ShopMetaDao;
@@ -12,6 +13,7 @@ import com.rbkmoney.payouter.job.GeneratePayoutJob;
 import com.rbkmoney.payouter.service.DominantService;
 import com.rbkmoney.payouter.service.PartyManagementService;
 import com.rbkmoney.payouter.service.SchedulerService;
+import com.rbkmoney.payouter.trigger.FreezeTimeCronScheduleBuilder;
 import com.rbkmoney.payouter.util.SchedulerUtil;
 import org.quartz.*;
 import org.quartz.impl.calendar.HolidayCalendar;
@@ -24,7 +26,10 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.TimeZone;
 import java.util.stream.Collectors;
 
 @Service
@@ -55,14 +60,19 @@ public class SchedulerServiceImpl implements SchedulerService {
     @PostConstruct
     public void initJobs() {
         log.info("Starting jobs...");
-        List<Map.Entry<Integer, Integer>> activeShops = shopMetaDao.getAllActiveShops();
+        List<ShopMeta> activeShops = shopMetaDao.getAllActiveShops();
         if (activeShops.isEmpty()) {
             log.info("No shops found, nothing to do");
             return;
         }
 
-        for (Map.Entry<Integer, Integer> job : activeShops) {
-            updateJobs(new CalendarRef(job.getKey()), new ScheduleRef(job.getValue()));
+        for (ShopMeta shopMeta : activeShops) {
+            createJob(
+                    shopMeta.getPartyId(),
+                    shopMeta.getShopId(),
+                    new CalendarRef(shopMeta.getCalendarId()),
+                    new ScheduleRef(shopMeta.getSchedulerId())
+            );
         }
         log.info("Jobs have been successfully started, jobsCount='{}'", activeShops.size());
     }
@@ -81,7 +91,7 @@ public class SchedulerServiceImpl implements SchedulerService {
 
             shopMetaDao.save(partyId, shopId, calendarRef.getId(), scheduleRef.getId());
 
-            updateJobs(calendarRef, scheduleRef);
+            createJob(partyId, shopId, calendarRef, scheduleRef);
             log.info("Job have been successfully enabled, partyId='{}', shopId='{}', scheduleRef='{}', calendarRef='{}'",
                     partyId, shopId, scheduleRef, calendarRef);
         } catch (DaoException ex) {
@@ -92,16 +102,9 @@ public class SchedulerServiceImpl implements SchedulerService {
         }
     }
 
-    private void updateJobs(CalendarRef calendarRef, ScheduleRef scheduleRef) throws NotFoundException, ScheduleProcessingException, StorageException {
-        log.info("Trying to update jobs, calendarRef='{}', scheduleRef='{}'", calendarRef, scheduleRef);
+    private void createJob(String partyId, String shopId, CalendarRef calendarRef, ScheduleRef scheduleRef) throws NotFoundException, ScheduleProcessingException, StorageException {
+        log.info("Trying to create job, partyId='{}', shopId='{}', calendarRef='{}', scheduleRef='{}'", partyId, shopId, calendarRef, scheduleRef);
         try {
-            List<ShopMeta> shops = shopMetaDao.getByCalendarAndSchedulerId(calendarRef.getId(), scheduleRef.getId());
-
-            if (shops.isEmpty()) {
-                cleanUpJobs(calendarRef, scheduleRef);
-                return;
-            }
-
             Schedule schedule = dominantService.getSchedule(scheduleRef);
             Calendar calendar = dominantService.getCalendar(calendarRef);
 
@@ -110,60 +113,46 @@ public class SchedulerServiceImpl implements SchedulerService {
             scheduler.addCalendar(calendarId, holidayCalendar, true, true);
             log.info("New calendar was saved, calendarRef='{}', calendarId='{}'", calendarRef, calendarId);
 
-            JobDataMap jobDataMap = new JobDataMap();
-            jobDataMap.put("shops", shops);
-
             JobDetail jobDetail = JobBuilder.newJob(GeneratePayoutJob.class)
-                    .withIdentity(buildJobKey(calendarRef, scheduleRef))
+                    .withIdentity(buildJobKey(partyId, shopId, calendarRef.getId(), scheduleRef.getId()))
                     .withDescription(schedule.getDescription())
-                    .usingJobData(jobDataMap)
+                    .usingJobData(GeneratePayoutJob.PARTY_ID, partyId)
+                    .usingJobData(GeneratePayoutJob.SHOP_ID, shopId)
                     .build();
 
+            TimeSpan timeSpan = partyManagementService.getAssetsFreezeFor(partyId, shopId);
             Set<Trigger> triggers = new HashSet<>();
             List<String> cronList = SchedulerUtil.buildCron(schedule.getSchedule());
-            for (int itemId = 0; itemId < cronList.size(); itemId++) {
-                String cron = cronList.get(itemId);
+            for (int triggerId = 0; triggerId < cronList.size(); triggerId++) {
+                String cron = cronList.get(triggerId);
                 Trigger trigger = TriggerBuilder.newTrigger()
-                        .withIdentity(buildTriggerKey(calendarRef, scheduleRef, itemId))
+                        .withIdentity(buildTriggerKey(partyId, shopId, calendarRef.getId(), scheduleRef.getId(), triggerId))
                         .withDescription(schedule.getDescription())
                         .forJob(jobDetail)
                         .withSchedule(
-                                CronScheduleBuilder.cronSchedule(cron)
+                                FreezeTimeCronScheduleBuilder.cronSchedule(cron)
                                         .inTimeZone(TimeZone.getTimeZone(calendar.getTimezone()))
+                                        .withYears(timeSpan.getYears())
+                                        .withMonths(timeSpan.getMonths())
+                                        .withDays(timeSpan.getDays())
+                                        .withHours(timeSpan.getHours())
+                                        .withMinutes(timeSpan.getMinutes())
+                                        .withSeconds(timeSpan.getSeconds())
                         )
                         .modifiedByCalendar(calendarId)
                         .build();
                 triggers.add(trigger);
             }
             scheduler.scheduleJob(jobDetail, triggers, true);
-            log.info("Jobs have been successfully updated, calendarRef='{}', scheduleRef='{}', jobDetail='{}', triggers='{}'", calendarRef, scheduleRef, jobDetail, triggers);
+            log.info("Jobs have been successfully created or updated, partyId='{}', shopId='{}', calendarRef='{}', scheduleRef='{}', jobDetail='{}', triggers='{}'", calendarRef, scheduleRef, jobDetail, triggers);
         } catch (DaoException ex) {
             throw new StorageException(
-                    String.format("failed to update jobs from storage, calendarRef='%s', scheduleRef='%s'",
-                            calendarRef, scheduleRef, ex));
-        } catch (SchedulerException ex) {
+                    String.format("failed to create job on storage, partyId='%s', shopId='%s', calendarRef='%s', scheduleRef='%s'",
+                            partyId, shopId, calendarRef, scheduleRef, ex));
+        } catch (NotFoundException | SchedulerException ex) {
             throw new ScheduleProcessingException(
-                    String.format("Failed to update jobs, calendarRef='%s', scheduleRef='%s'",
-                            calendarRef, scheduleRef), ex);
-        }
-    }
-
-    private void cleanUpJobs(CalendarRef calendarRef, ScheduleRef scheduleRef) throws ScheduleProcessingException {
-        try {
-            log.info("Starting clean-up for jobs, calendarRef='{}', scheduleRef='{}'", calendarRef, scheduleRef);
-            JobKey jobKey = buildJobKey(calendarRef, scheduleRef);
-            List<TriggerKey> triggerKeys = scheduler.getTriggersOfJob(jobKey).stream()
-                    .map(trigger -> trigger.getKey())
-                    .collect(Collectors.toList());
-
-            scheduler.unscheduleJobs(triggerKeys);
-            scheduler.deleteJob(jobKey);
-            log.info("Jobs clean-up finished, calendarRef='{}', scheduleRef='{}', jobKey='{}', triggerKeys='{}'",
-                    calendarRef, scheduleRef, jobKey, triggerKeys);
-        } catch (SchedulerException ex) {
-            throw new ScheduleProcessingException(
-                    String.format("Failed to clean-up jobs, calendarRef='%s', scheduleRef='%s'",
-                            calendarRef, scheduleRef), ex);
+                    String.format("Failed to create job, partyId='%s', shopId='%s', calendarRef='%s', scheduleRef='%s'",
+                            partyId, shopId, calendarRef, scheduleRef), ex);
         }
     }
 
@@ -175,7 +164,13 @@ public class SchedulerServiceImpl implements SchedulerService {
             ShopMeta shopMeta = shopMetaDao.get(partyId, shopId);
             shopMetaDao.disableShop(partyId, shopId);
             if (shopMeta.getCalendarId() != null && shopMeta.getSchedulerId() != null) {
-                updateJobs(new CalendarRef(shopMeta.getCalendarId()), new ScheduleRef(shopMeta.getSchedulerId()));
+                JobKey jobKey = buildJobKey(partyId, shopId, shopMeta.getCalendarId(), shopMeta.getSchedulerId());
+                List<TriggerKey> triggerKeys = scheduler.getTriggersOfJob(jobKey).stream()
+                        .map(trigger -> trigger.getKey())
+                        .collect(Collectors.toList());
+
+                scheduler.unscheduleJobs(triggerKeys);
+                scheduler.deleteJob(jobKey);
             }
             log.info("Job have been successfully disabled, partyId='{}', shopId='{}', scheduleId='{}', calendarId='{}'",
                     partyId, shopId, shopMeta.getSchedulerId(), shopMeta.getCalendarId());
@@ -183,16 +178,28 @@ public class SchedulerServiceImpl implements SchedulerService {
             throw new StorageException(
                     String.format("Failed to disable job on storage, partyId='%s', shopId='%s'",
                             partyId, shopId), ex);
+        } catch (SchedulerException ex) {
+            throw new ScheduleProcessingException(
+                    String.format("Failed to disable job, partyId='%s', shopId='%s'",
+                            partyId, shopId), ex);
         }
     }
 
-    private JobKey buildJobKey(CalendarRef calendarRef, ScheduleRef scheduleRef) {
-        return JobKey.jobKey(String.format("job-%d:%d", calendarRef.getId(), scheduleRef.getId()));
+    private JobKey buildJobKey(String partyId, String shopId, int calendarId, int scheduleId) {
+        return JobKey.jobKey(
+                String.format("job-%s-%s", partyId, shopId),
+                buildGroupKey(calendarId, scheduleId)
+        );
     }
 
-    private TriggerKey buildTriggerKey(CalendarRef calendarRef, ScheduleRef scheduleRef, int triggerId) {
+    private TriggerKey buildTriggerKey(String partyId, String shopId, int calendarId, int scheduleId, int triggerId) {
         return TriggerKey.triggerKey(
-                String.format("trigger-%d:%d:%d", calendarRef.getId(), scheduleRef.getId(), triggerId)
+                String.format("trigger-%s-%s-%d", partyId, shopId, triggerId),
+                buildGroupKey(calendarId, scheduleId)
         );
+    }
+
+    private String buildGroupKey(int calendarId, int scheduleId) {
+        return String.format("group-%d-%d", calendarId, scheduleId);
     }
 }

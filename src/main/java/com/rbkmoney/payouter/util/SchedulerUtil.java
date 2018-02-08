@@ -6,16 +6,13 @@ import com.cronutils.model.definition.CronDefinitionBuilder;
 import com.cronutils.model.field.CronFieldName;
 import com.cronutils.model.field.expression.And;
 import com.cronutils.model.field.expression.FieldExpression;
-import com.rbkmoney.damsel.base.DayOfWeek;
-import com.rbkmoney.damsel.base.Month;
 import com.rbkmoney.damsel.base.*;
 import com.rbkmoney.damsel.domain.Calendar;
 import com.rbkmoney.damsel.domain.CalendarHoliday;
 import org.quartz.impl.calendar.HolidayCalendar;
 
 import java.sql.Date;
-import java.time.*;
-import java.time.temporal.TemporalUnit;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -25,58 +22,26 @@ import static com.cronutils.model.field.expression.FieldExpression.always;
 import static com.cronutils.model.field.expression.FieldExpression.questionMark;
 import static com.cronutils.model.field.expression.FieldExpressionFactory.every;
 import static com.cronutils.model.field.expression.FieldExpressionFactory.on;
-import static java.time.temporal.ChronoUnit.*;
 
 public class SchedulerUtil {
 
-    public static Instant computeToTimeBound(Instant timestamp, TimeSpan timeSpan, HolidayCalendar holidayCalendar) {
-        LocalDateTime currentTime = LocalDateTime.ofInstant(timestamp, ZoneOffset.UTC);
-
-        LocalDateTime toTime = currentTime;
-        if (timeSpan.isSetYears()) {
-            toTime = toTime.minusYears(timeSpan.getYears());
-        }
-
-        if (timeSpan.isSetMonths()) {
-            toTime = toTime.minusMonths(timeSpan.getMonths());
-        }
-
-        if (timeSpan.isSetDays()) {
-            toTime = toTime.minusDays(timeSpan.getDays());
-        }
-
-        if (timeSpan.isSetHours()) {
-            toTime = toTime.minusHours(timeSpan.getHours());
-        }
-
-        if (timeSpan.isSetMinutes()) {
-            toTime = toTime.minusMinutes(timeSpan.getMinutes());
-        }
-
-        if (timeSpan.isSetSeconds()) {
-            toTime = toTime.minusSeconds(timeSpan.getSeconds());
-        }
-
-        Duration duration = Duration.between(toTime, currentTime);
-        for (TemporalUnit temporalUnit : Arrays.asList(DAYS, HOURS, MINUTES, SECONDS)) {
-            long unitCount = duration.getSeconds() / temporalUnit.getDuration().getSeconds();
-            for (int unit = 0; unit < unitCount; unit++) {
-                currentTime = currentTime.minus(1, temporalUnit);
-                while (!holidayCalendar.isTimeIncluded(currentTime.toInstant(ZoneOffset.UTC).toEpochMilli())) {
-                    currentTime = currentTime.minus(1, temporalUnit);
-                }
-            }
-            duration = duration.minus(unitCount, temporalUnit);
-        }
-
-        return currentTime.toInstant(ZoneOffset.UTC);
-    }
-
     public static List<String> buildCron(Schedule schedule) {
-        return Arrays.asList(
-                buildCron(schedule, DAY_OF_WEEK),
-                buildCron(schedule, DAY_OF_MONTH)
-        );
+        if (schedule.getDayOfMonth().isSetEvery() && !schedule.getDayOfMonth().getEvery().isSetNth()) {
+            if (schedule.getDayOfWeek().isSetEvery() && !schedule.getDayOfWeek().getEvery().isSetNth()) {
+                return Arrays.asList(buildCron(schedule, DAY_OF_WEEK));
+            } else {
+                return Arrays.asList(buildCron(schedule, DAY_OF_MONTH));
+            }
+        }
+
+        if (schedule.getDayOfWeek().isSetEvery() && !schedule.getDayOfWeek().getEvery().isSetNth()) {
+            return Arrays.asList(buildCron(schedule, DAY_OF_WEEK));
+        } else {
+            return Arrays.asList(
+                    buildCron(schedule, DAY_OF_WEEK),
+                    buildCron(schedule, DAY_OF_MONTH));
+        }
+
     }
 
     public static String buildCron(Schedule schedule, CronFieldName questionField) {

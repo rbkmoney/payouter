@@ -97,17 +97,13 @@ public class ShopMetaDaoImpl extends AbstractGenericDao implements ShopMetaDao {
     }
 
     @Override
-    public List<Map.Entry<Integer, Integer>> getAllActiveShops() {
+    public List<ShopMeta> getAllActiveShops() {
         Query query = getDslContext().select(SHOP_META.CALENDAR_ID, SHOP_META.SCHEDULER_ID)
                 .from(SHOP_META)
                 .where(SHOP_META.SCHEDULER_ID.isNotNull()
-                        .and(SHOP_META.CALENDAR_ID.isNotNull()))
-                .groupBy(SHOP_META.CALENDAR_ID, SHOP_META.SCHEDULER_ID);
+                        .and(SHOP_META.CALENDAR_ID.isNotNull()));
 
-        return fetch(query, (row, i) -> new AbstractMap.SimpleEntry<>(
-                row.getInt(SHOP_META.CALENDAR_ID.getName()),
-                row.getInt(SHOP_META.SCHEDULER_ID.getName())
-        ));
+        return fetch(query, shopMetaRowMapper);
     }
 
     @Override

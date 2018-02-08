@@ -21,7 +21,7 @@ public interface ShopMetaDao extends GenericDao {
 
     List<ShopMeta> getByCalendarAndSchedulerId(int calendarId, int schedulerId);
 
-    List<Map.Entry<Integer, Integer>> getAllActiveShops();
+    List<ShopMeta> getAllActiveShops();
 
     void disableShop(String partyId, String shopId) throws DaoException;
 
