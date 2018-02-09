@@ -65,7 +65,7 @@ public class Report1CService implements ReportService {
             Map<String, Object> payout = new HashMap<>();
 
             payout.put("corr_account", payoutRecord.getBankPostAccount()); // корреспонденский счет
-            payout.put("bik", payoutRecord.getBankBik()); //бик
+            payout.put("bik", payoutRecord.getBankLocalCode()); //бик
             payout.put("calc_account", payoutRecord.getBankAccount()); //рассчетный счет //may be contract.getContractor().getBankAccount().getAccount()
             payout.put("descr", payoutRecord.getDescription()); // Ex: Индивидуальный предприниматель Иванов Иван Иваныч
             payout.put("inn", payoutRecord.getInn()); // Идентификационный номер налогоплательщика

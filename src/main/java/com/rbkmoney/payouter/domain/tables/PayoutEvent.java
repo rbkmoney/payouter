@@ -36,7 +36,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class PayoutEvent extends TableImpl<PayoutEventRecord> {
 
-    private static final long serialVersionUID = 916959998;
+    private static final long serialVersionUID = -1880768483;
 
     /**
      * The reference instance of <code>sht.payout_event</code>
@@ -157,9 +157,9 @@ public class PayoutEvent extends TableImpl<PayoutEventRecord> {
     public final TableField<PayoutEventRecord, String> PAYOUT_ACCOUNT_BANK_POST_ID = createField("payout_account_bank_post_id", org.jooq.impl.SQLDataType.VARCHAR, this, "");
 
     /**
-     * The column <code>sht.payout_event.payout_account_bank_bik</code>.
+     * The column <code>sht.payout_event.payout_account_bank_local_code</code>.
      */
-    public final TableField<PayoutEventRecord, String> PAYOUT_ACCOUNT_BANK_BIK = createField("payout_account_bank_bik", org.jooq.impl.SQLDataType.VARCHAR, this, "");
+    public final TableField<PayoutEventRecord, String> PAYOUT_ACCOUNT_BANK_LOCAL_CODE = createField("payout_account_bank_local_code", org.jooq.impl.SQLDataType.VARCHAR, this, "");
 
     /**
      * The column <code>sht.payout_event.payout_account_inn</code>.
@@ -190,6 +190,51 @@ public class PayoutEvent extends TableImpl<PayoutEventRecord> {
      * The column <code>sht.payout_event.user_type</code>.
      */
     public final TableField<PayoutEventRecord, String> USER_TYPE = createField("user_type", org.jooq.impl.SQLDataType.VARCHAR, this, "");
+
+    /**
+     * The column <code>sht.payout_event.payout_account_type</code>.
+     */
+    public final TableField<PayoutEventRecord, String> PAYOUT_ACCOUNT_TYPE = createField("payout_account_type", org.jooq.impl.SQLDataType.VARCHAR, this, "");
+
+    /**
+     * The column <code>sht.payout_event.payout_account_bank_address</code>.
+     */
+    public final TableField<PayoutEventRecord, String> PAYOUT_ACCOUNT_BANK_ADDRESS = createField("payout_account_bank_address", org.jooq.impl.SQLDataType.VARCHAR, this, "");
+
+    /**
+     * The column <code>sht.payout_event.payout_account_bank_bic</code>.
+     */
+    public final TableField<PayoutEventRecord, String> PAYOUT_ACCOUNT_BANK_BIC = createField("payout_account_bank_bic", org.jooq.impl.SQLDataType.VARCHAR, this, "");
+
+    /**
+     * The column <code>sht.payout_event.payout_account_bank_iban</code>.
+     */
+    public final TableField<PayoutEventRecord, String> PAYOUT_ACCOUNT_BANK_IBAN = createField("payout_account_bank_iban", org.jooq.impl.SQLDataType.VARCHAR, this, "");
+
+    /**
+     * The column <code>sht.payout_event.payout_account_legal_name</code>.
+     */
+    public final TableField<PayoutEventRecord, String> PAYOUT_ACCOUNT_LEGAL_NAME = createField("payout_account_legal_name", org.jooq.impl.SQLDataType.VARCHAR, this, "");
+
+    /**
+     * The column <code>sht.payout_event.payout_account_trading_name</code>.
+     */
+    public final TableField<PayoutEventRecord, String> PAYOUT_ACCOUNT_TRADING_NAME = createField("payout_account_trading_name", org.jooq.impl.SQLDataType.VARCHAR, this, "");
+
+    /**
+     * The column <code>sht.payout_event.payout_account_registered_address</code>.
+     */
+    public final TableField<PayoutEventRecord, String> PAYOUT_ACCOUNT_REGISTERED_ADDRESS = createField("payout_account_registered_address", org.jooq.impl.SQLDataType.VARCHAR, this, "");
+
+    /**
+     * The column <code>sht.payout_event.payout_account_actual_address</code>.
+     */
+    public final TableField<PayoutEventRecord, String> PAYOUT_ACCOUNT_ACTUAL_ADDRESS = createField("payout_account_actual_address", org.jooq.impl.SQLDataType.VARCHAR, this, "");
+
+    /**
+     * The column <code>sht.payout_event.payout_account_registered_number</code>.
+     */
+    public final TableField<PayoutEventRecord, String> PAYOUT_ACCOUNT_REGISTERED_NUMBER = createField("payout_account_registered_number", org.jooq.impl.SQLDataType.VARCHAR, this, "");
 
     /**
      * Create a <code>sht.payout_event</code> table reference

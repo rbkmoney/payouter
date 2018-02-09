@@ -1,15 +1,8 @@
 package com.rbkmoney.payouter.util;
 
-import com.cronutils.builder.CronBuilder;
-import com.cronutils.model.CronType;
-import com.cronutils.model.definition.CronDefinitionBuilder;
-import com.cronutils.model.field.expression.And;
-import com.cronutils.model.field.expression.FieldExpression;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
-import com.rbkmoney.damsel.base.*;
-import com.rbkmoney.damsel.base.Schedule;
 import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.payout_processing.*;
 import com.rbkmoney.geck.common.util.TypeUtil;
@@ -20,12 +13,12 @@ import com.rbkmoney.payouter.exception.NotFoundException;
 import org.apache.thrift.TBase;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.cronutils.model.field.expression.FieldExpression.always;
-import static com.cronutils.model.field.expression.FieldExpressionFactory.every;
-import static com.cronutils.model.field.expression.FieldExpressionFactory.on;
 import static com.rbkmoney.payouter.util.CashFlowType.*;
 
 public class DamselUtil {
@@ -209,24 +202,66 @@ public class DamselUtil {
                         )
                 ));
             case BANK_ACCOUNT:
-                LegalAgreement legalAgreement = new LegalAgreement();
-                legalAgreement.setLegalAgreementId(payoutEvent.getPayoutAccountLegalAgreementId());
-                legalAgreement.setSignedAt(TypeUtil.temporalToString(payoutEvent.getPayoutAccountLegalAgreementSignedAt()));
-
-                return PayoutType.bank_account(new PayoutAccount(
-                        new RussianBankAccount(
-                                payoutEvent.getPayoutAccountId(),
-                                payoutEvent.getPayoutAccountBankName(),
-                                payoutEvent.getPayoutAccountBankPostId(),
-                                payoutEvent.getPayoutAccountBankBik()
-                        ),
-                        payoutEvent.getPayoutAccountInn(),
-                        payoutEvent.getPayoutAccountPurpose(),
-                        legalAgreement
-                ));
+                return PayoutType.bank_account(toPayoutAccount(payoutEvent));
             default:
                 throw new NotFoundException(String.format("Payout type not found, type = %s", payoutType));
         }
+    }
+
+    public static PayoutAccount toPayoutAccount(PayoutEvent payoutEvent) {
+        LegalAgreement legalAgreement = new LegalAgreement();
+        legalAgreement.setLegalAgreementId(payoutEvent.getPayoutAccountLegalAgreementId());
+        legalAgreement.setSignedAt(TypeUtil.temporalToString(payoutEvent.getPayoutAccountLegalAgreementSignedAt()));
+
+        PayoutAccount._Fields payoutAccountType = PayoutAccount._Fields.findByName(payoutEvent.getPayoutAccountType());
+        switch (payoutAccountType) {
+            case RUSSIAN_PAYOUT_ACCOUNT:
+                return PayoutAccount.russian_payout_account(
+                        new RussianPayoutAccount(
+                                new RussianBankAccount(
+                                        payoutEvent.getPayoutAccountId(),
+                                        payoutEvent.getPayoutAccountBankName(),
+                                        payoutEvent.getPayoutAccountBankPostId(),
+                                        payoutEvent.getPayoutAccountBankLocalCode()
+                                ),
+                                payoutEvent.getPayoutAccountInn(),
+                                payoutEvent.getPayoutAccountPurpose(),
+                                legalAgreement
+                        )
+                );
+            case INTERNATIONAL_PAYOUT_ACCOUNT:
+                return PayoutAccount.international_payout_account(
+                        new InternationalPayoutAccount(
+                                toInternationalBankAccount(payoutEvent),
+                                toInternationalLegalEntity(payoutEvent),
+                                payoutEvent.getPayoutAccountPurpose(),
+                                legalAgreement
+                        )
+                );
+            default:
+                throw new NotFoundException(String.format("Payout account type not found, type = %s", payoutAccountType));
+        }
+    }
+
+    private static InternationalLegalEntity toInternationalLegalEntity(PayoutEvent payoutEvent) {
+        InternationalLegalEntity legalEntity = new InternationalLegalEntity();
+        legalEntity.setLegalName(payoutEvent.getPayoutAccountLegalName());
+        legalEntity.setTradingName(payoutEvent.getPayoutAccountTradingName());
+        legalEntity.setRegisteredAddress(payoutEvent.getPayoutAccountRegisteredAddress());
+        legalEntity.setActualAddress(payoutEvent.getPayoutAccountActualAddress());
+        legalEntity.setRegisteredNumber(payoutEvent.getPayoutAccountRegisteredNumber());
+        return legalEntity;
+    }
+
+    private static InternationalBankAccount toInternationalBankAccount(PayoutEvent payoutEvent) {
+        InternationalBankAccount bankAccount = new InternationalBankAccount();
+        bankAccount.setAccountHolder(payoutEvent.getPayoutAccountId());
+        bankAccount.setBankName(payoutEvent.getPayoutAccountBankName());
+        bankAccount.setBankAddress(payoutEvent.getPayoutAccountBankAddress());
+        bankAccount.setIban(payoutEvent.getPayoutAccountBankIban());
+        bankAccount.setBic(payoutEvent.getPayoutAccountBankBic());
+        bankAccount.setLocalBankCode(payoutEvent.getPayoutAccountBankLocalCode());
+        return bankAccount;
     }
 
     public static PayoutPaid toDamselPayoutStatusPaid(PayoutEvent payoutEvent) {

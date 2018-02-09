@@ -6,6 +6,7 @@ package com.rbkmoney.payouter.domain.tables;
 
 import com.rbkmoney.payouter.domain.Keys;
 import com.rbkmoney.payouter.domain.Sht;
+import com.rbkmoney.payouter.domain.enums.PayoutAccountType;
 import com.rbkmoney.payouter.domain.enums.PayoutStatus;
 import com.rbkmoney.payouter.domain.enums.PayoutType;
 import com.rbkmoney.payouter.domain.tables.records.PayoutRecord;
@@ -38,7 +39,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Payout extends TableImpl<PayoutRecord> {
 
-    private static final long serialVersionUID = 2123037387;
+    private static final long serialVersionUID = 370196937;
 
     /**
      * The reference instance of <code>sht.payout</code>
@@ -89,9 +90,9 @@ public class Payout extends TableImpl<PayoutRecord> {
     public final TableField<PayoutRecord, PayoutStatus> STATUS = createField("status", org.jooq.util.postgres.PostgresDataType.VARCHAR.asEnumDataType(com.rbkmoney.payouter.domain.enums.PayoutStatus.class), this, "");
 
     /**
-     * The column <code>sht.payout.payout_type</code>.
+     * The column <code>sht.payout.type</code>.
      */
-    public final TableField<PayoutRecord, PayoutType> PAYOUT_TYPE = createField("payout_type", org.jooq.util.postgres.PostgresDataType.VARCHAR.asEnumDataType(com.rbkmoney.payouter.domain.enums.PayoutType.class), this, "");
+    public final TableField<PayoutRecord, PayoutType> TYPE = createField("type", org.jooq.util.postgres.PostgresDataType.VARCHAR.asEnumDataType(com.rbkmoney.payouter.domain.enums.PayoutType.class), this, "");
 
     /**
      * The column <code>sht.payout.amount</code>.
@@ -119,9 +120,9 @@ public class Payout extends TableImpl<PayoutRecord> {
     public final TableField<PayoutRecord, String> BANK_ACCOUNT = createField("bank_account", org.jooq.impl.SQLDataType.VARCHAR, this, "");
 
     /**
-     * The column <code>sht.payout.bank_bik</code>.
+     * The column <code>sht.payout.bank_local_code</code>.
      */
-    public final TableField<PayoutRecord, String> BANK_BIK = createField("bank_bik", org.jooq.impl.SQLDataType.VARCHAR, this, "");
+    public final TableField<PayoutRecord, String> BANK_LOCAL_CODE = createField("bank_local_code", org.jooq.impl.SQLDataType.VARCHAR, this, "");
 
     /**
      * The column <code>sht.payout.bank_name</code>.
@@ -157,6 +158,51 @@ public class Payout extends TableImpl<PayoutRecord> {
      * The column <code>sht.payout.account_legal_agreement_signed_at</code>.
      */
     public final TableField<PayoutRecord, LocalDateTime> ACCOUNT_LEGAL_AGREEMENT_SIGNED_AT = createField("account_legal_agreement_signed_at", org.jooq.impl.SQLDataType.LOCALDATETIME, this, "");
+
+    /**
+     * The column <code>sht.payout.account_type</code>.
+     */
+    public final TableField<PayoutRecord, PayoutAccountType> ACCOUNT_TYPE = createField("account_type", org.jooq.util.postgres.PostgresDataType.VARCHAR.asEnumDataType(com.rbkmoney.payouter.domain.enums.PayoutAccountType.class), this, "");
+
+    /**
+     * The column <code>sht.payout.bank_address</code>.
+     */
+    public final TableField<PayoutRecord, String> BANK_ADDRESS = createField("bank_address", org.jooq.impl.SQLDataType.VARCHAR, this, "");
+
+    /**
+     * The column <code>sht.payout.bank_bic</code>.
+     */
+    public final TableField<PayoutRecord, String> BANK_BIC = createField("bank_bic", org.jooq.impl.SQLDataType.VARCHAR, this, "");
+
+    /**
+     * The column <code>sht.payout.bank_iban</code>.
+     */
+    public final TableField<PayoutRecord, String> BANK_IBAN = createField("bank_iban", org.jooq.impl.SQLDataType.VARCHAR, this, "");
+
+    /**
+     * The column <code>sht.payout.account_legal_name</code>.
+     */
+    public final TableField<PayoutRecord, String> ACCOUNT_LEGAL_NAME = createField("account_legal_name", org.jooq.impl.SQLDataType.VARCHAR, this, "");
+
+    /**
+     * The column <code>sht.payout.account_trading_name</code>.
+     */
+    public final TableField<PayoutRecord, String> ACCOUNT_TRADING_NAME = createField("account_trading_name", org.jooq.impl.SQLDataType.VARCHAR, this, "");
+
+    /**
+     * The column <code>sht.payout.account_registered_address</code>.
+     */
+    public final TableField<PayoutRecord, String> ACCOUNT_REGISTERED_ADDRESS = createField("account_registered_address", org.jooq.impl.SQLDataType.VARCHAR, this, "");
+
+    /**
+     * The column <code>sht.payout.account_actual_address</code>.
+     */
+    public final TableField<PayoutRecord, String> ACCOUNT_ACTUAL_ADDRESS = createField("account_actual_address", org.jooq.impl.SQLDataType.VARCHAR, this, "");
+
+    /**
+     * The column <code>sht.payout.account_registered_number</code>.
+     */
+    public final TableField<PayoutRecord, String> ACCOUNT_REGISTERED_NUMBER = createField("account_registered_number", org.jooq.impl.SQLDataType.VARCHAR, this, "");
 
     /**
      * Create a <code>sht.payout</code> table reference

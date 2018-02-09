@@ -1,24 +1,25 @@
 package com.rbkmoney.payouter.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
 import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.msgpack.Value;
 import com.rbkmoney.damsel.payout_processing.PaidDetails;
 import com.rbkmoney.damsel.payout_processing.PayoutChange;
 import com.rbkmoney.damsel.payout_processing.ShopParams;
 import com.rbkmoney.damsel.payout_processing.UserInfo;
+import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.geck.serializer.kit.json.JsonHandler;
 import com.rbkmoney.geck.serializer.kit.tbase.TBaseProcessor;
 import com.rbkmoney.payouter.dao.*;
+import com.rbkmoney.payouter.domain.enums.PayoutAccountType;
 import com.rbkmoney.payouter.domain.enums.PayoutStatus;
 import com.rbkmoney.payouter.domain.enums.PayoutType;
 import com.rbkmoney.payouter.domain.tables.pojos.*;
-import com.rbkmoney.payouter.domain.tables.pojos.CashFlowPosting;
 import com.rbkmoney.payouter.exception.DaoException;
 import com.rbkmoney.payouter.exception.InvalidStateException;
 import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.exception.StorageException;
-import com.rbkmoney.payouter.model.PayoutToolData;
 import com.rbkmoney.payouter.service.EventSinkService;
 import com.rbkmoney.payouter.service.PartyManagementService;
 import com.rbkmoney.payouter.service.PayoutService;
@@ -35,9 +36,14 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class PayoutServiceImpl implements PayoutService {
@@ -160,16 +166,15 @@ public class PayoutServiceImpl implements PayoutService {
 
             shopMetaDao.updateLastPayoutCreatedAt(shopMeta.getPartyId(), shopMeta.getShopId(), payout.getCreatedAt());
 
-            UserInfo userInfo = WoodyUtils.getUserInfo();
-            PayoutEvent payoutEvent = buildPayoutCreatedEvent(payout, userInfo);
-            eventSinkService.saveEvent(payoutEvent);
-
             List<FinalCashFlowPosting> cashFlowPostings = partyManagementService.computePayoutCashFlow(
                     partyId,
                     shopId,
                     new Cash(availableAmount, new CurrencyRef(payout.getCurrencyCode())),
                     payout.getCreatedAt().toInstant(ZoneOffset.UTC)
             );
+            UserInfo userInfo = WoodyUtils.getUserInfo();
+            PayoutEvent payoutEvent = buildPayoutCreatedEvent(payout, cashFlowPostings, userInfo);
+            eventSinkService.saveEvent(payoutEvent);
             shumwayService.hold(payoutId, cashFlowPostings);
 
             log.info("Payout successfully created, payoutId='{}', partyId={}, shopId={}, fromTime={}, toTime={}, payoutType={}",
@@ -315,7 +320,7 @@ public class PayoutServiceImpl implements PayoutService {
         return payoutEvent;
     }
 
-    private PayoutEvent buildPayoutCreatedEvent(Payout payoutRecord, UserInfo userInfo) throws StorageException {
+    private PayoutEvent buildPayoutCreatedEvent(Payout payoutRecord, List<FinalCashFlowPosting> cashFlowPostings, UserInfo userInfo) throws StorageException {
         PayoutEvent payoutEvent = new PayoutEvent();
         payoutEvent.setEventType(PayoutChange._Fields.PAYOUT_CREATED.getFieldName());
         payoutEvent.setPayoutId(Long.toString(payoutRecord.getId()));
@@ -323,41 +328,35 @@ public class PayoutServiceImpl implements PayoutService {
         payoutEvent.setPayoutCreatedAt(payoutRecord.getCreatedAt());
         payoutEvent.setPayoutPartyId(payoutRecord.getPartyId());
         payoutEvent.setPayoutShopId(payoutRecord.getShopId());
+        payoutEvent.setPayoutType(payoutRecord.getType().getLiteral());
 
-        //account
-        payoutEvent.setPayoutType(com.rbkmoney.damsel.payout_processing.PayoutType._Fields.BANK_ACCOUNT.getFieldName());
+        payoutEvent.setPayoutAccountType(payoutRecord.getAccountType().getLiteral());
         payoutEvent.setPayoutAccountId(payoutRecord.getBankAccount());
+        payoutEvent.setPayoutAccountLegalName(payoutRecord.getAccountLegalName());
+        payoutEvent.setPayoutAccountTradingName(payoutRecord.getAccountTradingName());
+        payoutEvent.setPayoutAccountRegisteredAddress(payoutRecord.getAccountRegisteredAddress());
+        payoutEvent.setPayoutAccountActualAddress(payoutRecord.getAccountActualAddress());
+        payoutEvent.setPayoutAccountRegisteredNumber(payoutRecord.getAccountRegisteredNumber());
         payoutEvent.setPayoutAccountBankPostId(payoutRecord.getBankPostAccount());
         payoutEvent.setPayoutAccountBankName(payoutRecord.getBankName());
-        payoutEvent.setPayoutAccountBankBik(payoutRecord.getBankBik());
+        payoutEvent.setPayoutAccountBankAddress(payoutRecord.getBankAddress());
+        payoutEvent.setPayoutAccountBankBic(payoutRecord.getBankBic());
+        payoutEvent.setPayoutAccountBankIban(payoutRecord.getBankIban());
+        payoutEvent.setPayoutAccountBankLocalCode(payoutRecord.getBankLocalCode());
         payoutEvent.setPayoutAccountPurpose(payoutRecord.getPurpose());
         payoutEvent.setPayoutAccountInn(payoutRecord.getInn());
 
-        //account cash flow
-        FinalCashFlowPosting finalCashFlowPosting = new FinalCashFlowPosting();
-        finalCashFlowPosting.setSource(
-                new FinalCashFlowAccount(
-                        CashFlowAccount.merchant(MerchantCashFlowAccount.settlement),
-                        payoutRecord.getShopAcc()
-                )
-        );
-        finalCashFlowPosting.setDestination(
-                new FinalCashFlowAccount(
-                        CashFlowAccount.merchant(MerchantCashFlowAccount.settlement),
-                        payoutRecord.getShopPayoutAcc()
-                )
-        );
-        finalCashFlowPosting.setVolume(
-                new Cash(
-                        payoutRecord.getAmount(),
-                        new CurrencyRef(payoutRecord.getCurrencyCode())
-                )
-        );
         try {
             payoutEvent.setPayoutCashFlow(
-                    new ObjectMapper().writeValueAsString(Arrays.asList(
-                            new TBaseProcessor().process(finalCashFlowPosting, new JsonHandler())
-                    ))
+                    new ObjectMapper().writeValueAsString(cashFlowPostings.stream().map(
+                            cashFlowPosting -> {
+                                try {
+                                    return new TBaseProcessor().process(cashFlowPosting, new JsonHandler());
+                                } catch (IOException ex) {
+                                    throw new RuntimeJsonMappingException(ex.getMessage());
+                                }
+                            }).collect(Collectors.toList())
+                    )
             );
         } catch (IOException ex) {
             throw new StorageException("Failed to generate cash flow", ex);
@@ -372,28 +371,96 @@ public class PayoutServiceImpl implements PayoutService {
     }
 
     private Payout buildPayout(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType) {
+        Instant timestamp = Instant.now();
+
         Payout payout = new Payout();
         payout.setPartyId(partyId);
         payout.setShopId(shopId);
         payout.setFromTime(fromTime);
         payout.setToTime(toTime);
-        payout.setPayoutType(payoutType);
-        payout.setCreatedAt(LocalDateTime.now(ZoneOffset.UTC));
+        payout.setType(payoutType);
+        payout.setCreatedAt(LocalDateTime.ofInstant(timestamp, ZoneOffset.UTC));
         payout.setStatus(PayoutStatus.UNPAID);
 
-        PayoutToolData payoutToolData = partyManagementService.getPayoutToolData(partyId, shopId);
-        payout.setCurrencyCode(payoutToolData.getCurrencyCode());
-        payout.setBankAccount(payoutToolData.getBankAccount());
-        payout.setBankName(payoutToolData.getBankName());
-        payout.setBankBik(payoutToolData.getBankBik());
-        payout.setInn(payoutToolData.getInn());
-        payout.setShopAcc(payoutToolData.getShopAccountId());
-        payout.setShopPayoutAcc(payoutToolData.getShopPayoutAccountId());
-        payout.setBankPostAccount(payoutToolData.getBankPostAccount());
-        payout.setDescription(payoutToolData.getDescription());
-        payout.setAccountLegalAgreementId(payoutToolData.getLegalAgreementId());
-        payout.setAccountLegalAgreementSignedAt(payoutToolData.getLegalAgreementSignedAt());
-        payout.setPurpose(payoutToolData.getPurpose());
+        Party party = partyManagementService.getParty(partyId, timestamp);
+
+        Shop shop = party.getShops().get(shopId);
+        if (shop == null) {
+            throw new NotFoundException(String.format("Shop not found, partyId='%s', contractId='%s', timestamp='%s'", partyId, shopId, timestamp));
+        }
+        ShopAccount shopAccount = shop.getAccount();
+        payout.setShopAcc(shopAccount.getSettlement());
+        payout.setShopPayoutAcc(shopAccount.getPayout());
+        payout.setCurrencyCode(shopAccount.getCurrency().getSymbolicCode());
+
+        Contract contract = party.getContracts().get(shop.getContractId());
+        if (contract == null) {
+            throw new NotFoundException(String.format("Contract not found, partyId='%s', contractId='%s', timestamp='%s'", partyId, shop.getId(), timestamp));
+        }
+
+        Optional<PayoutTool> payoutToolOptional = contract.getPayoutTools().stream()
+                .filter(payoutTool ->
+                        payoutTool.getPayoutToolInfo().isSetRussianBankAccount()
+                                && payoutTool.getId().equals(shop.getPayoutToolId()))
+                .findFirst();
+
+        if (!payoutToolOptional.isPresent()) {
+            throw new NotFoundException(
+                    String.format("Payout tool with bank account not found, partyId='%s', shopId='%s', payoutToolId='%s'",
+                            partyId, shopId, shop.getPayoutToolId()));
+        }
+
+        PayoutTool payoutTool = payoutToolOptional.get();
+        if (!payout.getCurrencyCode().equals(payoutTool.getCurrency().getSymbolicCode())) {
+            throw new InvalidStateException("Shop account and payout tool currency must be equals");
+        }
+
+        if (payoutTool.getPayoutToolInfo().isSetRussianBankAccount()) {
+            payout.setAccountType(PayoutAccountType.russian_payout_account);
+            RussianBankAccount bankAccount = payoutTool.getPayoutToolInfo().getRussianBankAccount();
+
+            payout.setBankAccount(bankAccount.getAccount());
+            payout.setBankLocalCode(bankAccount.getBankBik());
+            payout.setBankName(bankAccount.getBankName());
+            payout.setBankPostAccount(bankAccount.getBankPostAccount());
+            if (contract.getContractor().getLegalEntity().isSetRussianLegalEntity()) {
+                RussianLegalEntity legalEntity = contract.getContractor().getLegalEntity().getRussianLegalEntity();
+                payout.setInn(legalEntity.getInn());
+                payout.setDescription(legalEntity.getRegisteredName());
+                payout.setAccountRegisteredNumber(legalEntity.getRegisteredNumber());
+            }
+        }
+
+        if (payoutTool.getPayoutToolInfo().isSetInternationalBankAccount()) {
+            payout.setAccountType(PayoutAccountType.international_payout_account);
+            InternationalBankAccount bankAccount = payoutTool.getPayoutToolInfo().getInternationalBankAccount();
+
+            payout.setBankAccount(bankAccount.getAccountHolder());
+            payout.setBankName(bankAccount.getBankName());
+            payout.setBankAddress(bankAccount.getBankAddress());
+            payout.setBankBic(bankAccount.getBic());
+            payout.setBankIban(bankAccount.getIban());
+            payout.setBankLocalCode(bankAccount.getLocalBankCode());
+            if (contract.getContractor().getLegalEntity().isSetInternationalLegalEntity()) {
+                InternationalLegalEntity legalEntity = contract.getContractor().getLegalEntity().getInternationalLegalEntity();
+                payout.setAccountLegalName(legalEntity.getLegalName());
+                payout.setAccountTradingName(legalEntity.getTradingName());
+                payout.setAccountRegisteredAddress(legalEntity.getRegisteredAddress());
+                payout.setAccountActualAddress(legalEntity.getActualAddress());
+                payout.setAccountRegisteredNumber(legalEntity.getRegisteredNumber());
+            }
+        }
+
+        if (!contract.isSetLegalAgreement()) {
+            throw new NotFoundException(
+                    String.format("Legal agreement not found, partyId='%s', shopId='%s', contractId='%s'",
+                            partyId, shopId, contract.getId()));
+        }
+
+        payout.setAccountLegalAgreementId(contract.getLegalAgreement().getLegalAgreementId());
+        payout.setAccountLegalAgreementSignedAt(
+                TypeUtil.stringToLocalDateTime(contract.getLegalAgreement().getSignedAt())
+        );
 
         return payout;
     }
