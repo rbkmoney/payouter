@@ -57,10 +57,6 @@ public interface PartyManagementService {
 
     List<FinalCashFlowPosting> computePayoutCashFlow(String partyId, PayoutParams payoutParams) throws NotFoundException;
 
-    PayoutToolData getPayoutToolData(String partyId, String shopId) throws InvalidStateException, NotFoundException;
-
-    PayoutToolData getPayoutToolData(String partyId, String shopId, Instant timestamp) throws InvalidStateException, NotFoundException;
-
     CategoryType getCategoryType(String partyId, String shopId, long domainRevision, Instant timestamp) throws NotFoundException;
 
     boolean isTestCategoryType(String partyId, String shopId, long domainRevision, Instant timestamp) throws NotFoundException;

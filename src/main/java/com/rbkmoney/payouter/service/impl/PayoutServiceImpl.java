@@ -39,6 +39,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -158,7 +159,9 @@ public class PayoutServiceImpl implements PayoutService {
             payout.setAmount(availableAmount);
 
             long payoutId = payoutDao.save(payout);
-            payout.setId(payoutId);
+
+            String purpose = buildPurpose(payout);
+            payoutDao.changePurpose(payoutId, purpose);
 
             paymentDao.includeToPayout(payoutId, payments);
             refundDao.includeToPayout(payoutId, refunds);
@@ -173,6 +176,8 @@ public class PayoutServiceImpl implements PayoutService {
                     payout.getCreatedAt().toInstant(ZoneOffset.UTC)
             );
             UserInfo userInfo = WoodyUtils.getUserInfo();
+            payout.setId(payoutId);
+            payout.setPurpose(purpose);
             PayoutEvent payoutEvent = buildPayoutCreatedEvent(payout, cashFlowPostings, userInfo);
             eventSinkService.saveEvent(payoutEvent);
             shumwayService.hold(payoutId, cashFlowPostings);
@@ -185,6 +190,25 @@ public class PayoutServiceImpl implements PayoutService {
             throw new StorageException(
                     String.format("Failed to create payout, partyId='%s', shopId='%s', fromTime='%s', toTime='%s', payoutType='%s'",
                             partyId, shopId, fromTime, toTime, payoutType), ex);
+        }
+    }
+
+    private String buildPurpose(Payout payout) {
+        switch (payout.getAccountType()) {
+            case russian_payout_account:
+                return String.format(
+                        "Перевод согласно договора номер %s от %s. Без НДС",
+                        payout.getAccountLegalAgreementId(),
+                        payout.getAccountLegalAgreementSignedAt().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+                );
+            case international_payout_account:
+                return String.format("Agr %s %s, %d for accepted payments.",
+                        payout.getAccountLegalAgreementId(),
+                        payout.getAccountLegalAgreementSignedAt().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")),
+                        payout.getId()
+                );
+            default:
+                throw new IllegalArgumentException(String.format("Unknown account type, accountType='%s'", payout.getAccountType()));
         }
     }
 
