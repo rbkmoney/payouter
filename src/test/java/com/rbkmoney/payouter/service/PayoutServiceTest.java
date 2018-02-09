@@ -1,6 +1,7 @@
 package com.rbkmoney.payouter.service;
 
 import com.rbkmoney.damsel.base.InvalidRequest;
+import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.event_stock.SourceEvent;
 import com.rbkmoney.damsel.event_stock.StockEvent;
 import com.rbkmoney.damsel.msgpack.Value;
@@ -17,10 +18,8 @@ import com.rbkmoney.generation.RefundGenerator;
 import com.rbkmoney.payouter.AbstractIntegrationTest;
 import com.rbkmoney.payouter.dao.PayoutDao;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
-import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.meta.UserIdentityIdExtensionKit;
 import com.rbkmoney.payouter.meta.UserIdentityRealmExtensionKit;
-import com.rbkmoney.payouter.model.PayoutToolData;
 import com.rbkmoney.woody.api.flow.WFlow;
 import com.rbkmoney.woody.api.trace.ContextUtils;
 import com.rbkmoney.woody.thrift.impl.http.THSpawnClientBuilder;
@@ -34,14 +33,12 @@ import org.springframework.test.jdbc.JdbcTestUtils;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 import static com.rbkmoney.payouter.domain.enums.PayoutStatus.*;
-import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.BDDMockito.given;
@@ -75,6 +72,10 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
 
     String shopId = "test-shop-id";
 
+    String contractId = "test-contract-id";
+
+    String payoutToolId = "test-payout-tool";
+
     @Before
     public void setUp() throws URISyntaxException {
         client = new THSpawnClientBuilder()
@@ -82,8 +83,8 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
                 .withNetworkTimeout(0)
                 .build(PayoutManagementSrv.Iface.class);
 
-        given(partyManagementService.getPayoutToolData(any(), any()))
-                .willReturn(random(PayoutToolData.class));
+        given(partyManagementService.getParty(any(), any(Instant.class)))
+                .willReturn(buildParty(partyId, shopId, contractId, payoutToolId));
         given(partyManagementService.getMetaData(any(), any()))
                 .willReturn(null);
     }
@@ -269,6 +270,72 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
                     ContextUtils.setCustomMetadataValue(UserIdentityRealmExtensionKit.KEY, "internal");
                     return callable.call();
                 }).call();
+    }
+
+    private Party buildParty(String partyId, String shopId, String contractId, String payoutToolId) {
+        Instant timestamp = Instant.now();
+
+        Party party = new Party();
+        party.setId(partyId);
+        party.setBlocking(Blocking.unblocked(new Unblocked("", TypeUtil.temporalToString(timestamp))));
+        party.setCreatedAt(TypeUtil.temporalToString(timestamp));
+        party.setRevision(1L);
+        party.setContactInfo(new PartyContactInfo("me@party.com"));
+        party.setShops(buildShops(shopId, contractId, payoutToolId));
+        party.setContracts(buildContracts(contractId, payoutToolId));
+        return party;
+    }
+
+    private Map<String, Contract> buildContracts(String contractId, String payoutToolId) {
+        Map<String, Contract> contracts = new HashMap<>();
+        Contract contract = new Contract();
+        contract.setId(contractId);
+        contract.setLegalAgreement(new LegalAgreement(
+                TypeUtil.temporalToString(Instant.now()),
+                "12/12")
+        );
+        contract.setPayoutTools(Arrays.asList(
+                new PayoutTool(
+                        payoutToolId,
+                        TypeUtil.temporalToString(Instant.now()),
+                        new CurrencyRef("RUB"),
+                        PayoutToolInfo.international_bank_account(
+                                new InternationalBankAccount(
+                                        "123",
+                                        "123",
+                                        "123",
+                                        "123",
+                                        "123"
+                                )
+                        )
+                )
+        ));
+        contract.setContractor(
+                Contractor.legal_entity(
+                        LegalEntity.international_legal_entity(new InternationalLegalEntity(
+                                "kek",
+                                "711-2880 Nulla St. Mankato Mississippi 96522"
+                        ))
+                )
+        );
+        contracts.put(contractId, contract);
+        return contracts;
+    }
+
+    private Map<String, Shop> buildShops(String shopId, String contractId, String payoutToolId) {
+        Map<String, Shop> shops = new HashMap<>();
+        Shop shop = new Shop();
+        shop.setContractId(contractId);
+        shop.setAccount(new ShopAccount(
+                new CurrencyRef("RUB"),
+                1,
+                2,
+                3
+        ));
+        shop.setPayoutToolId(payoutToolId);
+        shops.put(shopId, shop);
+
+        return shops;
     }
 
 }

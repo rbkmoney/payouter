@@ -423,9 +423,7 @@ public class PayoutServiceImpl implements PayoutService {
         }
 
         Optional<PayoutTool> payoutToolOptional = contract.getPayoutTools().stream()
-                .filter(payoutTool ->
-                        payoutTool.getPayoutToolInfo().isSetRussianBankAccount()
-                                && payoutTool.getId().equals(shop.getPayoutToolId()))
+                .filter(payoutTool -> payoutTool.getId().equals(shop.getPayoutToolId()))
                 .findFirst();
 
         if (!payoutToolOptional.isPresent()) {
