@@ -20,10 +20,7 @@ import com.rbkmoney.payouter.exception.DaoException;
 import com.rbkmoney.payouter.exception.InvalidStateException;
 import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.exception.StorageException;
-import com.rbkmoney.payouter.service.EventSinkService;
-import com.rbkmoney.payouter.service.PartyManagementService;
-import com.rbkmoney.payouter.service.PayoutService;
-import com.rbkmoney.payouter.service.ShumwayService;
+import com.rbkmoney.payouter.service.*;
 import com.rbkmoney.payouter.service.report.Report1CSendService;
 import com.rbkmoney.payouter.service.report._1c.Report1CService;
 import com.rbkmoney.payouter.util.WoodyUtils;
@@ -61,6 +58,8 @@ public class PayoutServiceImpl implements PayoutService {
 
     private final PayoutDao payoutDao;
 
+    private final CashFlowDescriptionService cashFlowDescriptionService;
+
     private final ReportDao reportDao;
 
     private final ShumwayService shumwayService;
@@ -79,6 +78,7 @@ public class PayoutServiceImpl implements PayoutService {
                              RefundDao refundDao,
                              AdjustmentDao adjustmentDao,
                              PayoutDao payoutDao,
+                             CashFlowDescriptionService cashFlowDescriptionService,
                              ReportDao reportDao,
                              ShumwayService shumwayService,
                              PartyManagementService partyManagementService,
@@ -90,6 +90,7 @@ public class PayoutServiceImpl implements PayoutService {
         this.refundDao = refundDao;
         this.adjustmentDao = adjustmentDao;
         this.payoutDao = payoutDao;
+        this.cashFlowDescriptionService = cashFlowDescriptionService;
         this.reportDao = reportDao;
         this.shumwayService = shumwayService;
         this.partyManagementService = partyManagementService;
@@ -159,6 +160,9 @@ public class PayoutServiceImpl implements PayoutService {
             payout.setAmount(availableAmount);
 
             long payoutId = payoutDao.save(payout);
+
+            List<CashFlowDescription> cashFlowDescriptions = buildCashFlowDescriptions(payments, refunds, adjustments, payoutId, payout.getCurrencyCode());
+            cashFlowDescriptionService.save(cashFlowDescriptions);
 
             String purpose = buildPurpose(payout);
             payoutDao.changePurpose(payoutId, purpose);
@@ -486,6 +490,62 @@ public class PayoutServiceImpl implements PayoutService {
 
         return payout;
     }
+
+    private List<CashFlowDescription> buildCashFlowDescriptions(List<Payment> payments, List<Refund> refunds, List<Adjustment> adjustments, long payoutId, String currencyCode) {
+        List<CashFlowDescription> result = new ArrayList<>();
+
+        long paymentAmount = payments.stream().mapToLong(Payment::getAmount).sum();
+        long paymentFee = payments.stream().mapToLong(Payment::getFee).sum();
+        LocalDateTime paymentFromTime = payments.stream().map(Payment::getCreatedAt).min(LocalDateTime::compareTo).get();
+        LocalDateTime paymentToTime = payments.stream().map(Payment::getCreatedAt).max(LocalDateTime::compareTo).get();
+        CashFlowDescription paymentCashFlow = new CashFlowDescription();
+        paymentCashFlow.setAmount(paymentAmount);
+        paymentCashFlow.setFee(paymentFee);
+        paymentCashFlow.setCurrencyCode(currencyCode);
+        paymentCashFlow.setCashFlowType(com.rbkmoney.payouter.domain.enums.CashFlowType.payment);
+        paymentCashFlow.setCount(payments.size());
+        paymentCashFlow.setPayoutId(payoutId);
+        paymentCashFlow.setFromTime(paymentFromTime);
+        paymentCashFlow.setToTime(paymentToTime);
+        result.add(paymentCashFlow);
+
+        if (!refunds.isEmpty()) {
+            long refundAmount = refunds.stream().mapToLong(Refund::getAmount).sum();
+            long refundFee = refunds.stream().mapToLong(Refund::getFee).sum();
+            LocalDateTime refundFromTime = refunds.stream().map(Refund::getCreatedAt).min(LocalDateTime::compareTo).get();
+            LocalDateTime refundToTime = refunds.stream().map(Refund::getCreatedAt).max(LocalDateTime::compareTo).get();
+            CashFlowDescription refundCashFlow = new CashFlowDescription();
+            refundCashFlow.setAmount(refundAmount);
+            refundCashFlow.setFee(refundFee);
+            refundCashFlow.setCurrencyCode(currencyCode);
+            refundCashFlow.setCashFlowType(com.rbkmoney.payouter.domain.enums.CashFlowType.refund);
+            refundCashFlow.setCount(refunds.size());
+            refundCashFlow.setPayoutId(payoutId);
+            refundCashFlow.setFromTime(refundFromTime);
+            refundCashFlow.setToTime(refundToTime);
+            result.add(refundCashFlow);
+        }
+
+        if (!adjustments.isEmpty()) {
+            long adjustmentAmount = adjustments.stream().mapToLong(Adjustment::getPaymentFee).sum();
+            long adjustmentFee = adjustments.stream().mapToLong(Adjustment::getNewFee).sum();
+            LocalDateTime adjustmentFromTime = adjustments.stream().map(Adjustment::getCreatedAt).min(LocalDateTime::compareTo).get();
+            LocalDateTime adjustmentToTime = adjustments.stream().map(Adjustment::getCreatedAt).max(LocalDateTime::compareTo).get();
+            CashFlowDescription adjustmentCashFlow = new CashFlowDescription();
+            adjustmentCashFlow.setAmount(adjustmentAmount);
+            adjustmentCashFlow.setFee(adjustmentFee);
+            adjustmentCashFlow.setCurrencyCode(currencyCode);
+            adjustmentCashFlow.setCashFlowType(com.rbkmoney.payouter.domain.enums.CashFlowType.adjustment);
+            adjustmentCashFlow.setCount(adjustments.size());
+            adjustmentCashFlow.setPayoutId(payoutId);
+            adjustmentCashFlow.setFromTime(adjustmentFromTime);
+            adjustmentCashFlow.setToTime(adjustmentToTime);
+            result.add(adjustmentCashFlow);
+        }
+
+        return result;
+    }
+
 
     private long calculateAvailableAmount(List<Payment> payments, List<Refund> refunds, List<Adjustment> adjustments) {
         long paymentAmount = payments.stream()

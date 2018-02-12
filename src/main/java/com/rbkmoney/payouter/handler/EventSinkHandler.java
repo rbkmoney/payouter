@@ -3,6 +3,7 @@ package com.rbkmoney.payouter.handler;
 import com.rbkmoney.damsel.base.InvalidRequest;
 import com.rbkmoney.damsel.payout_processing.*;
 import com.rbkmoney.payouter.domain.tables.pojos.PayoutEvent;
+import com.rbkmoney.payouter.service.CashFlowDescriptionService;
 import com.rbkmoney.payouter.service.EventSinkService;
 import com.rbkmoney.payouter.util.DamselUtil;
 import org.apache.thrift.TException;
@@ -18,10 +19,12 @@ import java.util.stream.Collectors;
 public class EventSinkHandler implements EventSinkSrv.Iface {
 
     private final EventSinkService eventSinkService;
+    private final CashFlowDescriptionService cashFlowDescriptionService;
 
     @Autowired
-    public EventSinkHandler(EventSinkService eventSinkService) {
+    public EventSinkHandler(EventSinkService eventSinkService, CashFlowDescriptionService cashFlowDescriptionService) {
         this.eventSinkService = eventSinkService;
+        this.cashFlowDescriptionService = cashFlowDescriptionService;
     }
 
     @Override
@@ -42,6 +45,16 @@ public class EventSinkHandler implements EventSinkSrv.Iface {
         List<Event> eventList = eventSinkService.getEvents(after, eventRange.getLimit()).stream()
                 .map(DamselUtil::toDamselEvent)
                 .collect(Collectors.toList());
+
+        for (Event event : eventList) {
+            for (PayoutChange pc : event.getPayload().getPayoutChanges()) {
+                if (pc.isSetPayoutCreated()) {
+                    Payout payout = pc.getPayoutCreated().getPayout();
+                    List<com.rbkmoney.payouter.domain.tables.pojos.CashFlowDescription> cashFlowDescriptions = cashFlowDescriptionService.get(Long.parseLong(payout.getId()));
+                    payout.setCashFlowDescriptions(DamselUtil.toDamselCashFlowDescription(cashFlowDescriptions));
+                }
+            }
+        }
 
         return eventList;
     }
