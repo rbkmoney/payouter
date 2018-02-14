@@ -1,5 +1,6 @@
 package com.rbkmoney.payouter.service;
 
+import com.rbkmoney.damsel.base.TimeSpan;
 import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.msgpack.Value;
 import com.rbkmoney.damsel.payment_processing.PartyRevisionParam;
@@ -34,6 +35,10 @@ public interface PartyManagementService {
     TermSet computeShopTerms(String partyId, String shopId) throws NotFoundException;
 
     TermSet computeShopTerms(String partyId, String shopId, Instant timestamp) throws NotFoundException;
+
+    TimeSpan getAssetsFreezeFor(String partyId, String shopId) throws NotFoundException;
+
+    TimeSpan getAssetsFreezeFor(String partyId, String shopId, Instant timestamp) throws NotFoundException;
 
     Contract getContract(String partyId, String contractId) throws NotFoundException;
 

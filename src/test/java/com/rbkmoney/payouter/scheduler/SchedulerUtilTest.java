@@ -1,10 +1,10 @@
 package com.rbkmoney.payouter.scheduler;
 
 import au.com.bytecode.opencsv.CSVReader;
-import com.rbkmoney.damsel.base.Month;
 import com.rbkmoney.damsel.base.*;
 import com.rbkmoney.damsel.domain.Calendar;
 import com.rbkmoney.damsel.domain.CalendarHoliday;
+import com.rbkmoney.payouter.trigger.FreezeTimeCronTrigger;
 import com.rbkmoney.payouter.util.SchedulerUtil;
 import org.junit.Test;
 import org.quartz.CronExpression;
@@ -13,7 +13,10 @@ import org.springframework.core.io.ClassPathResource;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.time.*;
+import java.text.ParseException;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.*;
 
 import static com.rbkmoney.damsel.base.DayOfWeek.*;
@@ -23,39 +26,216 @@ import static org.junit.Assert.*;
 public class SchedulerUtilTest {
 
     @Test
-    public void testTimeBoundCompute() throws IOException {
-        TimeSpan timeSpan = new TimeSpan();
-        timeSpan.setYears((short) 1);
-        timeSpan.setMonths((short) 2);
-        timeSpan.setDays((short) 3);
-        timeSpan.setHours((short) 3);
-        timeSpan.setMinutes((short) 34);
-        timeSpan.setSeconds((short) 55);
-
-        Instant instant = SchedulerUtil.computeToTimeBound(
-                LocalDateTime.of(2018, java.time.Month.DECEMBER, 12, 00, 00)
-                        .toInstant(ZoneOffset.UTC),
-                timeSpan,
-                SchedulerUtil.buildCalendar(buildTestCalendar())
+    public void testStartOfWeekOnThirdWorkingDay() throws ParseException, IOException {
+        FreezeTimeCronTrigger trigger = new FreezeTimeCronTrigger();
+        trigger.setCronExpression(new CronExpression("0 0 0 ? * MON *"));
+        trigger.setStartTime(
+                Date.from(
+                        LocalDate.of(2018, java.time.Month.APRIL, 24)
+                                .atStartOfDay(ZoneId.of("Europe/Moscow"))
+                                .toInstant()
+                )
         );
-        assertEquals("2017-03-23T20:25:05Z", instant.toString());
+        trigger.setTimeZone(TimeZone.getTimeZone("Europe/Moscow"));
+        trigger.withDays(2);
+
+        HolidayCalendar calendar = SchedulerUtil.buildCalendar(buildTestCalendar());
+        trigger.computeFirstFireTime(calendar);
+
+        //since April 24, 2018
+        assertEquals(
+                LocalDate.of(2018, java.time.Month.MAY, 7)
+                        .atStartOfDay(ZoneId.of("Europe/Moscow"))
+                        .toInstant(),
+                trigger.getNextFireTime().toInstant()
+        );
+
+        //continue from 7 May, 2018
+        trigger.triggered(calendar);
+
+        assertEquals(
+                LocalDate.of(2018, java.time.Month.MAY, 10)
+                        .atStartOfDay(ZoneId.of("Europe/Moscow"))
+                        .toInstant(),
+                trigger.getNextFireTime().toInstant()
+        );
+
+        //since December 29, 2017
+        trigger.setStartTime(
+                Date.from(
+                        LocalDate.of(2017, java.time.Month.DECEMBER, 29)
+                                .atStartOfDay(ZoneId.of("Europe/Moscow"))
+                                .toInstant()
+                )
+        );
+
+        trigger.computeFirstFireTime(calendar);
+        assertEquals(
+                LocalDate.of(2018, java.time.Month.JANUARY, 11)
+                        .atStartOfDay(ZoneId.of("Europe/Moscow"))
+                        .toInstant(),
+                trigger.getNextFireTime().toInstant()
+        );
+
+        //continue 11 january, 2018
+        trigger.triggered(calendar);
+        assertEquals(
+                LocalDate.of(2018, java.time.Month.JANUARY, 17)
+                        .atStartOfDay(ZoneId.of("Europe/Moscow"))
+                        .toInstant(),
+                trigger.getNextFireTime().toInstant()
+        );
+
+        trigger.updateWithNewCalendar(calendar, 1000L);
+        assertEquals(
+                LocalDate.of(2018, java.time.Month.JANUARY, 24)
+                        .atStartOfDay(ZoneId.of("Europe/Moscow"))
+                        .toInstant(),
+                trigger.getNextFireTime().toInstant()
+        );
     }
 
     @Test
-    public void testTimeBoundComputeOnThreeDays() throws IOException {
-        TimeSpan timeSpan = new TimeSpan();
-        timeSpan.setDays((short) 3);
+    public void testStartOfMonthOnThirdWorkingDay() throws ParseException, IOException {
+        FreezeTimeCronTrigger trigger = new FreezeTimeCronTrigger();
+        trigger.setCronExpression(new CronExpression("0 0 0 1 * ? *"));
+        trigger.setStartTime(
+                Date.from(
+                        LocalDate.of(2018, java.time.Month.APRIL, 24)
+                                .atStartOfDay(ZoneId.of("Europe/Moscow"))
+                                .toInstant()
+                )
+        );
+        trigger.setTimeZone(TimeZone.getTimeZone("Europe/Moscow"));
+        trigger.withDays(2);
 
-        HolidayCalendar holidayCalendar = SchedulerUtil.buildCalendar(buildTestCalendar());
+        HolidayCalendar calendar = SchedulerUtil.buildCalendar(buildTestCalendar());
+        trigger.computeFirstFireTime(calendar);
 
-        assertEquals("2017-12-26T06:00:00Z", SchedulerUtil.computeToTimeBound(Instant.parse("2017-12-29T06:00:00Z"), timeSpan, holidayCalendar).toString());
-        assertEquals("2017-12-27T06:00:00Z", SchedulerUtil.computeToTimeBound(Instant.parse("2018-01-09T06:00:00Z"), timeSpan, holidayCalendar).toString());
-        assertEquals("2017-12-28T06:00:00Z", SchedulerUtil.computeToTimeBound(Instant.parse("2018-01-10T06:00:00Z"), timeSpan, holidayCalendar).toString());
-        assertEquals("2017-12-29T15:00:00Z", SchedulerUtil.computeToTimeBound(Instant.parse("2018-01-11T15:00:00Z"), timeSpan, holidayCalendar).toString());
-        assertEquals("2018-01-09T15:00:00Z", SchedulerUtil.computeToTimeBound(Instant.parse("2018-01-12T15:00:00Z"), timeSpan, holidayCalendar).toString());
+        //since April 24, 2018
+        assertEquals(
+                LocalDate.of(2018, java.time.Month.MAY, 7)
+                        .atStartOfDay(ZoneId.of("Europe/Moscow"))
+                        .toInstant(),
+                trigger.getNextFireTime().toInstant()
+        );
 
-        assertEquals("2015-06-11T00:00:00Z", SchedulerUtil.computeToTimeBound(Instant.parse("2015-06-17T00:00:00Z"), timeSpan, holidayCalendar).toString());
-        assertEquals("2015-06-15T22:10:00Z", SchedulerUtil.computeToTimeBound(Instant.parse("2015-06-18T22:10:00Z"), timeSpan, holidayCalendar).toString());
+        //continue from 7 May, 2018
+        trigger.triggered(calendar);
+        assertEquals(
+                LocalDate.of(2018, java.time.Month.JUNE, 5)
+                        .atStartOfDay(ZoneId.of("Europe/Moscow"))
+                        .toInstant(),
+                trigger.getNextFireTime().toInstant()
+        );
+
+        //since December 29, 2017
+        trigger.setStartTime(
+                Date.from(
+                        LocalDate.of(2017, java.time.Month.DECEMBER, 29)
+                                .atStartOfDay(ZoneId.of("Europe/Moscow"))
+                                .toInstant()
+                )
+        );
+
+        trigger.computeFirstFireTime(calendar);
+        assertEquals(
+                LocalDate.of(2018, java.time.Month.JANUARY, 11)
+                        .atStartOfDay(ZoneId.of("Europe/Moscow"))
+                        .toInstant(),
+                trigger.getNextFireTime().toInstant()
+        );
+
+        //continue 11 january, 2018
+        trigger.triggered(calendar);
+        assertEquals(
+                LocalDate.of(2018, java.time.Month.FEBRUARY, 5)
+                        .atStartOfDay(ZoneId.of("Europe/Moscow"))
+                        .toInstant(),
+                trigger.getNextFireTime().toInstant()
+        );
+
+        trigger.updateWithNewCalendar(calendar, 1000L);
+        assertEquals(
+                LocalDate.of(2018, java.time.Month.MARCH, 5)
+                        .atStartOfDay(ZoneId.of("Europe/Moscow"))
+                        .toInstant(),
+                trigger.getNextFireTime().toInstant()
+        );
+    }
+
+    @Test
+    public void testEveryDayOnThirdWorkingDay() throws ParseException, IOException {
+        FreezeTimeCronTrigger trigger = new FreezeTimeCronTrigger();
+        trigger.setCronExpression(new CronExpression("0 0 0 * * ? *"));
+        trigger.withDays(2);
+
+        HolidayCalendar calendar = SchedulerUtil.buildCalendar(buildTestCalendar());
+
+        //since December 29, 2017
+        trigger.setStartTime(
+                Date.from(
+                        LocalDate.of(2017, java.time.Month.DECEMBER, 29)
+                                .atStartOfDay(ZoneId.of("Europe/Moscow"))
+                                .toInstant()
+                )
+        );
+
+        trigger.computeFirstFireTime(calendar);
+        assertEquals(
+                LocalDate.of(2018, java.time.Month.JANUARY, 10)
+                        .atStartOfDay(ZoneId.of("Europe/Moscow"))
+                        .toInstant(),
+                trigger.getNextFireTime().toInstant()
+        );
+
+        trigger.triggered(calendar);
+        assertEquals(
+                LocalDate.of(2018, java.time.Month.JANUARY, 11)
+                        .atStartOfDay(ZoneId.of("Europe/Moscow"))
+                        .toInstant(),
+                trigger.getNextFireTime().toInstant()
+        );
+
+        trigger.triggered(calendar);
+        assertEquals(
+                LocalDate.of(2018, java.time.Month.JANUARY, 12)
+                        .atStartOfDay(ZoneId.of("Europe/Moscow"))
+                        .toInstant(),
+                trigger.getNextFireTime().toInstant()
+        );
+
+        //since December 29, 2017
+        trigger.setStartTime(
+                Date.from(
+                        LocalDate.of(2018, java.time.Month.MARCH, 7)
+                                .atStartOfDay(ZoneId.of("Europe/Moscow"))
+                                .toInstant()
+                )
+        );
+        trigger.computeFirstFireTime(calendar);
+        assertEquals(
+                LocalDate.of(2018, java.time.Month.MARCH, 13)
+                        .atStartOfDay(ZoneId.of("Europe/Moscow"))
+                        .toInstant(),
+                trigger.getNextFireTime().toInstant()
+        );
+
+        trigger.triggered(calendar);
+        assertEquals(
+                LocalDate.of(2018, java.time.Month.MARCH, 14)
+                        .atStartOfDay(ZoneId.of("Europe/Moscow"))
+                        .toInstant(),
+                trigger.getNextFireTime().toInstant()
+        );
+
+        trigger.updateWithNewCalendar(calendar, 1000L);
+        assertEquals(
+                LocalDate.of(2018, java.time.Month.MARCH, 16)
+                        .atStartOfDay(ZoneId.of("Europe/Moscow"))
+                        .toInstant(),
+                trigger.getNextFireTime().toInstant()
+        );
     }
 
     @Test
@@ -73,10 +253,83 @@ public class SchedulerUtilTest {
         );
 
         List<String> cronList = SchedulerUtil.buildCron(schedule);
-        assertEquals(2, cronList.size());
+        assertEquals(1, cronList.size());
         assertEquals("* * * * * ? *", cronList.get(0));
-        assertEquals("* * * ? * * *", cronList.get(1));
         assertTrue(cronList.stream().allMatch(cron -> CronExpression.isValidExpression(cron)));
+    }
+
+    @Test
+    public void testCronWhenOnlyWeekSet() {
+        ScheduleEvery scheduleEvery = new ScheduleEvery();
+        Schedule schedule = new Schedule(
+                ScheduleYear.every(scheduleEvery),
+                ScheduleMonth.every(scheduleEvery),
+                ScheduleFragment.every(scheduleEvery),
+                ScheduleDayOfWeek.on(new HashSet<>(Arrays.asList(Mon, Sun, Sat))),
+                ScheduleFragment.every(scheduleEvery),
+                ScheduleFragment.every(scheduleEvery),
+                ScheduleFragment.every(scheduleEvery)
+        );
+
+        List<String> cronList = SchedulerUtil.buildCron(schedule);
+        assertEquals(1, cronList.size());
+        assertEquals("* * * ? * 1,6,7 *", cronList.get(0));
+        assertTrue(CronExpression.isValidExpression(cronList.get(0)));
+
+
+        ScheduleEvery scheduleEvery3daysOfWeek = new ScheduleEvery();
+        scheduleEvery3daysOfWeek.setNth((byte) 3);
+        schedule = new Schedule(
+                ScheduleYear.every(scheduleEvery),
+                ScheduleMonth.every(scheduleEvery),
+                ScheduleFragment.every(scheduleEvery),
+                ScheduleDayOfWeek.every(scheduleEvery3daysOfWeek),
+                ScheduleFragment.every(scheduleEvery),
+                ScheduleFragment.every(scheduleEvery),
+                ScheduleFragment.every(scheduleEvery)
+        );
+
+        cronList = SchedulerUtil.buildCron(schedule);
+        assertEquals(1, cronList.size());
+        assertEquals("* * * ? * */3 *", cronList.get(0));
+        assertTrue(CronExpression.isValidExpression(cronList.get(0)));
+    }
+
+    @Test
+    public void testCronWhenOnlyDayOfMonthSet() {
+        ScheduleEvery scheduleEvery = new ScheduleEvery();
+        Schedule schedule = new Schedule(
+                ScheduleYear.every(scheduleEvery),
+                ScheduleMonth.every(scheduleEvery),
+                ScheduleFragment.on(new HashSet<>(Arrays.asList((byte) 6, (byte) 10, (byte) 31))),
+                ScheduleDayOfWeek.every(scheduleEvery),
+                ScheduleFragment.every(scheduleEvery),
+                ScheduleFragment.every(scheduleEvery),
+                ScheduleFragment.every(scheduleEvery)
+        );
+
+        List<String> cronList = SchedulerUtil.buildCron(schedule);
+        assertEquals(1, cronList.size());
+        assertEquals("* * * 6,10,31 * ? *", cronList.get(0));
+        assertTrue(CronExpression.isValidExpression(cronList.get(0)));
+
+
+        ScheduleEvery scheduleEvery3daysOfMonth = new ScheduleEvery();
+        scheduleEvery3daysOfMonth.setNth((byte) 3);
+        schedule = new Schedule(
+                ScheduleYear.every(scheduleEvery),
+                ScheduleMonth.every(scheduleEvery),
+                ScheduleFragment.every(scheduleEvery3daysOfMonth),
+                ScheduleDayOfWeek.every(scheduleEvery),
+                ScheduleFragment.every(scheduleEvery),
+                ScheduleFragment.every(scheduleEvery),
+                ScheduleFragment.every(scheduleEvery)
+        );
+
+        cronList = SchedulerUtil.buildCron(schedule);
+        assertEquals(1, cronList.size());
+        assertEquals("* * * */3 * ? *", cronList.get(0));
+        assertTrue(CronExpression.isValidExpression(cronList.get(0)));
     }
 
     @Test

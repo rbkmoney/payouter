@@ -48,8 +48,8 @@ public class ShopMetaDaoTest extends AbstractIntegrationTest {
         assertEquals(1, (int) shopMeta.getSchedulerId());
 
         shopMetaDao.save("test2", "test2", 2, 1);
-        List<Map.Entry<Integer, Integer>> activeShops = shopMetaDao.getAllActiveShops();
-        assertEquals(1, activeShops.size());
+        List<ShopMeta> activeShops = shopMetaDao.getAllActiveShops();
+        assertEquals(2, activeShops.size());
 
         List<ShopMeta> shopMetaList = shopMetaDao.getByCalendarAndSchedulerId(2, 1);
         assertEquals(2, shopMetaList.size());

@@ -1,5 +1,6 @@
 package com.rbkmoney.payouter.service.impl;
 
+import com.rbkmoney.damsel.base.TimeSpan;
 import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.msgpack.Value;
 import com.rbkmoney.damsel.payment_processing.*;
@@ -140,6 +141,25 @@ public class PartyManagementServiceImpl implements PartyManagementService {
                     String.format("Failed to compute shop terms, partyId='%s', shopId='%s', timestamp='%s'", partyId, shopId, timestamp), ex
             );
         }
+    }
+
+    @Override
+    public TimeSpan getAssetsFreezeFor(String partyId, String shopId) throws NotFoundException {
+        return getAssetsFreezeFor(partyId, shopId, Instant.now());
+    }
+
+    @Override
+    public TimeSpan getAssetsFreezeFor(String partyId, String shopId, Instant timestamp) throws NotFoundException {
+        log.info("Trying to get freeze time for assets, partyId='{}', shopId='{}', timestamp='{}'", partyId, shopId, timestamp);
+        TermSet termSet = computeShopTerms(partyId, shopId, timestamp);
+
+        if (!termSet.isSetPayouts()) {
+            throw new NotFoundException(String.format("Payout terms not found, partyId='%s', shopId='%s', timestamp='%s'"));
+        }
+
+        return Optional.ofNullable(termSet.getPayouts().getPolicy())
+                .map(policy -> policy.getAssetsFreezeFor())
+                .orElseThrow(() -> new NotFoundException(String.format("Payout policy not found, partyId='%s', shopId='%s', timestamp='%s'")));
     }
 
     @Override
