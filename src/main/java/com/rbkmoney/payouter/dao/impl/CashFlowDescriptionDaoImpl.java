@@ -6,7 +6,6 @@ import com.rbkmoney.payouter.domain.tables.pojos.CashFlowDescription;
 import com.rbkmoney.payouter.domain.tables.records.CashFlowDescriptionRecord;
 import com.rbkmoney.payouter.exception.DaoException;
 import org.jooq.InsertSetMoreStep;
-import org.jooq.InsertSetStep;
 import org.jooq.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.RowMapper;
