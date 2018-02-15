@@ -42,12 +42,12 @@ public class ShumwayServiceImpl implements ShumwayService {
     }
 
     @Override
-    public void hold(long payoutId, List<FinalCashFlowPosting> finalCashFlowPostings) {
+    public void hold(String payoutId, List<FinalCashFlowPosting> finalCashFlowPostings) {
         hold(payoutId, toPlanId(payoutId), 1L, toCashFlowPostings(finalCashFlowPostings));
     }
 
     @Transactional(propagation = Propagation.REQUIRED)
-    public void hold(long payoutId, String planId, long batchId, List<CashFlowPosting> cashFlowPostings) {
+    public void hold(String payoutId, String planId, long batchId, List<CashFlowPosting> cashFlowPostings) {
         log.debug("Trying to hold payout postings, payoutId='{}', cashFlowPostings='{}'", payoutId, cashFlowPostings);
         List<CashFlowPosting> newCashFlowPostings = cashFlowPostings.stream().map(cashFlowPosting -> {
             cashFlowPosting.setPayoutId(payoutId);
@@ -61,7 +61,7 @@ public class ShumwayServiceImpl implements ShumwayService {
             hold(planId, toPostingBatch(batchId, newCashFlowPostings));
             log.info("Payout has been held, payoutId='{}', cashFlowPostings='{}'", payoutId, newCashFlowPostings);
         } catch (Exception ex) {
-            throw new AccounterException(String.format("Failed to hold payout, payoutId='%d'", payoutId), ex);
+            throw new AccounterException(String.format("Failed to hold payout, payoutId='%s'", payoutId), ex);
         }
     }
 
@@ -77,18 +77,18 @@ public class ShumwayServiceImpl implements ShumwayService {
     }
 
     @Override
-    public void commit(long payoutId) {
+    public void commit(String payoutId) {
         log.debug("Trying to commit payout postings, payoutId='{}'", payoutId);
         try {
             List<CashFlowPosting> cashFlowPostings = cashFlowPostingDao.getByPayoutId(payoutId);
             if (cashFlowPostings.isEmpty()) {
-                throw new NotFoundException(String.format("Cash flow posting for commit not found, payoutId='%d'", payoutId));
+                throw new NotFoundException(String.format("Cash flow posting for commit not found, payoutId='%s'", payoutId));
             }
 
             commit(toPlanId(payoutId), toPostingBatches(cashFlowPostings));
             log.info("Payout has been committed, payoutId='{}', cashFlowPostings='{}'", payoutId, cashFlowPostings);
         } catch (Exception ex) {
-            throw new AccounterException(String.format("Failed to commit payout, payoutId='%d'", payoutId), ex);
+            throw new AccounterException(String.format("Failed to commit payout, payoutId='%s'", payoutId), ex);
         }
     }
 
@@ -104,18 +104,18 @@ public class ShumwayServiceImpl implements ShumwayService {
     }
 
     @Override
-    public void rollback(long payoutId) {
+    public void rollback(String payoutId) {
         log.debug("Trying to rollback payout postings, payoutId='{}'", payoutId);
         try {
             List<CashFlowPosting> cashFlowPostings = cashFlowPostingDao.getByPayoutId(payoutId);
             if (cashFlowPostings.isEmpty()) {
-                throw new NotFoundException(String.format("Cash flow posting for rollback not found, payoutId='%d'", payoutId));
+                throw new NotFoundException(String.format("Cash flow posting for rollback not found, payoutId='%s'", payoutId));
             }
 
             rollback(toPlanId(payoutId), toPostingBatches(cashFlowPostings));
             log.info("Payout has been rolled back, payoutId={}", payoutId);
         } catch (Exception ex) {
-            throw new AccounterException(String.format("Failed to rollback payout, payoutId='%d'", payoutId), ex);
+            throw new AccounterException(String.format("Failed to rollback payout, payoutId='%s'", payoutId), ex);
         }
     }
 
@@ -131,22 +131,22 @@ public class ShumwayServiceImpl implements ShumwayService {
     }
 
     @Override
-    public void revert(long payoutId) {
+    public void revert(String payoutId) {
         log.debug("Trying to revert payout, payoutId={}", payoutId);
         try {
             List<CashFlowPosting> cashFlowPostings = cashFlowPostingDao.getByPayoutId(payoutId);
             if (cashFlowPostings.isEmpty()) {
-                throw new NotFoundException(String.format("Cash flow posting for revert not found, payoutId='%d'", payoutId));
+                throw new NotFoundException(String.format("Cash flow posting for revert not found, payoutId='%s'", payoutId));
             }
 
             doRevert(payoutId, cashFlowPostings);
             log.info("Payout has been reverted, payoutId={}", payoutId);
         } catch (Exception ex) {
-            throw new AccounterException(String.format("Failed to revert payout, payoutId='%d'", payoutId), ex);
+            throw new AccounterException(String.format("Failed to revert payout, payoutId='%s'", payoutId), ex);
         }
     }
 
-    private void doRevert(long payoutId, List<CashFlowPosting> cashFlowPostings) throws Exception {
+    private void doRevert(String payoutId, List<CashFlowPosting> cashFlowPostings) throws Exception {
         String revertPlanId = toRevertPlanId(payoutId);
         List<CashFlowPosting> revertCashFlowPostings = cashFlowPostings.stream()
                 .map(cashFlowPosting -> toRevertCashFlowPosting(cashFlowPosting))
@@ -291,11 +291,11 @@ public class ShumwayServiceImpl implements ShumwayService {
         }
     }
 
-    private String toPlanId(long payoutId) {
+    private String toPlanId(String payoutId) {
         return "payout_" + payoutId;
     }
 
-    private String toRevertPlanId(long payoutId) {
+    private String toRevertPlanId(String payoutId) {
         return "revert_" + toPlanId(payoutId);
     }
 

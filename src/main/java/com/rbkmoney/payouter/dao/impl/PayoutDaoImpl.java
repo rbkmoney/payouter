@@ -71,6 +71,15 @@ public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
     }
 
     @Override
+    public void changePurpose(long payoutId, String purpose) throws DaoException {
+        Query query = getDslContext().update(PAYOUT)
+                .set(PAYOUT.PURPOSE, purpose)
+                .where(PAYOUT.ID.eq(payoutId));
+
+        executeOne(query);
+    }
+
+    @Override
     public void changeStatus(long payoutId, PayoutStatus payoutStatus) throws DaoException {
         Query query = getDslContext().update(PAYOUT)
                 .set(PAYOUT.STATUS, payoutStatus)

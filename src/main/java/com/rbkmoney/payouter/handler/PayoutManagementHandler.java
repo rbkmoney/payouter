@@ -1,10 +1,13 @@
 package com.rbkmoney.payouter.handler;
 
 import com.rbkmoney.damsel.base.InvalidRequest;
+import com.rbkmoney.damsel.domain.InternationalBankAccount;
+import com.rbkmoney.damsel.domain.InternationalLegalEntity;
 import com.rbkmoney.damsel.domain.LegalAgreement;
 import com.rbkmoney.damsel.domain.RussianBankAccount;
 import com.rbkmoney.damsel.payout_processing.*;
 import com.rbkmoney.geck.common.util.TypeUtil;
+import com.rbkmoney.payouter.domain.enums.PayoutAccountType;
 import com.rbkmoney.payouter.domain.enums.PayoutType;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.exception.InvalidStateException;
@@ -144,21 +147,9 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
         payoutInfo.setPartyId(record.getPartyId());
         payoutInfo.setShopId(record.getShopId());
         payoutInfo.setAmount(record.getAmount());
-        if (record.getPayoutType().equals(PayoutType.bank_account)) {
-            RussianBankAccount bankAccount = new RussianBankAccount();
-            bankAccount.setBankBik(record.getBankBik());
-            bankAccount.setAccount(record.getBankAccount());
-            bankAccount.setBankPostAccount(record.getBankPostAccount());
-            bankAccount.setBankName(record.getBankName());
-
-            PayoutAccount payoutAccount = new PayoutAccount();
-            payoutAccount.setAccount(bankAccount);
-            payoutAccount.setInn(record.getInn());
-            payoutAccount.setPurpose(record.getPurpose());
-            LegalAgreement legalAgreement = new LegalAgreement(record.getAccountLegalAgreementId(), TypeUtil.temporalToString(record.getAccountLegalAgreementSignedAt()));
-            payoutAccount.setLegalAgreement(legalAgreement);
+        if (record.getType().equals(PayoutType.bank_account)) {
             com.rbkmoney.damsel.payout_processing.PayoutType payoutType = new com.rbkmoney.damsel.payout_processing.PayoutType();
-            payoutType.setBankAccount(payoutAccount);
+            payoutType.setBankAccount(toPayoutAccount(record));
             payoutInfo.setType(payoutType);
         }
         payoutInfo.setStatus(DamselUtil.toDamselPayoutStatus(record));
@@ -167,4 +158,58 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
         payoutInfo.setCreatedAt(TypeUtil.temporalToString(record.getCreatedAt()));
         return payoutInfo;
     }
+
+    private PayoutAccount toPayoutAccount(Payout payout) {
+        LegalAgreement legalAgreement = new LegalAgreement(
+                payout.getAccountLegalAgreementId(),
+                TypeUtil.temporalToString(payout.getAccountLegalAgreementSignedAt())
+        );
+        if (payout.getAccountType() == PayoutAccountType.russian_payout_account) {
+            return PayoutAccount.russian_payout_account(
+                    new RussianPayoutAccount(
+                            new RussianBankAccount(
+                                    payout.getBankAccount(),
+                                    payout.getBankName(),
+                                    payout.getBankPostAccount(),
+                                    payout.getBankLocalCode()
+                            ),
+                            payout.getInn(),
+                            payout.getPurpose(),
+                            legalAgreement
+                    )
+            );
+        } else {
+            return PayoutAccount.international_payout_account(
+                    new InternationalPayoutAccount(
+                            toInternationalBankAccount(payout),
+                            toInternationalLegalEntity(payout),
+                            payout.getPurpose(),
+                            legalAgreement
+                    )
+            );
+        }
+    }
+
+    private static InternationalLegalEntity toInternationalLegalEntity(Payout payout) {
+        InternationalLegalEntity legalEntity = new InternationalLegalEntity();
+        legalEntity.setLegalName(payout.getAccountLegalName());
+        legalEntity.setTradingName(payout.getAccountTradingName());
+        legalEntity.setRegisteredAddress(payout.getAccountRegisteredAddress());
+        legalEntity.setActualAddress(payout.getAccountActualAddress());
+        legalEntity.setRegisteredNumber(payout.getAccountRegisteredNumber());
+        return legalEntity;
+    }
+
+    private InternationalBankAccount toInternationalBankAccount(Payout payout) {
+        InternationalBankAccount bankAccount = new InternationalBankAccount();
+        bankAccount.setAccountHolder(payout.getBankAccount());
+        bankAccount.setBankName(payout.getBankName());
+        bankAccount.setBankAddress(payout.getBankAddress());
+        bankAccount.setIban(payout.getBankIban());
+        bankAccount.setBic(payout.getBankBic());
+        bankAccount.setLocalBankCode(payout.getBankLocalCode());
+        return bankAccount;
+    }
+
+
 }

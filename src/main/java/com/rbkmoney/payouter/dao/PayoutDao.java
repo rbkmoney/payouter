@@ -20,6 +20,8 @@ public interface PayoutDao extends GenericDao {
 
     long save(Payout payout) throws DaoException;
 
+    void changePurpose(long payoutId, String purpose) throws DaoException;
+
     void changeStatus(long payoutId, PayoutStatus payoutStatus) throws DaoException;
 
     List<Payout> getUnpaidPayouts() throws DaoException;

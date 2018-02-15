@@ -37,7 +37,7 @@ public class ShumwayServiceTest extends AbstractIntegrationTest {
         Payout payout = random(Payout.class);
         payoutDao.save(payout);
         try {
-            shumwayService.hold(payout.getId(), Arrays.asList(
+            shumwayService.hold(String.valueOf(payout.getId()), Arrays.asList(
                     new FinalCashFlowPosting(
                             new FinalCashFlowAccount(
                                     CashFlowAccount.merchant(MerchantCashFlowAccount.settlement),
@@ -54,7 +54,7 @@ public class ShumwayServiceTest extends AbstractIntegrationTest {
                     .willThrow(InvalidPostingParams.class);
             given(shumwayClient.rollbackPlan(any()))
                     .willThrow(InvalidPostingParams.class);
-            shumwayService.revert(payout.getId());
+            shumwayService.revert(String.valueOf(payout.getId()));
             fail();
         } catch (AccounterException ex) {
             Throwable throwable = ex.getCause();

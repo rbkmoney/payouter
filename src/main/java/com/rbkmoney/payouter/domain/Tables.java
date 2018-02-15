@@ -5,6 +5,7 @@ package com.rbkmoney.payouter.domain;
 
 
 import com.rbkmoney.payouter.domain.tables.Adjustment;
+import com.rbkmoney.payouter.domain.tables.CashFlowDescription;
 import com.rbkmoney.payouter.domain.tables.CashFlowPosting;
 import com.rbkmoney.payouter.domain.tables.EventStockMeta;
 import com.rbkmoney.payouter.domain.tables.Invoice;
@@ -35,6 +36,11 @@ public class Tables {
      * The table <code>sht.adjustment</code>.
      */
     public static final Adjustment ADJUSTMENT = com.rbkmoney.payouter.domain.tables.Adjustment.ADJUSTMENT;
+
+    /**
+     * The table <code>sht.cash_flow_description</code>.
+     */
+    public static final CashFlowDescription CASH_FLOW_DESCRIPTION = com.rbkmoney.payouter.domain.tables.CashFlowDescription.CASH_FLOW_DESCRIPTION;
 
     /**
      * The table <code>sht.cash_flow_posting</code>.

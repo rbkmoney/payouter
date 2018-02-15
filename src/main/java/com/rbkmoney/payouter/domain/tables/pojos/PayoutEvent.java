@@ -23,7 +23,7 @@ import javax.annotation.Generated;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class PayoutEvent implements Serializable {
 
-    private static final long serialVersionUID = 540652980;
+    private static final long serialVersionUID = -656701824;
 
     private Long          eventId;
     private LocalDateTime eventCreatedAt;
@@ -46,13 +46,22 @@ public class PayoutEvent implements Serializable {
     private String        payoutAccountId;
     private String        payoutAccountBankName;
     private String        payoutAccountBankPostId;
-    private String        payoutAccountBankBik;
+    private String        payoutAccountBankLocalCode;
     private String        payoutAccountInn;
     private String        payoutAccountPurpose;
     private String        payoutAccountLegalAgreementId;
     private LocalDateTime payoutAccountLegalAgreementSignedAt;
     private String        userId;
     private String        userType;
+    private String        payoutAccountType;
+    private String        payoutAccountBankAddress;
+    private String        payoutAccountBankBic;
+    private String        payoutAccountBankIban;
+    private String        payoutAccountLegalName;
+    private String        payoutAccountTradingName;
+    private String        payoutAccountRegisteredAddress;
+    private String        payoutAccountActualAddress;
+    private String        payoutAccountRegisteredNumber;
 
     public PayoutEvent() {}
 
@@ -78,13 +87,22 @@ public class PayoutEvent implements Serializable {
         this.payoutAccountId = value.payoutAccountId;
         this.payoutAccountBankName = value.payoutAccountBankName;
         this.payoutAccountBankPostId = value.payoutAccountBankPostId;
-        this.payoutAccountBankBik = value.payoutAccountBankBik;
+        this.payoutAccountBankLocalCode = value.payoutAccountBankLocalCode;
         this.payoutAccountInn = value.payoutAccountInn;
         this.payoutAccountPurpose = value.payoutAccountPurpose;
         this.payoutAccountLegalAgreementId = value.payoutAccountLegalAgreementId;
         this.payoutAccountLegalAgreementSignedAt = value.payoutAccountLegalAgreementSignedAt;
         this.userId = value.userId;
         this.userType = value.userType;
+        this.payoutAccountType = value.payoutAccountType;
+        this.payoutAccountBankAddress = value.payoutAccountBankAddress;
+        this.payoutAccountBankBic = value.payoutAccountBankBic;
+        this.payoutAccountBankIban = value.payoutAccountBankIban;
+        this.payoutAccountLegalName = value.payoutAccountLegalName;
+        this.payoutAccountTradingName = value.payoutAccountTradingName;
+        this.payoutAccountRegisteredAddress = value.payoutAccountRegisteredAddress;
+        this.payoutAccountActualAddress = value.payoutAccountActualAddress;
+        this.payoutAccountRegisteredNumber = value.payoutAccountRegisteredNumber;
     }
 
     public PayoutEvent(
@@ -109,13 +127,22 @@ public class PayoutEvent implements Serializable {
         String        payoutAccountId,
         String        payoutAccountBankName,
         String        payoutAccountBankPostId,
-        String        payoutAccountBankBik,
+        String        payoutAccountBankLocalCode,
         String        payoutAccountInn,
         String        payoutAccountPurpose,
         String        payoutAccountLegalAgreementId,
         LocalDateTime payoutAccountLegalAgreementSignedAt,
         String        userId,
-        String        userType
+        String        userType,
+        String        payoutAccountType,
+        String        payoutAccountBankAddress,
+        String        payoutAccountBankBic,
+        String        payoutAccountBankIban,
+        String        payoutAccountLegalName,
+        String        payoutAccountTradingName,
+        String        payoutAccountRegisteredAddress,
+        String        payoutAccountActualAddress,
+        String        payoutAccountRegisteredNumber
     ) {
         this.eventId = eventId;
         this.eventCreatedAt = eventCreatedAt;
@@ -138,13 +165,22 @@ public class PayoutEvent implements Serializable {
         this.payoutAccountId = payoutAccountId;
         this.payoutAccountBankName = payoutAccountBankName;
         this.payoutAccountBankPostId = payoutAccountBankPostId;
-        this.payoutAccountBankBik = payoutAccountBankBik;
+        this.payoutAccountBankLocalCode = payoutAccountBankLocalCode;
         this.payoutAccountInn = payoutAccountInn;
         this.payoutAccountPurpose = payoutAccountPurpose;
         this.payoutAccountLegalAgreementId = payoutAccountLegalAgreementId;
         this.payoutAccountLegalAgreementSignedAt = payoutAccountLegalAgreementSignedAt;
         this.userId = userId;
         this.userType = userType;
+        this.payoutAccountType = payoutAccountType;
+        this.payoutAccountBankAddress = payoutAccountBankAddress;
+        this.payoutAccountBankBic = payoutAccountBankBic;
+        this.payoutAccountBankIban = payoutAccountBankIban;
+        this.payoutAccountLegalName = payoutAccountLegalName;
+        this.payoutAccountTradingName = payoutAccountTradingName;
+        this.payoutAccountRegisteredAddress = payoutAccountRegisteredAddress;
+        this.payoutAccountActualAddress = payoutAccountActualAddress;
+        this.payoutAccountRegisteredNumber = payoutAccountRegisteredNumber;
     }
 
     public Long getEventId() {
@@ -315,12 +351,12 @@ public class PayoutEvent implements Serializable {
         this.payoutAccountBankPostId = payoutAccountBankPostId;
     }
 
-    public String getPayoutAccountBankBik() {
-        return this.payoutAccountBankBik;
+    public String getPayoutAccountBankLocalCode() {
+        return this.payoutAccountBankLocalCode;
     }
 
-    public void setPayoutAccountBankBik(String payoutAccountBankBik) {
-        this.payoutAccountBankBik = payoutAccountBankBik;
+    public void setPayoutAccountBankLocalCode(String payoutAccountBankLocalCode) {
+        this.payoutAccountBankLocalCode = payoutAccountBankLocalCode;
     }
 
     public String getPayoutAccountInn() {
@@ -369,6 +405,78 @@ public class PayoutEvent implements Serializable {
 
     public void setUserType(String userType) {
         this.userType = userType;
+    }
+
+    public String getPayoutAccountType() {
+        return this.payoutAccountType;
+    }
+
+    public void setPayoutAccountType(String payoutAccountType) {
+        this.payoutAccountType = payoutAccountType;
+    }
+
+    public String getPayoutAccountBankAddress() {
+        return this.payoutAccountBankAddress;
+    }
+
+    public void setPayoutAccountBankAddress(String payoutAccountBankAddress) {
+        this.payoutAccountBankAddress = payoutAccountBankAddress;
+    }
+
+    public String getPayoutAccountBankBic() {
+        return this.payoutAccountBankBic;
+    }
+
+    public void setPayoutAccountBankBic(String payoutAccountBankBic) {
+        this.payoutAccountBankBic = payoutAccountBankBic;
+    }
+
+    public String getPayoutAccountBankIban() {
+        return this.payoutAccountBankIban;
+    }
+
+    public void setPayoutAccountBankIban(String payoutAccountBankIban) {
+        this.payoutAccountBankIban = payoutAccountBankIban;
+    }
+
+    public String getPayoutAccountLegalName() {
+        return this.payoutAccountLegalName;
+    }
+
+    public void setPayoutAccountLegalName(String payoutAccountLegalName) {
+        this.payoutAccountLegalName = payoutAccountLegalName;
+    }
+
+    public String getPayoutAccountTradingName() {
+        return this.payoutAccountTradingName;
+    }
+
+    public void setPayoutAccountTradingName(String payoutAccountTradingName) {
+        this.payoutAccountTradingName = payoutAccountTradingName;
+    }
+
+    public String getPayoutAccountRegisteredAddress() {
+        return this.payoutAccountRegisteredAddress;
+    }
+
+    public void setPayoutAccountRegisteredAddress(String payoutAccountRegisteredAddress) {
+        this.payoutAccountRegisteredAddress = payoutAccountRegisteredAddress;
+    }
+
+    public String getPayoutAccountActualAddress() {
+        return this.payoutAccountActualAddress;
+    }
+
+    public void setPayoutAccountActualAddress(String payoutAccountActualAddress) {
+        this.payoutAccountActualAddress = payoutAccountActualAddress;
+    }
+
+    public String getPayoutAccountRegisteredNumber() {
+        return this.payoutAccountRegisteredNumber;
+    }
+
+    public void setPayoutAccountRegisteredNumber(String payoutAccountRegisteredNumber) {
+        this.payoutAccountRegisteredNumber = payoutAccountRegisteredNumber;
     }
 
     @Override
@@ -506,11 +614,11 @@ public class PayoutEvent implements Serializable {
         }
         else if (!payoutAccountBankPostId.equals(other.payoutAccountBankPostId))
             return false;
-        if (payoutAccountBankBik == null) {
-            if (other.payoutAccountBankBik != null)
+        if (payoutAccountBankLocalCode == null) {
+            if (other.payoutAccountBankLocalCode != null)
                 return false;
         }
-        else if (!payoutAccountBankBik.equals(other.payoutAccountBankBik))
+        else if (!payoutAccountBankLocalCode.equals(other.payoutAccountBankLocalCode))
             return false;
         if (payoutAccountInn == null) {
             if (other.payoutAccountInn != null)
@@ -548,6 +656,60 @@ public class PayoutEvent implements Serializable {
         }
         else if (!userType.equals(other.userType))
             return false;
+        if (payoutAccountType == null) {
+            if (other.payoutAccountType != null)
+                return false;
+        }
+        else if (!payoutAccountType.equals(other.payoutAccountType))
+            return false;
+        if (payoutAccountBankAddress == null) {
+            if (other.payoutAccountBankAddress != null)
+                return false;
+        }
+        else if (!payoutAccountBankAddress.equals(other.payoutAccountBankAddress))
+            return false;
+        if (payoutAccountBankBic == null) {
+            if (other.payoutAccountBankBic != null)
+                return false;
+        }
+        else if (!payoutAccountBankBic.equals(other.payoutAccountBankBic))
+            return false;
+        if (payoutAccountBankIban == null) {
+            if (other.payoutAccountBankIban != null)
+                return false;
+        }
+        else if (!payoutAccountBankIban.equals(other.payoutAccountBankIban))
+            return false;
+        if (payoutAccountLegalName == null) {
+            if (other.payoutAccountLegalName != null)
+                return false;
+        }
+        else if (!payoutAccountLegalName.equals(other.payoutAccountLegalName))
+            return false;
+        if (payoutAccountTradingName == null) {
+            if (other.payoutAccountTradingName != null)
+                return false;
+        }
+        else if (!payoutAccountTradingName.equals(other.payoutAccountTradingName))
+            return false;
+        if (payoutAccountRegisteredAddress == null) {
+            if (other.payoutAccountRegisteredAddress != null)
+                return false;
+        }
+        else if (!payoutAccountRegisteredAddress.equals(other.payoutAccountRegisteredAddress))
+            return false;
+        if (payoutAccountActualAddress == null) {
+            if (other.payoutAccountActualAddress != null)
+                return false;
+        }
+        else if (!payoutAccountActualAddress.equals(other.payoutAccountActualAddress))
+            return false;
+        if (payoutAccountRegisteredNumber == null) {
+            if (other.payoutAccountRegisteredNumber != null)
+                return false;
+        }
+        else if (!payoutAccountRegisteredNumber.equals(other.payoutAccountRegisteredNumber))
+            return false;
         return true;
     }
 
@@ -576,13 +738,22 @@ public class PayoutEvent implements Serializable {
         result = prime * result + ((this.payoutAccountId == null) ? 0 : this.payoutAccountId.hashCode());
         result = prime * result + ((this.payoutAccountBankName == null) ? 0 : this.payoutAccountBankName.hashCode());
         result = prime * result + ((this.payoutAccountBankPostId == null) ? 0 : this.payoutAccountBankPostId.hashCode());
-        result = prime * result + ((this.payoutAccountBankBik == null) ? 0 : this.payoutAccountBankBik.hashCode());
+        result = prime * result + ((this.payoutAccountBankLocalCode == null) ? 0 : this.payoutAccountBankLocalCode.hashCode());
         result = prime * result + ((this.payoutAccountInn == null) ? 0 : this.payoutAccountInn.hashCode());
         result = prime * result + ((this.payoutAccountPurpose == null) ? 0 : this.payoutAccountPurpose.hashCode());
         result = prime * result + ((this.payoutAccountLegalAgreementId == null) ? 0 : this.payoutAccountLegalAgreementId.hashCode());
         result = prime * result + ((this.payoutAccountLegalAgreementSignedAt == null) ? 0 : this.payoutAccountLegalAgreementSignedAt.hashCode());
         result = prime * result + ((this.userId == null) ? 0 : this.userId.hashCode());
         result = prime * result + ((this.userType == null) ? 0 : this.userType.hashCode());
+        result = prime * result + ((this.payoutAccountType == null) ? 0 : this.payoutAccountType.hashCode());
+        result = prime * result + ((this.payoutAccountBankAddress == null) ? 0 : this.payoutAccountBankAddress.hashCode());
+        result = prime * result + ((this.payoutAccountBankBic == null) ? 0 : this.payoutAccountBankBic.hashCode());
+        result = prime * result + ((this.payoutAccountBankIban == null) ? 0 : this.payoutAccountBankIban.hashCode());
+        result = prime * result + ((this.payoutAccountLegalName == null) ? 0 : this.payoutAccountLegalName.hashCode());
+        result = prime * result + ((this.payoutAccountTradingName == null) ? 0 : this.payoutAccountTradingName.hashCode());
+        result = prime * result + ((this.payoutAccountRegisteredAddress == null) ? 0 : this.payoutAccountRegisteredAddress.hashCode());
+        result = prime * result + ((this.payoutAccountActualAddress == null) ? 0 : this.payoutAccountActualAddress.hashCode());
+        result = prime * result + ((this.payoutAccountRegisteredNumber == null) ? 0 : this.payoutAccountRegisteredNumber.hashCode());
         return result;
     }
 
@@ -611,13 +782,22 @@ public class PayoutEvent implements Serializable {
         sb.append(", ").append(payoutAccountId);
         sb.append(", ").append(payoutAccountBankName);
         sb.append(", ").append(payoutAccountBankPostId);
-        sb.append(", ").append(payoutAccountBankBik);
+        sb.append(", ").append(payoutAccountBankLocalCode);
         sb.append(", ").append(payoutAccountInn);
         sb.append(", ").append(payoutAccountPurpose);
         sb.append(", ").append(payoutAccountLegalAgreementId);
         sb.append(", ").append(payoutAccountLegalAgreementSignedAt);
         sb.append(", ").append(userId);
         sb.append(", ").append(userType);
+        sb.append(", ").append(payoutAccountType);
+        sb.append(", ").append(payoutAccountBankAddress);
+        sb.append(", ").append(payoutAccountBankBic);
+        sb.append(", ").append(payoutAccountBankIban);
+        sb.append(", ").append(payoutAccountLegalName);
+        sb.append(", ").append(payoutAccountTradingName);
+        sb.append(", ").append(payoutAccountRegisteredAddress);
+        sb.append(", ").append(payoutAccountActualAddress);
+        sb.append(", ").append(payoutAccountRegisteredNumber);
 
         sb.append(")");
         return sb.toString();
