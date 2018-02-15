@@ -71,7 +71,7 @@ public class SchedulerServiceImpl implements SchedulerService {
                     shopMeta.getPartyId(),
                     shopMeta.getShopId(),
                     new CalendarRef(shopMeta.getCalendarId()),
-                    new ScheduleRef(shopMeta.getSchedulerId())
+                    new PayoutScheduleRef(shopMeta.getSchedulerId())
             );
         }
         log.info("Jobs have been successfully started, jobsCount='{}'", activeShops.size());
@@ -79,7 +79,7 @@ public class SchedulerServiceImpl implements SchedulerService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
-    public void registerJob(String partyId, String shopId, ScheduleRef scheduleRef) throws NotFoundException, ScheduleProcessingException, StorageException {
+    public void registerJob(String partyId, String shopId, PayoutScheduleRef scheduleRef) throws NotFoundException, ScheduleProcessingException, StorageException {
         try {
             log.info("Trying to register job, partyId='{}', shopId='{}', scheduleRef='{}'",
                     partyId, shopId, scheduleRef);
@@ -102,10 +102,10 @@ public class SchedulerServiceImpl implements SchedulerService {
         }
     }
 
-    private void createJob(String partyId, String shopId, CalendarRef calendarRef, ScheduleRef scheduleRef) throws NotFoundException, ScheduleProcessingException, StorageException {
+    private void createJob(String partyId, String shopId, CalendarRef calendarRef, PayoutScheduleRef scheduleRef) throws NotFoundException, ScheduleProcessingException, StorageException {
         log.info("Trying to create job, partyId='{}', shopId='{}', calendarRef='{}', scheduleRef='{}'", partyId, shopId, calendarRef, scheduleRef);
         try {
-            Schedule schedule = dominantService.getSchedule(scheduleRef);
+            PayoutSchedule schedule = dominantService.getPayoutSchedule(scheduleRef);
             Calendar calendar = dominantService.getCalendar(calendarRef);
 
             String calendarId = "calendar-" + calendarRef.getId();
@@ -120,7 +120,7 @@ public class SchedulerServiceImpl implements SchedulerService {
                     .usingJobData(GeneratePayoutJob.SHOP_ID, shopId)
                     .build();
 
-            TimeSpan timeSpan = partyManagementService.getAssetsFreezeFor(partyId, shopId);
+            TimeSpan timeSpan = schedule.getPolicy().getAssetsFreezeFor();
             Set<Trigger> triggers = new HashSet<>();
             List<String> cronList = SchedulerUtil.buildCron(schedule.getSchedule());
             for (int triggerId = 0; triggerId < cronList.size(); triggerId++) {

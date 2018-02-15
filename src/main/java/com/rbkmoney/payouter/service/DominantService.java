@@ -5,11 +5,11 @@ import com.rbkmoney.damsel.domain_config.Reference;
 import com.rbkmoney.payouter.exception.NotFoundException;
 
 public interface DominantService {
-    Schedule getSchedule(ScheduleRef scheduleRef) throws NotFoundException;
+    PayoutSchedule getPayoutSchedule(PayoutScheduleRef scheduleRef) throws NotFoundException;
 
-    Schedule getSchedule(ScheduleRef scheduleRef, long domainRevision) throws NotFoundException;
+    PayoutSchedule getPayoutSchedule(PayoutScheduleRef scheduleRef, long domainRevision) throws NotFoundException;
 
-    Schedule getSchedule(ScheduleRef scheduleRef, Reference revisionReference) throws NotFoundException;
+    PayoutSchedule getPayoutSchedule(PayoutScheduleRef scheduleRef, Reference revisionReference) throws NotFoundException;
 
     PaymentInstitution getPaymentInstitution(PaymentInstitutionRef paymentInstitutionRef) throws NotFoundException;
 

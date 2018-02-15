@@ -20,23 +20,23 @@ public class DominantServiceImpl implements DominantService {
     private RepositoryClientSrv.Iface dominantClient;
 
     @Override
-    public Schedule getSchedule(ScheduleRef scheduleRef) throws NotFoundException {
-        return getSchedule(scheduleRef, Reference.head(new Head()));
+    public PayoutSchedule getPayoutSchedule(PayoutScheduleRef scheduleRef) throws NotFoundException {
+        return getPayoutSchedule(scheduleRef, Reference.head(new Head()));
     }
 
     @Override
-    public Schedule getSchedule(ScheduleRef scheduleRef, long domainRevision) throws NotFoundException {
-        return getSchedule(scheduleRef, Reference.version(domainRevision));
+    public PayoutSchedule getPayoutSchedule(PayoutScheduleRef scheduleRef, long domainRevision) throws NotFoundException {
+        return getPayoutSchedule(scheduleRef, Reference.version(domainRevision));
     }
 
     @Override
-    public Schedule getSchedule(ScheduleRef scheduleRef, Reference revisionReference) throws NotFoundException {
+    public PayoutSchedule getPayoutSchedule(PayoutScheduleRef scheduleRef, Reference revisionReference) throws NotFoundException {
         log.info("Trying to get schedule, scheduleRef='{}', revisionReference='{}'", scheduleRef, revisionReference);
         try {
             com.rbkmoney.damsel.domain.Reference reference = new com.rbkmoney.damsel.domain.Reference();
-            reference.setSchedule(scheduleRef);
+            reference.setPayoutSchedule(scheduleRef);
             VersionedObject versionedObject = dominantClient.checkoutObject(revisionReference, reference);
-            Schedule schedule = versionedObject.getObject().getSchedule().getData();
+            PayoutSchedule schedule = versionedObject.getObject().getPayoutSchedule().getData();
             log.info("Schedule has been found, scheduleRef='{}', revisionReference='{}', schedule='{}'", scheduleRef, revisionReference, schedule);
             return schedule;
         } catch (VersionNotFound | ObjectNotFound ex) {

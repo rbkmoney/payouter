@@ -102,66 +102,7 @@ public class PartyManagementServiceImpl implements PartyManagementService {
         log.info("Shop has been found, partyId='{}', shopId='{}', partyRevisionParam='{}'", partyId, shopId, partyRevisionParam);
         return shop;
     }
-
-    @Override
-    public Shop getShopByContractAndPayoutToolIds(String partyId, String contractId, String payoutToolId) throws NotFoundException {
-        log.info("Trying to get shop by contract and payoutTool ids, partyId='{}', contractId='{}', payoutToolId='{}'", partyId, contractId, payoutToolId);
-        Party party = getParty(partyId);
-
-        Shop shop = party.getShops().values().stream()
-                .filter(
-                        shopValue -> shopValue.getContractId().equals(contractId)
-                                && shopValue.getPayoutToolId().equals(payoutToolId)
-                ).findFirst().orElseThrow(() -> new NotFoundException(
-                        String.format("Shop not found, partyId='{}', contractId='{}', payoutToolId='{}'", party, contractId, payoutToolId)
-                ));
-
-        log.info("Shop has been found, partyId='{}', contractId='{}', payoutToolId='{}'", partyId, contractId, payoutToolId);
-        return shop;
-    }
-
-    @Override
-    public TermSet computeShopTerms(String partyId, String shopId) throws NotFoundException {
-        return computeShopTerms(partyId, shopId, Instant.now());
-    }
-
-    @Override
-    public TermSet computeShopTerms(String partyId, String shopId, Instant timestamp) throws NotFoundException {
-        log.info("Trying to compute shop terms, partyId='{}', shopId='{}', timestamp='{}'", partyId, shopId, timestamp);
-        try {
-            TermSet termSet = partyManagementClient.computeShopTerms(userInfo, partyId, shopId, TypeUtil.temporalToString(timestamp));
-            log.info("Shop terms has been computed, partyId='{}', shopId='{}', timestamp='{}', terms='{}'", partyId, shopId, timestamp, termSet);
-            return termSet;
-        } catch (PartyNotFound | PartyNotExistsYet | ShopNotFound ex) {
-            throw new NotFoundException(
-                    String.format("%s, partyId='%s', shopId='%s', timestamp='%s'", ex.getClass().getSimpleName(), partyId, shopId, timestamp),
-                    ex);
-        } catch (TException ex) {
-            throw new RuntimeException(
-                    String.format("Failed to compute shop terms, partyId='%s', shopId='%s', timestamp='%s'", partyId, shopId, timestamp), ex
-            );
-        }
-    }
-
-    @Override
-    public TimeSpan getAssetsFreezeFor(String partyId, String shopId) throws NotFoundException {
-        return getAssetsFreezeFor(partyId, shopId, Instant.now());
-    }
-
-    @Override
-    public TimeSpan getAssetsFreezeFor(String partyId, String shopId, Instant timestamp) throws NotFoundException {
-        log.info("Trying to get freeze time for assets, partyId='{}', shopId='{}', timestamp='{}'", partyId, shopId, timestamp);
-        TermSet termSet = computeShopTerms(partyId, shopId, timestamp);
-
-        if (!termSet.isSetPayouts()) {
-            throw new NotFoundException(String.format("Payout terms not found, partyId='%s', shopId='%s', timestamp='%s'"));
-        }
-
-        return Optional.ofNullable(termSet.getPayouts().getPolicy())
-                .map(policy -> policy.getAssetsFreezeFor())
-                .orElseThrow(() -> new NotFoundException(String.format("Payout policy not found, partyId='%s', shopId='%s', timestamp='%s'")));
-    }
-
+    
     @Override
     public Contract getContract(String partyId, String contractId) throws NotFoundException {
         return getContract(partyId, contractId, Instant.now());

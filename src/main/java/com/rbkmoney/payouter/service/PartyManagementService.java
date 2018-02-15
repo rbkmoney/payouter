@@ -30,16 +30,6 @@ public interface PartyManagementService {
 
     Shop getShop(String partyId, String shopId, PartyRevisionParam partyRevisionParam) throws NotFoundException;
 
-    Shop getShopByContractAndPayoutToolIds(String partyId, String contractId, String payoutToolId) throws NotFoundException;
-
-    TermSet computeShopTerms(String partyId, String shopId) throws NotFoundException;
-
-    TermSet computeShopTerms(String partyId, String shopId, Instant timestamp) throws NotFoundException;
-
-    TimeSpan getAssetsFreezeFor(String partyId, String shopId) throws NotFoundException;
-
-    TimeSpan getAssetsFreezeFor(String partyId, String shopId, Instant timestamp) throws NotFoundException;
-
     Contract getContract(String partyId, String contractId) throws NotFoundException;
 
     Contract getContract(String partyId, String contractId, long partyRevision) throws NotFoundException;
