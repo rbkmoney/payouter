@@ -36,7 +36,7 @@ public class CashFlowPostingDaoImpl extends AbstractGenericDao implements CashFl
     }
 
     @Override
-    public List<CashFlowPosting> getByPayoutId(long payoutId) throws DaoException {
+    public List<CashFlowPosting> getByPayoutId(String payoutId) throws DaoException {
         Query query = getDslContext().selectFrom(CASH_FLOW_POSTING)
                 .where(CASH_FLOW_POSTING.PAYOUT_ID.eq(payoutId));
 

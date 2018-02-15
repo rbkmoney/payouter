@@ -28,11 +28,11 @@ public class CashFlowDescriptionServiceImpl implements CashFlowDescriptionServic
     }
 
     @Override
-    public List<CashFlowDescription> get(long payoutId) throws StorageException {
+    public List<CashFlowDescription> get(String payoutId) throws StorageException {
         try {
             return cashFlowDescriptionDao.get(payoutId);
         } catch (DaoException e) {
-            throw new StorageException(String.format("Failed to get cash flow description list for payoutId=%d", payoutId), e);
+            throw new StorageException(String.format("Failed to get cash flow description list for payoutId=%s", payoutId), e);
         }
     }
 
@@ -42,7 +42,7 @@ public class CashFlowDescriptionServiceImpl implements CashFlowDescriptionServic
         try {
             cashFlowDescriptionDao.save(cashFlowDescription);
         } catch (DaoException e) {
-            throw new StorageException(String.format("Failed to save cash flow description list for payoutId=%d", cashFlowDescription.get(0).getPayoutId()), e);
+            throw new StorageException(String.format("Failed to save cash flow description list for payoutId=%s", cashFlowDescription.get(0).getPayoutId()), e);
         }
     }
 }

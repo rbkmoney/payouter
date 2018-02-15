@@ -5,7 +5,7 @@ CREATE TYPE sht.ACCOUNT_TYPE AS ENUM ('MERCHANT_SETTLEMENT', 'MERCHANT_GUARANTEE
 -- cash_flow_posting table
 CREATE TABLE sht.cash_flow_posting (
   id                BIGSERIAL                   NOT NULL,
-  payout_id         BIGINT                      NOT NULL,
+  payout_id         CHARACTER VARYING           NOT NULL,
   plan_id           CHARACTER VARYING           NOT NULL,
   batch_id          BIGINT                      NOT NULL,
   from_account_id   BIGINT                      NOT NULL,

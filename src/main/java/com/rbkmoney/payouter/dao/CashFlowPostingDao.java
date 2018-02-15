@@ -9,6 +9,6 @@ public interface CashFlowPostingDao extends GenericDao {
 
     void save(List<CashFlowPosting> cashFlowPostings) throws DaoException;
 
-    List<CashFlowPosting> getByPayoutId(long payoutId) throws DaoException;
+    List<CashFlowPosting> getByPayoutId(String payoutId) throws DaoException;
 
 }

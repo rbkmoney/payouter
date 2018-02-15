@@ -6,12 +6,12 @@ import java.util.List;
 
 public interface ShumwayService {
 
-    void hold(long payoutId, List<FinalCashFlowPosting> finalCashFlowPostings);
+    void hold(String payoutId, List<FinalCashFlowPosting> finalCashFlowPostings);
 
-    void commit(long payoutId);
+    void commit(String payoutId);
 
-    void rollback(long payoutId);
+    void rollback(String payoutId);
 
-    void revert(long payoutId);
+    void revert(String payoutId);
 
 }

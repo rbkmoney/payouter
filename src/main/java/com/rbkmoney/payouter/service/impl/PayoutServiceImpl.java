@@ -184,7 +184,7 @@ public class PayoutServiceImpl implements PayoutService {
             payout.setPurpose(purpose);
             PayoutEvent payoutEvent = buildPayoutCreatedEvent(payout, cashFlowPostings, userInfo);
             eventSinkService.saveEvent(payoutEvent);
-            shumwayService.hold(payoutId, cashFlowPostings);
+            shumwayService.hold(String.valueOf(payoutId), cashFlowPostings);
 
             log.info("Payout successfully created, payoutId='{}', partyId={}, shopId={}, fromTime={}, toTime={}, payoutType={}",
                     payoutId, partyId, shopId, fromTime, toTime, payoutType);
@@ -260,7 +260,7 @@ public class PayoutServiceImpl implements PayoutService {
             UserInfo userInfo = WoodyUtils.getUserInfo();
             PayoutEvent payoutEvent = buildPayoutConfirmedEvent(payout, userInfo);
             eventSinkService.saveEvent(payoutEvent);
-            shumwayService.commit(payoutId);
+            shumwayService.commit(String.valueOf(payoutId));
             log.info("Payout have been confirmed, payoutId={}", payoutId);
         } catch (DaoException ex) {
             throw new StorageException(String.format("Failed to confirm a payout, payoutId='%d'", payoutId), ex);
@@ -282,11 +282,11 @@ public class PayoutServiceImpl implements PayoutService {
                 case UNPAID:
                 case PAID:
                     payoutDao.changeStatus(payoutId, PayoutStatus.CANCELLED);
-                    shumwayService.rollback(payoutId);
+                    shumwayService.rollback(String.valueOf(payoutId));
                     break;
                 case CONFIRMED:
                     payoutDao.changeStatus(payoutId, PayoutStatus.CANCELLED);
-                    shumwayService.revert(payoutId);
+                    shumwayService.revert(String.valueOf(payoutId));
                     break;
                 default:
                     throw new InvalidStateException(String.format("Invalid status for 'cancel' action, payoutId='%d', currentStatus='%s'", payoutId, payout.getStatus()));
@@ -504,7 +504,7 @@ public class PayoutServiceImpl implements PayoutService {
         paymentCashFlow.setCurrencyCode(currencyCode);
         paymentCashFlow.setCashFlowType(com.rbkmoney.payouter.domain.enums.CashFlowType.payment);
         paymentCashFlow.setCount(payments.size());
-        paymentCashFlow.setPayoutId(payoutId);
+        paymentCashFlow.setPayoutId(String.valueOf(payoutId));
         paymentCashFlow.setFromTime(paymentFromTime);
         paymentCashFlow.setToTime(paymentToTime);
         result.add(paymentCashFlow);
@@ -520,7 +520,7 @@ public class PayoutServiceImpl implements PayoutService {
             refundCashFlow.setCurrencyCode(currencyCode);
             refundCashFlow.setCashFlowType(com.rbkmoney.payouter.domain.enums.CashFlowType.refund);
             refundCashFlow.setCount(refunds.size());
-            refundCashFlow.setPayoutId(payoutId);
+            refundCashFlow.setPayoutId(String.valueOf(payoutId));
             refundCashFlow.setFromTime(refundFromTime);
             refundCashFlow.setToTime(refundToTime);
             result.add(refundCashFlow);
@@ -537,7 +537,7 @@ public class PayoutServiceImpl implements PayoutService {
             adjustmentCashFlow.setCurrencyCode(currencyCode);
             adjustmentCashFlow.setCashFlowType(com.rbkmoney.payouter.domain.enums.CashFlowType.adjustment);
             adjustmentCashFlow.setCount(adjustments.size());
-            adjustmentCashFlow.setPayoutId(payoutId);
+            adjustmentCashFlow.setPayoutId(String.valueOf(payoutId));
             adjustmentCashFlow.setFromTime(adjustmentFromTime);
             adjustmentCashFlow.setToTime(adjustmentToTime);
             result.add(adjustmentCashFlow);

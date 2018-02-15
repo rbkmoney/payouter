@@ -37,7 +37,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class CashFlowDescription extends TableImpl<CashFlowDescriptionRecord> {
 
-    private static final long serialVersionUID = -1579352372;
+    private static final long serialVersionUID = 345095063;
 
     /**
      * The reference instance of <code>sht.cash_flow_description</code>
@@ -60,7 +60,7 @@ public class CashFlowDescription extends TableImpl<CashFlowDescriptionRecord> {
     /**
      * The column <code>sht.cash_flow_description.payout_id</code>.
      */
-    public final TableField<CashFlowDescriptionRecord, Long> PAYOUT_ID = createField("payout_id", org.jooq.impl.SQLDataType.BIGINT.nullable(false), this, "");
+    public final TableField<CashFlowDescriptionRecord, String> PAYOUT_ID = createField("payout_id", org.jooq.impl.SQLDataType.VARCHAR.nullable(false), this, "");
 
     /**
      * The column <code>sht.cash_flow_description.cash_flow_type</code>.

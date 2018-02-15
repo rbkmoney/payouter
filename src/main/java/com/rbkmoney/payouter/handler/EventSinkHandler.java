@@ -50,7 +50,7 @@ public class EventSinkHandler implements EventSinkSrv.Iface {
             for (PayoutChange pc : event.getPayload().getPayoutChanges()) {
                 if (pc.isSetPayoutCreated()) {
                     Payout payout = pc.getPayoutCreated().getPayout();
-                    List<com.rbkmoney.payouter.domain.tables.pojos.CashFlowDescription> cashFlowDescriptions = cashFlowDescriptionService.get(Long.parseLong(payout.getId()));
+                    List<com.rbkmoney.payouter.domain.tables.pojos.CashFlowDescription> cashFlowDescriptions = cashFlowDescriptionService.get(payout.getId());
                     payout.setCashFlowDescriptions(DamselUtil.toDamselCashFlowDescription(cashFlowDescriptions));
                 }
             }

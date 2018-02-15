@@ -20,7 +20,7 @@ public class CashFlowDescriptionDaoTest extends AbstractIntegrationTest {
     public void saveAndGet() {
         ArrayList<CashFlowDescription> cashFlowDescription = new ArrayList<>();
         CashFlowDescription e = new CashFlowDescription();
-        long payoutId = 1L;
+        String payoutId = "1";
         e.setPayoutId(payoutId);
         e.setAmount(123L);
         e.setFee(12L);

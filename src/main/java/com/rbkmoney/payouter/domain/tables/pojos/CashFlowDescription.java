@@ -25,10 +25,10 @@ import javax.annotation.Generated;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class CashFlowDescription implements Serializable {
 
-    private static final long serialVersionUID = 1064279508;
+    private static final long serialVersionUID = 634678410;
 
     private Long          id;
-    private Long          payoutId;
+    private String        payoutId;
     private CashFlowType  cashFlowType;
     private Integer       count;
     private Long          amount;
@@ -53,7 +53,7 @@ public class CashFlowDescription implements Serializable {
 
     public CashFlowDescription(
         Long          id,
-        Long          payoutId,
+        String        payoutId,
         CashFlowType  cashFlowType,
         Integer       count,
         Long          amount,
@@ -81,11 +81,11 @@ public class CashFlowDescription implements Serializable {
         this.id = id;
     }
 
-    public Long getPayoutId() {
+    public String getPayoutId() {
         return this.payoutId;
     }
 
-    public void setPayoutId(Long payoutId) {
+    public void setPayoutId(String payoutId) {
         this.payoutId = payoutId;
     }
 

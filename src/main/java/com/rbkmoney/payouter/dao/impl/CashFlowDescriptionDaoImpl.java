@@ -40,7 +40,7 @@ public class CashFlowDescriptionDaoImpl extends AbstractGenericDao implements Ca
     }
 
     @Override
-    public List<CashFlowDescription> get(long payoutId) throws DaoException {
+    public List<CashFlowDescription> get(String payoutId) throws DaoException {
         Query query = getDslContext().selectFrom(CASH_FLOW_DESCRIPTION)
                 .where(CASH_FLOW_DESCRIPTION.PAYOUT_ID.eq(payoutId));
         return fetch(query, cashFlowDescriptionRowMapper);

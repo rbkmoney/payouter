@@ -7,5 +7,5 @@ import java.util.List;
 
 public interface CashFlowDescriptionDao {
     void save(List<CashFlowDescription> cashFlowDescription) throws DaoException;
-    List<CashFlowDescription> get(long payoutId) throws DaoException;
+    List<CashFlowDescription> get(String payoutId) throws DaoException;
 }
