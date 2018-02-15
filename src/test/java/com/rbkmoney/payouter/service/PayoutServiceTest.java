@@ -30,6 +30,9 @@ import org.apache.thrift.TException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
+import org.quartz.impl.matchers.GroupMatcher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -62,6 +65,9 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
 
     @Autowired
     JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    Scheduler scheduler;
 
     @MockBean
     PartyManagementSrv.Iface partyManagementClient;
@@ -127,6 +133,20 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         Payout payout = payouts.get(0);
         assertEquals(9500L, (long) payout.getAmount());
         assertEquals(UNPAID, payout.getStatus());
+    }
+
+    @Test
+    public void testRegisterAndDeregisterScheduler() throws SchedulerException {
+        eventStockService.processStockEvent(
+                buildStockEvent(buildScheduleEvent(partyId, shopId))
+        );
+        assertTrue(!scheduler.getJobKeys(GroupMatcher.anyGroup()).isEmpty());
+        assertTrue(!scheduler.getTriggerKeys(GroupMatcher.anyGroup()).isEmpty());
+        eventStockService.processStockEvent(
+                buildStockEvent(buildScheduleEvent(partyId, shopId, null))
+        );
+        assertTrue(scheduler.getJobKeys(GroupMatcher.anyGroup()).isEmpty());
+        assertTrue(scheduler.getTriggerKeys(GroupMatcher.anyGroup()).isEmpty());
     }
 
     @Test
@@ -307,6 +327,10 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
     }
 
     private Event buildScheduleEvent(String partyId, String shopId) {
+        return buildScheduleEvent(partyId, shopId, new PayoutScheduleRef(1));
+    }
+
+    private Event buildScheduleEvent(String partyId, String shopId, PayoutScheduleRef payoutScheduleRef) {
         ClaimStatusChanged claimStatusChanged = new ClaimStatusChanged();
         ClaimAccepted claimAccepted = new ClaimAccepted();
         ClaimEffect claimEffect = new ClaimEffect();
@@ -314,7 +338,7 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         shopEffectUnit.setShopId(shopId);
 
         ScheduleChanged scheduleChanged = new ScheduleChanged();
-        scheduleChanged.setSchedule(new PayoutScheduleRef(1));
+        scheduleChanged.setSchedule(payoutScheduleRef);
         shopEffectUnit.setEffect(ShopEffect.payout_schedule_changed(scheduleChanged));
         claimEffect.setShopEffect(shopEffectUnit);
         claimAccepted.setEffects(Arrays.asList(claimEffect));
