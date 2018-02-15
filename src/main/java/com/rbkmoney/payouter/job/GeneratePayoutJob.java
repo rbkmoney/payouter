@@ -1,16 +1,21 @@
 package com.rbkmoney.payouter.job;
 
+import com.rbkmoney.damsel.payout_processing.InternalUser;
+import com.rbkmoney.damsel.payout_processing.UserType;
 import com.rbkmoney.payouter.domain.enums.PayoutType;
 import com.rbkmoney.payouter.exception.InvalidStateException;
 import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.exception.StorageException;
 import com.rbkmoney.payouter.service.PayoutService;
 import com.rbkmoney.payouter.trigger.FreezeTimeCronTrigger;
+import com.rbkmoney.payouter.util.WoodyUtils;
+import com.rbkmoney.woody.api.flow.WFlow;
 import com.rbkmoney.woody.api.flow.error.WRuntimeException;
 import org.quartz.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -26,8 +31,14 @@ public class GeneratePayoutJob implements Job {
 
     public static final String SHOP_ID = "shop_id";
 
+    private final WFlow wFlow = new WFlow();
+
     @Autowired
     private PayoutService payoutService;
+
+    @Value("${scheduler.user-id}")
+    private String userId;
+
 
     @Override
     public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
@@ -43,13 +54,19 @@ public class GeneratePayoutJob implements Job {
         try {
             try {
                 LocalDateTime toTime = toLocalDateTime(trigger.getCronTime().toInstant());
-                long payoutId = payoutService.createPayout(
-                        partyId,
-                        shopId,
-                        toTime.minusDays(1),
-                        toTime,
-                        PayoutType.bank_account
-                );
+                long payoutId = wFlow.createServiceFork(
+                        () -> {
+                            WoodyUtils.setUserInfo(userId, UserType.internal_user(new InternalUser()));
+                            return payoutService.createPayout(
+                                    partyId,
+                                    shopId,
+                                    toTime.minusDays(1),
+                                    toTime,
+                                    PayoutType.bank_account
+                            );
+                        }
+                ).call();
+
                 log.info("Payout for shop have been successfully created, payoutId='{}' partyId='{}', shopId='{}', trigger='{}', jobExecutionContext='{}'",
                         payoutId, partyId, shopId, trigger, jobExecutionContext);
             } catch (NotFoundException | InvalidStateException ex) {

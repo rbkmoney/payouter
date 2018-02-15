@@ -87,8 +87,13 @@ public class SchedulerServiceImpl implements SchedulerService {
             Shop shop = partyManagementService.getShop(partyId, shopId);
             PaymentInstitutionRef paymentInstitutionRef = partyManagementService.getPaymentInstitutionRef(partyId, shop.getContractId());
             PaymentInstitution paymentInstitution = dominantService.getPaymentInstitution(paymentInstitutionRef);
-            CalendarRef calendarRef = paymentInstitution.getCalendar();
+            if (!paymentInstitution.isSetCalendar()) {
+                throw new NotFoundException(
+                        String.format("Calendar not found, partyId='%s', shopId='%s', contractId='%s'", partyId, shop.getId(), shop.getContractId())
+                );
+            }
 
+            CalendarRef calendarRef = paymentInstitution.getCalendar();
             shopMetaDao.save(partyId, shopId, calendarRef.getId(), scheduleRef.getId());
 
             createJob(partyId, shopId, calendarRef, scheduleRef);
