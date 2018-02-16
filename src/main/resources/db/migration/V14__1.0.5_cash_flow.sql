@@ -22,7 +22,7 @@ CREATE TABLE sht.cash_flow_posting (
 -- insert old data in a new format
 insert into sht.cash_flow_posting (payout_id, plan_id, batch_id, from_account_id, from_account_type, to_account_id, to_account_type, amount, currency_code, description, created_at)
   select
-    cast(payout_id as bigint) as payout_id,
+    payout_id as payout_id,
     'payout_' || payout_id as plan_id,
     1 as batch_id,
     cast(json_extract_path_text(json_array_elements(payout_cash_flow::json), 'source', 'account_id') as bigint) as from_account_id,
