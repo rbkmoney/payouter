@@ -109,8 +109,8 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
     public PayoutSearchResponse getPayoutsInfo(PayoutSearchRequest payoutSearchRequest) throws InvalidRequest, TException {
         PayoutSearchCriteria payoutSearchCriteria = payoutSearchRequest.getSearchCriteria();
         log.info("GetPayoutsInfo with request parameters: {}", payoutSearchRequest);
-        Optional<Long> fromId = Optional.ofNullable(payoutSearchRequest.getFromId());
-        Optional<Integer> size = Optional.ofNullable(payoutSearchRequest.getSize());
+        Optional<Long> fromId = payoutSearchRequest.isSetFromId() ? Optional.ofNullable(payoutSearchRequest.getFromId()) : Optional.empty();
+        Optional<Integer> size = payoutSearchRequest.isSetSize() ? Optional.ofNullable(payoutSearchRequest.getSize()) : Optional.empty();
         Optional<com.rbkmoney.payouter.domain.enums.PayoutStatus> payoutStatus = Optional.ofNullable(payoutSearchCriteria.getStatus()).map(ps -> com.rbkmoney.payouter.domain.enums.PayoutStatus.valueOf(ps.name().toUpperCase()));
         Optional<LocalDateTime> fromTime = Optional.ofNullable(payoutSearchCriteria.getTimeRange()).map(tr -> TypeUtil.stringToLocalDateTime(tr.getFromTime()));
         Optional<LocalDateTime> toTime = Optional.ofNullable(payoutSearchCriteria.getTimeRange()).map(tr -> TypeUtil.stringToLocalDateTime(tr.getToTime()));
