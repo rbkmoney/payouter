@@ -129,11 +129,11 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
     private void validateRequest(Optional<Integer> size, Optional<LocalDateTime> fromTime, Optional<LocalDateTime> toTime) throws InvalidRequest {
         List<String> errorList = new ArrayList<>();
         if (size.isPresent() && (size.get() <= 0 || size.get() > MAX_SIZE)) {
-            errorList.add(String.format("Size %d must be positive and less then %d", size, MAX_SIZE));
+            errorList.add(String.format("Size %d must be positive and less then %d", size.get(), MAX_SIZE));
         }
         if (toTime.isPresent() && fromTime.isPresent()) {
             if (fromTime.get().isAfter(toTime.get())) {
-                errorList.add(String.format("FromTime %s must be before toTime %s", fromTime.get().toString(), toTime.get().toString()));
+                errorList.add(String.format("FromTime %s must be before toTime %s", fromTime.get(), toTime.get()));
             }
         }
         if (!errorList.isEmpty()) {
