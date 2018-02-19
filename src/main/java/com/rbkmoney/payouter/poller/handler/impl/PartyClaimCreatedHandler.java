@@ -1,5 +1,6 @@
 package com.rbkmoney.payouter.poller.handler.impl;
 
+import com.rbkmoney.damsel.domain.Shop;
 import com.rbkmoney.damsel.payment_processing.*;
 import com.rbkmoney.geck.filter.Filter;
 import com.rbkmoney.geck.filter.PathConditionFilter;
@@ -45,6 +46,11 @@ public class PartyClaimCreatedHandler implements Handler<PartyChange, Event> {
                         schedulerService.registerJob(partyId, shopId, scheduleChanged.getSchedule());
                     } else {
                         schedulerService.deregisterJob(partyId, shopId);
+                    }
+                } else if (shopEffect.isSetCreated()) {
+                    Shop shop = shopEffect.getCreated();
+                    if (shop.isSetPayoutSchedule()) {
+                        schedulerService.registerJob(partyId, shopId, shop.getPayoutSchedule());
                     }
                 }
             }
