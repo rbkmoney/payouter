@@ -98,8 +98,7 @@ public class ShopMetaDaoImpl extends AbstractGenericDao implements ShopMetaDao {
 
     @Override
     public List<ShopMeta> getAllActiveShops() {
-        Query query = getDslContext().select(SHOP_META.CALENDAR_ID, SHOP_META.SCHEDULER_ID)
-                .from(SHOP_META)
+        Query query = getDslContext().selectFrom(SHOP_META)
                 .where(SHOP_META.SCHEDULER_ID.isNotNull()
                         .and(SHOP_META.CALENDAR_ID.isNotNull()));
 
