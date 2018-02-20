@@ -6,7 +6,6 @@ import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.payouter.dao.CashFlowPostingDao;
 import com.rbkmoney.payouter.domain.enums.AccountType;
 import com.rbkmoney.payouter.domain.tables.pojos.CashFlowPosting;
-import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.exception.AccounterException;
 import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.service.ShumwayService;
@@ -19,7 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -43,7 +41,7 @@ public class ShumwayServiceImpl implements ShumwayService {
 
     @Override
     public void hold(String payoutId, List<FinalCashFlowPosting> finalCashFlowPostings) {
-        hold(payoutId, toPlanId(payoutId), 1L, toCashFlowPostings(finalCashFlowPostings));
+        hold(payoutId, toPlanId(payoutId), 1L, toCashFlowPostings(payoutId, finalCashFlowPostings));
     }
 
     @Transactional(propagation = Propagation.REQUIRED)
@@ -215,7 +213,7 @@ public class ShumwayServiceImpl implements ShumwayService {
         return posting;
     }
 
-    private List<CashFlowPosting> toCashFlowPostings(List<FinalCashFlowPosting> finalCashFlowPostings) {
+    private List<CashFlowPosting> toCashFlowPostings(String payoutId, List<FinalCashFlowPosting> finalCashFlowPostings) {
         return finalCashFlowPostings.stream()
                 .map(finalCashFlowPosting -> {
                     CashFlowPosting cashFlowPosting = new CashFlowPosting();
@@ -227,9 +225,17 @@ public class ShumwayServiceImpl implements ShumwayService {
                     cashFlowPosting.setToAccountType(toAccountType(destination.getAccountType()));
                     cashFlowPosting.setAmount(finalCashFlowPosting.getVolume().getAmount());
                     cashFlowPosting.setCurrencyCode(finalCashFlowPosting.getVolume().getCurrency().getSymbolicCode());
-                    cashFlowPosting.setDescription(finalCashFlowPosting.getDetails());
+                    cashFlowPosting.setDescription(buildCashFlowDescription(payoutId, finalCashFlowPosting));
                     return cashFlowPosting;
                 }).collect(Collectors.toList());
+    }
+
+    private String buildCashFlowDescription(String payoutId, FinalCashFlowPosting finalCashFlowPosting) {
+        String description = "PAYOUT-" + payoutId;
+        if (finalCashFlowPosting.isSetDetails()) {
+            description += ": " + finalCashFlowPosting.getDetails();
+        }
+        return description;
     }
 
     private AccountType toAccountType(CashFlowAccount cashFlowAccount) {
