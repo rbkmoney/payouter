@@ -179,6 +179,8 @@ public class PayoutServiceImpl implements PayoutService {
                     new Cash(availableAmount, new CurrencyRef(payout.getCurrencyCode())),
                     payout.getCreatedAt().toInstant(ZoneOffset.UTC)
             );
+            cashFlowPostings.add(0, buildPrimaryPosting(payout));
+
             UserInfo userInfo = WoodyUtils.getUserInfo();
             payout.setId(payoutId);
             payout.setPurpose(purpose);
@@ -195,6 +197,29 @@ public class PayoutServiceImpl implements PayoutService {
                     String.format("Failed to create payout, partyId='%s', shopId='%s', fromTime='%s', toTime='%s', payoutType='%s'",
                             partyId, shopId, fromTime, toTime, payoutType), ex);
         }
+    }
+
+    private FinalCashFlowPosting buildPrimaryPosting(Payout payout) {
+        FinalCashFlowPosting finalCashFlowPosting = new FinalCashFlowPosting();
+        finalCashFlowPosting.setSource(
+                new FinalCashFlowAccount(
+                        CashFlowAccount.merchant(MerchantCashFlowAccount.settlement),
+                        payout.getShopAcc()
+                )
+        );
+        finalCashFlowPosting.setDestination(
+                new FinalCashFlowAccount(
+                        CashFlowAccount.merchant(MerchantCashFlowAccount.settlement),
+                        payout.getShopPayoutAcc()
+                )
+        );
+        finalCashFlowPosting.setVolume(
+                new Cash(
+                        payout.getAmount(),
+                        new CurrencyRef(payout.getCurrencyCode())
+                )
+        );
+        return finalCashFlowPosting;
     }
 
     private String buildPurpose(Payout payout) {
