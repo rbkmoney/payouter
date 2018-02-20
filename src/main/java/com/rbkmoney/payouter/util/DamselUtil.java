@@ -43,6 +43,10 @@ public class DamselUtil {
         if (checkRoute(
                 CashFlowAccount.provider(ProviderCashFlowAccount.settlement),
                 CashFlowAccount.merchant(MerchantCashFlowAccount.settlement),
+                cashFlowPosting)
+                || checkRoute(
+                CashFlowAccount.merchant(MerchantCashFlowAccount.settlement),
+                CashFlowAccount.merchant(MerchantCashFlowAccount.settlement),
                 cashFlowPosting)) {
             return AMOUNT;
         }

@@ -15,6 +15,7 @@ CREATE TYPE sht.payout_account_type AS ENUM ('russian_payout_account', 'internat
 ALTER TABLE sht.payout ADD COLUMN account_type sht.payout_account_type;
 UPDATE sht.payout SET account_type = 'russian_payout_account' WHERE account_type IS NULL;
 
+ALTER TABLE sht.payout ADD COLUMN fee BIGINT DEFAULT 0;
 ALTER TABLE sht.payout ADD COLUMN bank_address CHARACTER VARYING;
 ALTER TABLE sht.payout ADD COLUMN bank_bic CHARACTER VARYING;
 ALTER TABLE sht.payout ADD COLUMN bank_iban CHARACTER VARYING;

@@ -23,6 +23,8 @@ import com.rbkmoney.payouter.exception.StorageException;
 import com.rbkmoney.payouter.service.*;
 import com.rbkmoney.payouter.service.report.Report1CSendService;
 import com.rbkmoney.payouter.service.report._1c.Report1CService;
+import com.rbkmoney.payouter.util.CashFlowType;
+import com.rbkmoney.payouter.util.DamselUtil;
 import com.rbkmoney.payouter.util.WoodyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,10 +39,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -157,7 +156,23 @@ public class PayoutServiceImpl implements PayoutService {
             }
 
             Payout payout = buildPayout(partyId, shopId, fromTime, toTime, payoutType);
-            payout.setAmount(availableAmount);
+            List<FinalCashFlowPosting> cashFlowPostings = partyManagementService.computePayoutCashFlow(
+                    partyId,
+                    shopId,
+                    new Cash(availableAmount, new CurrencyRef(payout.getCurrencyCode())),
+                    payout.getCreatedAt().toInstant(ZoneOffset.UTC)
+            );
+            addPrimaryPosting(
+                    payout.getShopAcc(),
+                    payout.getShopPayoutAcc(),
+                    availableAmount,
+                    payout.getCurrencyCode(),
+                    cashFlowPostings
+            );
+
+            Map<CashFlowType, Long> cashFlow = DamselUtil.parseCashFlow(cashFlowPostings);
+            payout.setAmount(cashFlow.get(CashFlowType.AMOUNT));
+            payout.setFee(cashFlow.getOrDefault(CashFlowType.FEE, 0L));
 
             long payoutId = payoutDao.save(payout);
 
@@ -172,14 +187,6 @@ public class PayoutServiceImpl implements PayoutService {
             adjustmentDao.includeToPayout(payoutId, adjustments);
 
             shopMetaDao.updateLastPayoutCreatedAt(shopMeta.getPartyId(), shopMeta.getShopId(), payout.getCreatedAt());
-
-            List<FinalCashFlowPosting> cashFlowPostings = partyManagementService.computePayoutCashFlow(
-                    partyId,
-                    shopId,
-                    new Cash(availableAmount, new CurrencyRef(payout.getCurrencyCode())),
-                    payout.getCreatedAt().toInstant(ZoneOffset.UTC)
-            );
-            cashFlowPostings.add(0, buildPrimaryPosting(payout));
 
             UserInfo userInfo = WoodyUtils.getUserInfo();
             payout.setId(payoutId);
@@ -199,27 +206,29 @@ public class PayoutServiceImpl implements PayoutService {
         }
     }
 
-    private FinalCashFlowPosting buildPrimaryPosting(Payout payout) {
+    private void addPrimaryPosting(Long shopAcc, Long shopPayoutAcc, long availableAmount, String currencyCode, List<FinalCashFlowPosting> cashFlowPostings) {
+        Map<CashFlowType, Long> cashFlow = DamselUtil.parseCashFlow(cashFlowPostings);
+
         FinalCashFlowPosting finalCashFlowPosting = new FinalCashFlowPosting();
         finalCashFlowPosting.setSource(
                 new FinalCashFlowAccount(
                         CashFlowAccount.merchant(MerchantCashFlowAccount.settlement),
-                        payout.getShopAcc()
+                        shopAcc
                 )
         );
         finalCashFlowPosting.setDestination(
                 new FinalCashFlowAccount(
                         CashFlowAccount.merchant(MerchantCashFlowAccount.settlement),
-                        payout.getShopPayoutAcc()
+                        shopPayoutAcc
                 )
         );
         finalCashFlowPosting.setVolume(
                 new Cash(
-                        payout.getAmount(),
-                        new CurrencyRef(payout.getCurrencyCode())
+                        availableAmount - cashFlow.get(CashFlowType.FEE),
+                        new CurrencyRef(currencyCode)
                 )
         );
-        return finalCashFlowPosting;
+        cashFlowPostings.add(0, finalCashFlowPosting);
     }
 
     private String buildPurpose(Payout payout) {

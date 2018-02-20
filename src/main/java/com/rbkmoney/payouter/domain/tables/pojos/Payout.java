@@ -27,7 +27,7 @@ import javax.annotation.Generated;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Payout implements Serializable {
 
-    private static final long serialVersionUID = -857220211;
+    private static final long serialVersionUID = 244110863;
 
     private Long              id;
     private String            partyId;
@@ -51,6 +51,7 @@ public class Payout implements Serializable {
     private String            accountLegalAgreementId;
     private LocalDateTime     accountLegalAgreementSignedAt;
     private PayoutAccountType accountType;
+    private Long              fee;
     private String            bankAddress;
     private String            bankBic;
     private String            bankIban;
@@ -85,6 +86,7 @@ public class Payout implements Serializable {
         this.accountLegalAgreementId = value.accountLegalAgreementId;
         this.accountLegalAgreementSignedAt = value.accountLegalAgreementSignedAt;
         this.accountType = value.accountType;
+        this.fee = value.fee;
         this.bankAddress = value.bankAddress;
         this.bankBic = value.bankBic;
         this.bankIban = value.bankIban;
@@ -118,6 +120,7 @@ public class Payout implements Serializable {
         String            accountLegalAgreementId,
         LocalDateTime     accountLegalAgreementSignedAt,
         PayoutAccountType accountType,
+        Long              fee,
         String            bankAddress,
         String            bankBic,
         String            bankIban,
@@ -149,6 +152,7 @@ public class Payout implements Serializable {
         this.accountLegalAgreementId = accountLegalAgreementId;
         this.accountLegalAgreementSignedAt = accountLegalAgreementSignedAt;
         this.accountType = accountType;
+        this.fee = fee;
         this.bankAddress = bankAddress;
         this.bankBic = bankBic;
         this.bankIban = bankIban;
@@ -333,6 +337,14 @@ public class Payout implements Serializable {
 
     public void setAccountType(PayoutAccountType accountType) {
         this.accountType = accountType;
+    }
+
+    public Long getFee() {
+        return this.fee;
+    }
+
+    public void setFee(Long fee) {
+        this.fee = fee;
     }
 
     public String getBankAddress() {
@@ -540,6 +552,12 @@ public class Payout implements Serializable {
         }
         else if (!accountType.equals(other.accountType))
             return false;
+        if (fee == null) {
+            if (other.fee != null)
+                return false;
+        }
+        else if (!fee.equals(other.fee))
+            return false;
         if (bankAddress == null) {
             if (other.bankAddress != null)
                 return false;
@@ -617,6 +635,7 @@ public class Payout implements Serializable {
         result = prime * result + ((this.accountLegalAgreementId == null) ? 0 : this.accountLegalAgreementId.hashCode());
         result = prime * result + ((this.accountLegalAgreementSignedAt == null) ? 0 : this.accountLegalAgreementSignedAt.hashCode());
         result = prime * result + ((this.accountType == null) ? 0 : this.accountType.hashCode());
+        result = prime * result + ((this.fee == null) ? 0 : this.fee.hashCode());
         result = prime * result + ((this.bankAddress == null) ? 0 : this.bankAddress.hashCode());
         result = prime * result + ((this.bankBic == null) ? 0 : this.bankBic.hashCode());
         result = prime * result + ((this.bankIban == null) ? 0 : this.bankIban.hashCode());
@@ -654,6 +673,7 @@ public class Payout implements Serializable {
         sb.append(", ").append(accountLegalAgreementId);
         sb.append(", ").append(accountLegalAgreementSignedAt);
         sb.append(", ").append(accountType);
+        sb.append(", ").append(fee);
         sb.append(", ").append(bankAddress);
         sb.append(", ").append(bankBic);
         sb.append(", ").append(bankIban);

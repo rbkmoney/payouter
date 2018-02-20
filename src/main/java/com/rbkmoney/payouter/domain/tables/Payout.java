@@ -39,7 +39,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Payout extends TableImpl<PayoutRecord> {
 
-    private static final long serialVersionUID = 370196937;
+    private static final long serialVersionUID = 262287891;
 
     /**
      * The reference instance of <code>sht.payout</code>
@@ -163,6 +163,11 @@ public class Payout extends TableImpl<PayoutRecord> {
      * The column <code>sht.payout.account_type</code>.
      */
     public final TableField<PayoutRecord, PayoutAccountType> ACCOUNT_TYPE = createField("account_type", org.jooq.util.postgres.PostgresDataType.VARCHAR.asEnumDataType(com.rbkmoney.payouter.domain.enums.PayoutAccountType.class), this, "");
+
+    /**
+     * The column <code>sht.payout.fee</code>.
+     */
+    public final TableField<PayoutRecord, Long> FEE = createField("fee", org.jooq.impl.SQLDataType.BIGINT, this, "");
 
     /**
      * The column <code>sht.payout.bank_address</code>.

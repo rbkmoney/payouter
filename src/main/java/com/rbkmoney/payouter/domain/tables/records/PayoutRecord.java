@@ -30,7 +30,7 @@ import org.jooq.impl.UpdatableRecordImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class PayoutRecord extends UpdatableRecordImpl<PayoutRecord> {
 
-    private static final long serialVersionUID = -1520457200;
+    private static final long serialVersionUID = -1349088656;
 
     /**
      * Setter for <code>sht.payout.id</code>.
@@ -341,115 +341,129 @@ public class PayoutRecord extends UpdatableRecordImpl<PayoutRecord> {
     }
 
     /**
+     * Setter for <code>sht.payout.fee</code>.
+     */
+    public void setFee(Long value) {
+        set(22, value);
+    }
+
+    /**
+     * Getter for <code>sht.payout.fee</code>.
+     */
+    public Long getFee() {
+        return (Long) get(22);
+    }
+
+    /**
      * Setter for <code>sht.payout.bank_address</code>.
      */
     public void setBankAddress(String value) {
-        set(22, value);
+        set(23, value);
     }
 
     /**
      * Getter for <code>sht.payout.bank_address</code>.
      */
     public String getBankAddress() {
-        return (String) get(22);
+        return (String) get(23);
     }
 
     /**
      * Setter for <code>sht.payout.bank_bic</code>.
      */
     public void setBankBic(String value) {
-        set(23, value);
+        set(24, value);
     }
 
     /**
      * Getter for <code>sht.payout.bank_bic</code>.
      */
     public String getBankBic() {
-        return (String) get(23);
+        return (String) get(24);
     }
 
     /**
      * Setter for <code>sht.payout.bank_iban</code>.
      */
     public void setBankIban(String value) {
-        set(24, value);
+        set(25, value);
     }
 
     /**
      * Getter for <code>sht.payout.bank_iban</code>.
      */
     public String getBankIban() {
-        return (String) get(24);
+        return (String) get(25);
     }
 
     /**
      * Setter for <code>sht.payout.account_legal_name</code>.
      */
     public void setAccountLegalName(String value) {
-        set(25, value);
+        set(26, value);
     }
 
     /**
      * Getter for <code>sht.payout.account_legal_name</code>.
      */
     public String getAccountLegalName() {
-        return (String) get(25);
+        return (String) get(26);
     }
 
     /**
      * Setter for <code>sht.payout.account_trading_name</code>.
      */
     public void setAccountTradingName(String value) {
-        set(26, value);
+        set(27, value);
     }
 
     /**
      * Getter for <code>sht.payout.account_trading_name</code>.
      */
     public String getAccountTradingName() {
-        return (String) get(26);
+        return (String) get(27);
     }
 
     /**
      * Setter for <code>sht.payout.account_registered_address</code>.
      */
     public void setAccountRegisteredAddress(String value) {
-        set(27, value);
+        set(28, value);
     }
 
     /**
      * Getter for <code>sht.payout.account_registered_address</code>.
      */
     public String getAccountRegisteredAddress() {
-        return (String) get(27);
+        return (String) get(28);
     }
 
     /**
      * Setter for <code>sht.payout.account_actual_address</code>.
      */
     public void setAccountActualAddress(String value) {
-        set(28, value);
+        set(29, value);
     }
 
     /**
      * Getter for <code>sht.payout.account_actual_address</code>.
      */
     public String getAccountActualAddress() {
-        return (String) get(28);
+        return (String) get(29);
     }
 
     /**
      * Setter for <code>sht.payout.account_registered_number</code>.
      */
     public void setAccountRegisteredNumber(String value) {
-        set(29, value);
+        set(30, value);
     }
 
     /**
      * Getter for <code>sht.payout.account_registered_number</code>.
      */
     public String getAccountRegisteredNumber() {
-        return (String) get(29);
+        return (String) get(30);
     }
 
     // -------------------------------------------------------------------------
@@ -478,7 +492,7 @@ public class PayoutRecord extends UpdatableRecordImpl<PayoutRecord> {
     /**
      * Create a detached, initialised PayoutRecord
      */
-    public PayoutRecord(Long id, String partyId, String shopId, LocalDateTime createdAt, LocalDateTime fromTime, LocalDateTime toTime, PayoutStatus status, PayoutType type, Long amount, Long shopAcc, Long shopPayoutAcc, String currencyCode, String bankAccount, String bankLocalCode, String bankName, String bankPostAccount, String inn, String purpose, String description, String accountLegalAgreementId, LocalDateTime accountLegalAgreementSignedAt, PayoutAccountType accountType, String bankAddress, String bankBic, String bankIban, String accountLegalName, String accountTradingName, String accountRegisteredAddress, String accountActualAddress, String accountRegisteredNumber) {
+    public PayoutRecord(Long id, String partyId, String shopId, LocalDateTime createdAt, LocalDateTime fromTime, LocalDateTime toTime, PayoutStatus status, PayoutType type, Long amount, Long shopAcc, Long shopPayoutAcc, String currencyCode, String bankAccount, String bankLocalCode, String bankName, String bankPostAccount, String inn, String purpose, String description, String accountLegalAgreementId, LocalDateTime accountLegalAgreementSignedAt, PayoutAccountType accountType, Long fee, String bankAddress, String bankBic, String bankIban, String accountLegalName, String accountTradingName, String accountRegisteredAddress, String accountActualAddress, String accountRegisteredNumber) {
         super(Payout.PAYOUT);
 
         set(0, id);
@@ -503,13 +517,14 @@ public class PayoutRecord extends UpdatableRecordImpl<PayoutRecord> {
         set(19, accountLegalAgreementId);
         set(20, accountLegalAgreementSignedAt);
         set(21, accountType);
-        set(22, bankAddress);
-        set(23, bankBic);
-        set(24, bankIban);
-        set(25, accountLegalName);
-        set(26, accountTradingName);
-        set(27, accountRegisteredAddress);
-        set(28, accountActualAddress);
-        set(29, accountRegisteredNumber);
+        set(22, fee);
+        set(23, bankAddress);
+        set(24, bankBic);
+        set(25, bankIban);
+        set(26, accountLegalName);
+        set(27, accountTradingName);
+        set(28, accountRegisteredAddress);
+        set(29, accountActualAddress);
+        set(30, accountRegisteredNumber);
     }
 }
