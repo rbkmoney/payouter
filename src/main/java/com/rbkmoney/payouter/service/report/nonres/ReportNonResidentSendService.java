@@ -1,11 +1,10 @@
-package com.rbkmoney.payouter.service.report;
+package com.rbkmoney.payouter.service.report.nonres;
 
 import com.rbkmoney.payouter.dao.ReportDao;
 import com.rbkmoney.payouter.domain.enums.ReportStatus;
-import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.domain.tables.pojos.Report;
 import com.rbkmoney.payouter.exception.ReportException;
-import com.rbkmoney.payouter.service.report._1c.Report1CService;
+import com.rbkmoney.payouter.service.report.ReportSendService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -17,15 +16,15 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
-public class Report1CSendService {
+public class ReportNonResidentSendService {
 
     @Value("#{'${service.dudoser.mail.to}'.split(',')}")
     private List<String> to;
 
-    @Value("${report.1c.file.encoding}")
+    @Value("${report.nonres.file.encoding}")
     private String encoding;
 
-    @Value("${report.1c.timezone}")
+    @Value("${report.nonres.timezone}")
     private ZoneId zoneId;
 
     @Autowired

@@ -40,6 +40,14 @@ report:
       encoding: Windows-1251
     templateFileName: 1c_payout.ftl
     timezone: Europe/Moscow
+  nonres:
+    file:
+      name:
+        prefix: test_nonres
+        extension: .csv
+      encoding: UTF-8
+    templateFileName: nonres_payout.ftl
+    timezone: Europe/Moscow
 scheduler:
   user-id: test
 

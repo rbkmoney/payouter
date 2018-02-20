@@ -21,8 +21,10 @@ import com.rbkmoney.payouter.exception.InvalidStateException;
 import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.exception.StorageException;
 import com.rbkmoney.payouter.service.*;
-import com.rbkmoney.payouter.service.report.Report1CSendService;
+import com.rbkmoney.payouter.service.report._1c.Report1CSendService;
 import com.rbkmoney.payouter.service.report._1c.Report1CService;
+import com.rbkmoney.payouter.service.report.nonres.ReportNonResidentSendService;
+import com.rbkmoney.payouter.service.report.nonres.ReportNonResidentService;
 import com.rbkmoney.payouter.util.WoodyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,6 +74,10 @@ public class PayoutServiceImpl implements PayoutService {
 
     private final Report1CService report1CService;
 
+    private final ReportNonResidentSendService reportNonResidentSendService;
+
+    private final ReportNonResidentService reportNonResidentService;
+
     @Autowired
     public PayoutServiceImpl(ShopMetaDao shopMetaDao,
                              PaymentDao paymentDao,
@@ -84,7 +90,9 @@ public class PayoutServiceImpl implements PayoutService {
                              PartyManagementService partyManagementService,
                              EventSinkService eventSinkService,
                              Report1CSendService report1CSendService,
-                             Report1CService report1CService) {
+                             Report1CService report1CService,
+                             ReportNonResidentSendService reportNonResidentSendService,
+                             ReportNonResidentService reportNonResidentService) {
         this.shopMetaDao = shopMetaDao;
         this.paymentDao = paymentDao;
         this.refundDao = refundDao;
@@ -97,6 +105,8 @@ public class PayoutServiceImpl implements PayoutService {
         this.eventSinkService = eventSinkService;
         this.report1CSendService = report1CSendService;
         this.report1CService = report1CService;
+        this.reportNonResidentSendService = reportNonResidentSendService;
+        this.reportNonResidentService = reportNonResidentService;
         //over
     }
 
@@ -316,6 +326,7 @@ public class PayoutServiceImpl implements PayoutService {
         List<Report> reportsForSend = reportDao.getForSend();
         if (reportsForSend.isEmpty()) return;
         report1CSendService.send(reportsForSend);
+        reportNonResidentSendService.send(reportsForSend);
     }
 
     public PayoutEvent buildPayoutPaidEvent(Payout payoutRecord) throws StorageException {
