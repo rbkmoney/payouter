@@ -101,6 +101,17 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
                 .willReturn(buildParty(partyId, shopId, contractId, payoutToolId));
         given(partyManagementClient.getMetaData(any(), any(), any()))
                 .willReturn(null);
+        given(partyManagementClient.computePayoutCashFlow(any(), any(), any()))
+                .willAnswer(answer -> {
+                    PayoutParams payoutParams = answer.getArgumentAt(2, PayoutParams.class);
+                    return Arrays.asList(
+                            new FinalCashFlowPosting(
+                                    new FinalCashFlowAccount(CashFlowAccount.merchant(MerchantCashFlowAccount.settlement), 12),
+                                    new FinalCashFlowAccount(CashFlowAccount.merchant(MerchantCashFlowAccount.payout), 13),
+                                    payoutParams.getAmount()
+                            )
+                    );
+                });
         given(dominantClient.checkoutObject(any(), eq(Reference.payment_institution(new PaymentInstitutionRef(1)))))
                 .willReturn(buildPaymentInstitutionObject(new PaymentInstitutionRef(1)));
         given(dominantClient.checkoutObject(any(), eq(Reference.calendar(new CalendarRef(1)))))

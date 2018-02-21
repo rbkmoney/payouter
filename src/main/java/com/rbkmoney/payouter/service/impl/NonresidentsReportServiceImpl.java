@@ -125,6 +125,7 @@ public class NonresidentsReportServiceImpl implements ReportService {
         List<String> payoutIds = payouts.stream().map(p -> String.valueOf(p.getId())).collect(Collectors.toList());
         Report report = new Report();
         report.setName(prefix + "_" + createdAtFormatted + extension);
+        report.setSubject("Выплаты для нерезидентов, сгенерированные " + createdAtFormatted);
         report.setDescription(buildDescription(payouts));
         report.setPayoutIds(String.join(",", payoutIds));
         report.setStatus(ReportStatus.READY);

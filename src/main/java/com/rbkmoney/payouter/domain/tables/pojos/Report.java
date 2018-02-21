@@ -25,7 +25,7 @@ import javax.annotation.Generated;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Report implements Serializable {
 
-    private static final long serialVersionUID = -414666284;
+    private static final long serialVersionUID = -1095891934;
 
     private Long          id;
     private LocalDateTime createdAt;
@@ -36,6 +36,7 @@ public class Report implements Serializable {
     private ReportStatus  status;
     private LocalDateTime lastSendAt;
     private String        encoding;
+    private String        subject;
 
     public Report() {}
 
@@ -49,6 +50,7 @@ public class Report implements Serializable {
         this.status = value.status;
         this.lastSendAt = value.lastSendAt;
         this.encoding = value.encoding;
+        this.subject = value.subject;
     }
 
     public Report(
@@ -60,7 +62,8 @@ public class Report implements Serializable {
         String        description,
         ReportStatus  status,
         LocalDateTime lastSendAt,
-        String        encoding
+        String        encoding,
+        String        subject
     ) {
         this.id = id;
         this.createdAt = createdAt;
@@ -71,6 +74,7 @@ public class Report implements Serializable {
         this.status = status;
         this.lastSendAt = lastSendAt;
         this.encoding = encoding;
+        this.subject = subject;
     }
 
     public Long getId() {
@@ -145,6 +149,14 @@ public class Report implements Serializable {
         this.encoding = encoding;
     }
 
+    public String getSubject() {
+        return this.subject;
+    }
+
+    public void setSubject(String subject) {
+        this.subject = subject;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj)
@@ -208,6 +220,12 @@ public class Report implements Serializable {
         }
         else if (!encoding.equals(other.encoding))
             return false;
+        if (subject == null) {
+            if (other.subject != null)
+                return false;
+        }
+        else if (!subject.equals(other.subject))
+            return false;
         return true;
     }
 
@@ -224,6 +242,7 @@ public class Report implements Serializable {
         result = prime * result + ((this.status == null) ? 0 : this.status.hashCode());
         result = prime * result + ((this.lastSendAt == null) ? 0 : this.lastSendAt.hashCode());
         result = prime * result + ((this.encoding == null) ? 0 : this.encoding.hashCode());
+        result = prime * result + ((this.subject == null) ? 0 : this.subject.hashCode());
         return result;
     }
 
@@ -240,6 +259,7 @@ public class Report implements Serializable {
         sb.append(", ").append(status);
         sb.append(", ").append(lastSendAt);
         sb.append(", ").append(encoding);
+        sb.append(", ").append(subject);
 
         sb.append(")");
         return sb.toString();
