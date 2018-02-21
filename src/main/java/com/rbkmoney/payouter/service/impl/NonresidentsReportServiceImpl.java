@@ -71,6 +71,9 @@ public class NonresidentsReportServiceImpl implements ReportService {
     @Value("${report.nonresidents.templateFileName}")
     private String templateFileName;
 
+    @Value("${report.nonresidents.file.encoding}")
+    private String encoding;
+
     @Value("${report.nonresidents.timezone}")
     private ZoneId zoneId;
 
@@ -115,6 +118,7 @@ public class NonresidentsReportServiceImpl implements ReportService {
         report.setPayoutIds(String.join(",", payoutIds));
         report.setStatus(ReportStatus.READY);
         report.setContent(reportContent);
+        report.setEncoding(encoding);
         report.setCreatedAt(createdAt);
 
         return save(report);

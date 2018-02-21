@@ -57,6 +57,9 @@ public class ResidentsReportServiceImpl implements ReportService {
     @Value("${report.residents.templateFileName}")
     private String templateFileName;
 
+    @Value("${report.residents.file.encoding}")
+    private String encoding;
+
     @Value("${report.residents.timezone}")
     private ZoneId zoneId;
 
@@ -113,9 +116,10 @@ public class ResidentsReportServiceImpl implements ReportService {
         List<String> payoutIds = payouts.stream().map(p -> p.getId().toString()).collect(Collectors.toList());
         Report report = new Report();
         report.setName(prefix + "_" + createdAtFormatted + extension);
+        report.setDescription(reportDescription.toString());
         report.setStatus(ReportStatus.READY);
         report.setContent(reportContent);
-        report.setDescription(reportDescription.toString());
+        report.setEncoding(encoding);
         report.setPayoutIds(String.join(",", payoutIds));
         report.setCreatedAt(createdAt);
 
