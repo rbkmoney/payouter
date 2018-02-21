@@ -70,15 +70,20 @@ public class ResidentsReportServiceImpl implements ReportService {
         this.freeMarkerConfigurer = freeMarkerConfigurer;
     }
 
-    @Override
-    @Scheduled(cron="${report.residents.cron}", zone="${report.residents.timezone}")
+    @Scheduled(cron = "${report.residents.cron}", zone = "${report.residents.timezone}")
     @Transactional(propagation = Propagation.REQUIRED)
-    public long generateAndSave() throws StorageException {
-        List<Payout> payouts = payoutService.getUnpaidPayoutsByAccountType(PayoutAccountType.russian_payout_account);
+    public void createNewReportsJob() throws StorageException {
+        log.info("Report job for residents starting");
+        try {
+            List<Payout> payouts = payoutService.getUnpaidPayoutsByAccountType(PayoutAccountType.russian_payout_account);
 
-        long reportId = generateAndSave(payouts);
-        payouts.forEach(payout -> payoutService.pay(payout.getId()));
-        return reportId;
+            if (!payouts.isEmpty()) {
+                generateAndSave(payouts);
+                payouts.forEach(payout -> payoutService.pay(payout.getId()));
+            }
+        } finally {
+            log.info("Report job for residents ending");
+        }
     }
 
     @Override

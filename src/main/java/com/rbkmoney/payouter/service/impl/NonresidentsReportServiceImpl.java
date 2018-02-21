@@ -87,15 +87,20 @@ public class NonresidentsReportServiceImpl implements ReportService {
         this.payoutService = payoutService;
     }
 
-    @Override
     @Scheduled(cron = "${report.nonresidents.cron}", zone = "${report.nonresidents.timezone}")
     @Transactional(propagation = Propagation.REQUIRED)
-    public long generateAndSave() throws StorageException {
-        List<Payout> payouts = payoutService.getUnpaidPayoutsByAccountType(PayoutAccountType.international_payout_account);
+    public void createNewReportsJob() throws StorageException {
+        log.info("Report job for nonresidents starting");
+        try {
+            List<Payout> payouts = payoutService.getUnpaidPayoutsByAccountType(PayoutAccountType.international_payout_account);
 
-        long reportId = generateAndSave(payouts);
-        payouts.forEach(payout -> payoutService.pay(payout.getId()));
-        return reportId;
+            if (!payouts.isEmpty()) {
+                generateAndSave(payouts);
+                payouts.forEach(payout -> payoutService.pay(payout.getId()));
+            }
+        } finally {
+            log.info("Report job for nonresidents ending");
+        }
     }
 
     @Override

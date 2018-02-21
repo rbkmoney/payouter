@@ -8,8 +8,6 @@ import java.util.List;
 
 public interface ReportService {
 
-    long generateAndSave() throws StorageException;
-
     long generateAndSave(List<Payout> payouts) throws StorageException;
 
     long save(Report report) throws StorageException;
