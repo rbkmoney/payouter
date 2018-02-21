@@ -43,12 +43,14 @@ public class DamselUtil {
         if (checkRoute(
                 CashFlowAccount.provider(ProviderCashFlowAccount.settlement),
                 CashFlowAccount.merchant(MerchantCashFlowAccount.settlement),
-                cashFlowPosting)
-                || checkRoute(
-                CashFlowAccount.merchant(MerchantCashFlowAccount.settlement),
-                CashFlowAccount.merchant(MerchantCashFlowAccount.settlement),
                 cashFlowPosting)) {
             return AMOUNT;
+        }
+        if (checkRoute(
+                CashFlowAccount.merchant(MerchantCashFlowAccount.settlement),
+                CashFlowAccount.merchant(MerchantCashFlowAccount.payout),
+                cashFlowPosting)) {
+            return PAYOUT_AMOUNT;
         }
         if (checkRoute(
                 CashFlowAccount.merchant(MerchantCashFlowAccount.settlement),
@@ -89,7 +91,6 @@ public class DamselUtil {
 
         throw new UnsupportedOperationException("Unsupported cashflow");
     }
-
 
     public static boolean checkRoute(CashFlowAccount source, CashFlowAccount destination, FinalCashFlowPosting cashFlow) {
         return source.equals(cashFlow.getSource().getAccountType()) &&

@@ -1,6 +1,6 @@
 -- account type
 DROP TYPE sht.ACCOUNT_TYPE;
-CREATE TYPE sht.ACCOUNT_TYPE AS ENUM ('MERCHANT_SETTLEMENT', 'MERCHANT_GUARANTEE', 'PROVIDER_SETTLEMENT', 'SYSTEM_SETTLEMENT', 'EXTERNAL_INCOME', 'EXTERNAL_OUTCOME');
+CREATE TYPE sht.ACCOUNT_TYPE AS ENUM ('MERCHANT_SETTLEMENT', 'MERCHANT_GUARANTEE', 'MERCHANT_PAYOUT', 'PROVIDER_SETTLEMENT', 'SYSTEM_SETTLEMENT', 'EXTERNAL_INCOME', 'EXTERNAL_OUTCOME');
 
 -- cash_flow_posting table
 CREATE TABLE sht.cash_flow_posting (
@@ -28,7 +28,7 @@ insert into sht.cash_flow_posting (payout_id, plan_id, batch_id, from_account_id
     cast(json_extract_path_text(json_array_elements(payout_cash_flow::json), 'source', 'account_id') as bigint) as from_account_id,
     'MERCHANT_SETTLEMENT' as from_account_type,
     cast(json_extract_path_text(json_array_elements(payout_cash_flow::json), 'destination', 'account_id') as bigint) as to_account_id,
-    'MERCHANT_SETTLEMENT' as to_account_type,
+    'MERCHANT_PAYOUT' as to_account_type,
     cast(json_extract_path_text(json_array_elements(payout_cash_flow::json), 'volume', 'amount') as bigint) as amount,
     json_extract_path_text(json_array_elements(payout_cash_flow::json), 'volume', 'currency', 'symbolic_code') as currency_code,
     'Payout: ' || payout_id as description,

@@ -263,6 +263,8 @@ public class ShumwayServiceImpl implements ShumwayService {
                         return AccountType.MERCHANT_SETTLEMENT;
                     case guarantee:
                         return AccountType.MERCHANT_GUARANTEE;
+                    case payout:
+                        return AccountType.MERCHANT_PAYOUT;
                     default:
                         throw new IllegalArgumentException();
                 }
@@ -286,6 +288,8 @@ public class ShumwayServiceImpl implements ShumwayService {
                 return CashFlowAccount.merchant(MerchantCashFlowAccount.settlement);
             case MERCHANT_GUARANTEE:
                 return CashFlowAccount.merchant(MerchantCashFlowAccount.guarantee);
+            case MERCHANT_PAYOUT:
+                return CashFlowAccount.merchant(MerchantCashFlowAccount.payout);
             case SYSTEM_SETTLEMENT:
                 return CashFlowAccount.system(SystemCashFlowAccount.settlement);
             case EXTERNAL_INCOME:

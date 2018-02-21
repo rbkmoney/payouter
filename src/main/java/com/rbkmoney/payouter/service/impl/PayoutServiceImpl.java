@@ -162,22 +162,18 @@ public class PayoutServiceImpl implements PayoutService {
                     new Cash(availableAmount, new CurrencyRef(payout.getCurrencyCode())),
                     payout.getCreatedAt().toInstant(ZoneOffset.UTC)
             );
-            addPrimaryPosting(
-                    payout.getShopAcc(),
-                    payout.getShopPayoutAcc(),
-                    availableAmount,
-                    payout.getCurrencyCode(),
-                    cashFlowPostings
-            );
 
             Map<CashFlowType, Long> cashFlow = DamselUtil.parseCashFlow(cashFlowPostings);
-            payout.setAmount(cashFlow.get(CashFlowType.AMOUNT));
+            payout.setAmount(cashFlow.getOrDefault(CashFlowType.PAYOUT_AMOUNT, 0L));
             payout.setFee(cashFlow.getOrDefault(CashFlowType.FEE, 0L));
+            if (payout.getAmount() <= 0) {
+                throw new InvalidStateException(
+                        String.format("Invalid payout cash flow, amount='%d', fee='%d'", payout.getAmount(), payout.getFee())
+                );
+            }
 
             long payoutId = payoutDao.save(payout);
-
-            List<CashFlowDescription> cashFlowDescriptions = buildCashFlowDescriptions(payments, refunds, adjustments, payoutId, payout.getCurrencyCode());
-            cashFlowDescriptionService.save(cashFlowDescriptions);
+            cashFlowDescriptionService.save(payoutId, payout.getCurrencyCode(), payments, refunds, adjustments);
 
             String purpose = buildPurpose(payout);
             payoutDao.changePurpose(payoutId, purpose);
@@ -188,11 +184,13 @@ public class PayoutServiceImpl implements PayoutService {
 
             shopMetaDao.updateLastPayoutCreatedAt(shopMeta.getPartyId(), shopMeta.getShopId(), payout.getCreatedAt());
 
-            UserInfo userInfo = WoodyUtils.getUserInfo();
-            payout.setId(payoutId);
-            payout.setPurpose(purpose);
-            PayoutEvent payoutEvent = buildPayoutCreatedEvent(payout, cashFlowPostings, userInfo);
-            eventSinkService.saveEvent(payoutEvent);
+            eventSinkService.savePayoutCreatedEvent(
+                    String.valueOf(payoutId),
+                    purpose,
+                    payout,
+                    cashFlowPostings,
+                    WoodyUtils.getUserInfo()
+            );
             shumwayService.hold(String.valueOf(payoutId), cashFlowPostings);
 
             log.info("Payout successfully created, payoutId='{}', partyId={}, shopId={}, fromTime={}, toTime={}, payoutType={}",
@@ -204,31 +202,6 @@ public class PayoutServiceImpl implements PayoutService {
                     String.format("Failed to create payout, partyId='%s', shopId='%s', fromTime='%s', toTime='%s', payoutType='%s'",
                             partyId, shopId, fromTime, toTime, payoutType), ex);
         }
-    }
-
-    private void addPrimaryPosting(Long shopAcc, Long shopPayoutAcc, long availableAmount, String currencyCode, List<FinalCashFlowPosting> cashFlowPostings) {
-        Map<CashFlowType, Long> cashFlow = DamselUtil.parseCashFlow(cashFlowPostings);
-
-        FinalCashFlowPosting finalCashFlowPosting = new FinalCashFlowPosting();
-        finalCashFlowPosting.setSource(
-                new FinalCashFlowAccount(
-                        CashFlowAccount.merchant(MerchantCashFlowAccount.settlement),
-                        shopAcc
-                )
-        );
-        finalCashFlowPosting.setDestination(
-                new FinalCashFlowAccount(
-                        CashFlowAccount.merchant(MerchantCashFlowAccount.settlement),
-                        shopPayoutAcc
-                )
-        );
-        finalCashFlowPosting.setVolume(
-                new Cash(
-                        availableAmount - cashFlow.get(CashFlowType.FEE),
-                        new CurrencyRef(currencyCode)
-                )
-        );
-        cashFlowPostings.add(0, finalCashFlowPosting);
     }
 
     private String buildPurpose(Payout payout) {
@@ -269,8 +242,7 @@ public class PayoutServiceImpl implements PayoutService {
             }
 
             payoutDao.changeStatus(payoutId, PayoutStatus.PAID);
-            PayoutEvent payoutEvent = buildPayoutPaidEvent(payout);
-            eventSinkService.saveEvent(payoutEvent);
+            eventSinkService.savePayoutPaidEvent(String.valueOf(payoutId));
             log.info("Payout have been paid, payoutId={}", payoutId);
         } catch (DaoException ex) {
             throw new StorageException(String.format("Failed to pay a payout, payoutId='%d'", payoutId), ex);
@@ -291,9 +263,7 @@ public class PayoutServiceImpl implements PayoutService {
             }
 
             payoutDao.changeStatus(payoutId, PayoutStatus.CONFIRMED);
-            UserInfo userInfo = WoodyUtils.getUserInfo();
-            PayoutEvent payoutEvent = buildPayoutConfirmedEvent(payout, userInfo);
-            eventSinkService.saveEvent(payoutEvent);
+            eventSinkService.savePayoutConfirmedEvent(String.valueOf(payoutId), WoodyUtils.getUserInfo());
             shumwayService.commit(String.valueOf(payoutId));
             log.info("Payout have been confirmed, payoutId={}", payoutId);
         } catch (DaoException ex) {
@@ -309,8 +279,7 @@ public class PayoutServiceImpl implements PayoutService {
             Payout payout = payoutDao.getExclusive(payoutId);
 
             UserInfo userInfo = WoodyUtils.getUserInfo();
-            PayoutEvent payoutEvent = buildPayoutCancelledEvent(payout, details, userInfo);
-            eventSinkService.saveEvent(payoutEvent);
+            eventSinkService.savePayoutCancelledEvent(String.valueOf(payoutId), details, userInfo);
 
             switch (payout.getStatus()) {
                 case UNPAID:
@@ -350,86 +319,6 @@ public class PayoutServiceImpl implements PayoutService {
         List<Report> reportsForSend = reportDao.getForSend();
         if (reportsForSend.isEmpty()) return;
         report1CSendService.send(reportsForSend);
-    }
-
-    public PayoutEvent buildPayoutPaidEvent(Payout payoutRecord) throws StorageException {
-        PayoutEvent payoutEvent = new PayoutEvent();
-        payoutEvent.setEventType(PayoutChange._Fields.PAYOUT_STATUS_CHANGED.getFieldName());
-        payoutEvent.setPayoutId(Long.toString(payoutRecord.getId()));
-        payoutEvent.setPayoutStatus(com.rbkmoney.damsel.payout_processing.PayoutStatus._Fields.PAID.getFieldName());
-        payoutEvent.setPayoutPaidDetailsType(PaidDetails._Fields.ACCOUNT_DETAILS.getFieldName());
-        return payoutEvent;
-    }
-
-    public PayoutEvent buildPayoutCancelledEvent(Payout payoutRecord, String details, UserInfo userInfo) throws StorageException {
-        PayoutEvent payoutEvent = new PayoutEvent();
-        payoutEvent.setEventType(PayoutChange._Fields.PAYOUT_STATUS_CHANGED.getFieldName());
-        payoutEvent.setPayoutId(Long.toString(payoutRecord.getId()));
-        payoutEvent.setPayoutStatus(com.rbkmoney.damsel.payout_processing.PayoutStatus._Fields.CANCELLED.getFieldName());
-        payoutEvent.setUserId(userInfo.getId());
-        payoutEvent.setUserType(userInfo.getType().getSetField().getFieldName());
-        payoutEvent.setPayoutStatusCancelDetails(details);
-        return payoutEvent;
-    }
-
-    public PayoutEvent buildPayoutConfirmedEvent(Payout payoutRecord, UserInfo userInfo) throws StorageException {
-        PayoutEvent payoutEvent = new PayoutEvent();
-        payoutEvent.setEventType(PayoutChange._Fields.PAYOUT_STATUS_CHANGED.getFieldName());
-        payoutEvent.setPayoutId(Long.toString(payoutRecord.getId()));
-        payoutEvent.setPayoutStatus(com.rbkmoney.damsel.payout_processing.PayoutStatus._Fields.CONFIRMED.getFieldName());
-        payoutEvent.setUserId(userInfo.getId());
-        payoutEvent.setUserType(userInfo.getType().getSetField().getFieldName());
-        return payoutEvent;
-    }
-
-    private PayoutEvent buildPayoutCreatedEvent(Payout payoutRecord, List<FinalCashFlowPosting> cashFlowPostings, UserInfo userInfo) throws StorageException {
-        PayoutEvent payoutEvent = new PayoutEvent();
-        payoutEvent.setEventType(PayoutChange._Fields.PAYOUT_CREATED.getFieldName());
-        payoutEvent.setPayoutId(Long.toString(payoutRecord.getId()));
-        payoutEvent.setPayoutStatus(com.rbkmoney.damsel.payout_processing.PayoutStatus._Fields.UNPAID.getFieldName());
-        payoutEvent.setPayoutCreatedAt(payoutRecord.getCreatedAt());
-        payoutEvent.setPayoutPartyId(payoutRecord.getPartyId());
-        payoutEvent.setPayoutShopId(payoutRecord.getShopId());
-        payoutEvent.setPayoutType(payoutRecord.getType().getLiteral());
-
-        payoutEvent.setPayoutAccountType(payoutRecord.getAccountType().getLiteral());
-        payoutEvent.setPayoutAccountId(payoutRecord.getBankAccount());
-        payoutEvent.setPayoutAccountLegalName(payoutRecord.getAccountLegalName());
-        payoutEvent.setPayoutAccountTradingName(payoutRecord.getAccountTradingName());
-        payoutEvent.setPayoutAccountRegisteredAddress(payoutRecord.getAccountRegisteredAddress());
-        payoutEvent.setPayoutAccountActualAddress(payoutRecord.getAccountActualAddress());
-        payoutEvent.setPayoutAccountRegisteredNumber(payoutRecord.getAccountRegisteredNumber());
-        payoutEvent.setPayoutAccountBankPostId(payoutRecord.getBankPostAccount());
-        payoutEvent.setPayoutAccountBankName(payoutRecord.getBankName());
-        payoutEvent.setPayoutAccountBankAddress(payoutRecord.getBankAddress());
-        payoutEvent.setPayoutAccountBankBic(payoutRecord.getBankBic());
-        payoutEvent.setPayoutAccountBankIban(payoutRecord.getBankIban());
-        payoutEvent.setPayoutAccountBankLocalCode(payoutRecord.getBankLocalCode());
-        payoutEvent.setPayoutAccountPurpose(payoutRecord.getPurpose());
-        payoutEvent.setPayoutAccountInn(payoutRecord.getInn());
-
-        try {
-            payoutEvent.setPayoutCashFlow(
-                    new ObjectMapper().writeValueAsString(cashFlowPostings.stream().map(
-                            cashFlowPosting -> {
-                                try {
-                                    return new TBaseProcessor().process(cashFlowPosting, new JsonHandler());
-                                } catch (IOException ex) {
-                                    throw new RuntimeJsonMappingException(ex.getMessage());
-                                }
-                            }).collect(Collectors.toList())
-                    )
-            );
-        } catch (IOException ex) {
-            throw new StorageException("Failed to generate cash flow", ex);
-        }
-
-        payoutEvent.setPayoutAccountLegalAgreementId(payoutRecord.getAccountLegalAgreementId());
-        payoutEvent.setPayoutAccountLegalAgreementSignedAt(payoutRecord.getAccountLegalAgreementSignedAt());
-
-        payoutEvent.setUserId(userInfo.getId());
-        payoutEvent.setUserType(userInfo.getType().getSetField().getFieldName());
-        return payoutEvent;
     }
 
     private Payout buildPayout(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType) {
@@ -523,61 +412,6 @@ public class PayoutServiceImpl implements PayoutService {
         );
 
         return payout;
-    }
-
-    private List<CashFlowDescription> buildCashFlowDescriptions(List<Payment> payments, List<Refund> refunds, List<Adjustment> adjustments, long payoutId, String currencyCode) {
-        List<CashFlowDescription> result = new ArrayList<>();
-
-        long paymentAmount = payments.stream().mapToLong(Payment::getAmount).sum();
-        long paymentFee = payments.stream().mapToLong(Payment::getFee).sum();
-        LocalDateTime paymentFromTime = payments.stream().map(Payment::getCreatedAt).min(LocalDateTime::compareTo).get();
-        LocalDateTime paymentToTime = payments.stream().map(Payment::getCreatedAt).max(LocalDateTime::compareTo).get();
-        CashFlowDescription paymentCashFlow = new CashFlowDescription();
-        paymentCashFlow.setAmount(paymentAmount);
-        paymentCashFlow.setFee(paymentFee);
-        paymentCashFlow.setCurrencyCode(currencyCode);
-        paymentCashFlow.setCashFlowType(com.rbkmoney.payouter.domain.enums.CashFlowType.payment);
-        paymentCashFlow.setCount(payments.size());
-        paymentCashFlow.setPayoutId(String.valueOf(payoutId));
-        paymentCashFlow.setFromTime(paymentFromTime);
-        paymentCashFlow.setToTime(paymentToTime);
-        result.add(paymentCashFlow);
-
-        if (!refunds.isEmpty()) {
-            long refundAmount = refunds.stream().mapToLong(Refund::getAmount).sum();
-            long refundFee = refunds.stream().mapToLong(Refund::getFee).sum();
-            LocalDateTime refundFromTime = refunds.stream().map(Refund::getCreatedAt).min(LocalDateTime::compareTo).get();
-            LocalDateTime refundToTime = refunds.stream().map(Refund::getCreatedAt).max(LocalDateTime::compareTo).get();
-            CashFlowDescription refundCashFlow = new CashFlowDescription();
-            refundCashFlow.setAmount(refundAmount);
-            refundCashFlow.setFee(refundFee);
-            refundCashFlow.setCurrencyCode(currencyCode);
-            refundCashFlow.setCashFlowType(com.rbkmoney.payouter.domain.enums.CashFlowType.refund);
-            refundCashFlow.setCount(refunds.size());
-            refundCashFlow.setPayoutId(String.valueOf(payoutId));
-            refundCashFlow.setFromTime(refundFromTime);
-            refundCashFlow.setToTime(refundToTime);
-            result.add(refundCashFlow);
-        }
-
-        if (!adjustments.isEmpty()) {
-            long adjustmentAmount = adjustments.stream().mapToLong(Adjustment::getPaymentFee).sum();
-            long adjustmentFee = adjustments.stream().mapToLong(Adjustment::getNewFee).sum();
-            LocalDateTime adjustmentFromTime = adjustments.stream().map(Adjustment::getCreatedAt).min(LocalDateTime::compareTo).get();
-            LocalDateTime adjustmentToTime = adjustments.stream().map(Adjustment::getCreatedAt).max(LocalDateTime::compareTo).get();
-            CashFlowDescription adjustmentCashFlow = new CashFlowDescription();
-            adjustmentCashFlow.setAmount(adjustmentAmount);
-            adjustmentCashFlow.setFee(adjustmentFee);
-            adjustmentCashFlow.setCurrencyCode(currencyCode);
-            adjustmentCashFlow.setCashFlowType(com.rbkmoney.payouter.domain.enums.CashFlowType.adjustment);
-            adjustmentCashFlow.setCount(adjustments.size());
-            adjustmentCashFlow.setPayoutId(String.valueOf(payoutId));
-            adjustmentCashFlow.setFromTime(adjustmentFromTime);
-            adjustmentCashFlow.setToTime(adjustmentToTime);
-            result.add(adjustmentCashFlow);
-        }
-
-        return result;
     }
 
 
