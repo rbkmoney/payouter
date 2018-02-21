@@ -1,0 +1,3 @@
+ALTER TABLE sht.report RENAME payoutIds TO payout_ids;
+ALTER TABLE sht.report ADD COLUMN encoding CHARACTER VARYING NOT NULL;
+ALTER TABLE sht.report ADD COLUMN subject CHARACTER VARYING NOT NULL;

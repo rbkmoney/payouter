@@ -1,16 +1,10 @@
 package com.rbkmoney.payouter.service.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
 import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.msgpack.Value;
-import com.rbkmoney.damsel.payout_processing.PaidDetails;
-import com.rbkmoney.damsel.payout_processing.PayoutChange;
 import com.rbkmoney.damsel.payout_processing.ShopParams;
 import com.rbkmoney.damsel.payout_processing.UserInfo;
 import com.rbkmoney.geck.common.util.TypeUtil;
-import com.rbkmoney.geck.serializer.kit.json.JsonHandler;
-import com.rbkmoney.geck.serializer.kit.tbase.TBaseProcessor;
 import com.rbkmoney.payouter.dao.*;
 import com.rbkmoney.payouter.domain.enums.PayoutAccountType;
 import com.rbkmoney.payouter.domain.enums.PayoutStatus;
@@ -21,26 +15,21 @@ import com.rbkmoney.payouter.exception.InvalidStateException;
 import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.exception.StorageException;
 import com.rbkmoney.payouter.service.*;
-import com.rbkmoney.payouter.service.report.Report1CSendService;
-import com.rbkmoney.payouter.service.report._1c.Report1CService;
 import com.rbkmoney.payouter.util.CashFlowType;
 import com.rbkmoney.payouter.util.DamselUtil;
 import com.rbkmoney.payouter.util.WoodyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class PayoutServiceImpl implements PayoutService {
@@ -59,17 +48,11 @@ public class PayoutServiceImpl implements PayoutService {
 
     private final CashFlowDescriptionService cashFlowDescriptionService;
 
-    private final ReportDao reportDao;
-
     private final ShumwayService shumwayService;
 
     private final PartyManagementService partyManagementService;
 
     private final EventSinkService eventSinkService;
-
-    private final Report1CSendService report1CSendService;
-
-    private final Report1CService report1CService;
 
     @Autowired
     public PayoutServiceImpl(ShopMetaDao shopMetaDao,
@@ -78,24 +61,18 @@ public class PayoutServiceImpl implements PayoutService {
                              AdjustmentDao adjustmentDao,
                              PayoutDao payoutDao,
                              CashFlowDescriptionService cashFlowDescriptionService,
-                             ReportDao reportDao,
                              ShumwayService shumwayService,
                              PartyManagementService partyManagementService,
-                             EventSinkService eventSinkService,
-                             Report1CSendService report1CSendService,
-                             Report1CService report1CService) {
+                             EventSinkService eventSinkService) {
         this.shopMetaDao = shopMetaDao;
         this.paymentDao = paymentDao;
         this.refundDao = refundDao;
         this.adjustmentDao = adjustmentDao;
         this.payoutDao = payoutDao;
         this.cashFlowDescriptionService = cashFlowDescriptionService;
-        this.reportDao = reportDao;
         this.shumwayService = shumwayService;
         this.partyManagementService = partyManagementService;
         this.eventSinkService = eventSinkService;
-        this.report1CSendService = report1CSendService;
-        this.report1CService = report1CService;
         //over
     }
 
@@ -301,24 +278,20 @@ public class PayoutServiceImpl implements PayoutService {
     }
 
     @Override
+    public List<Payout> getUnpaidPayoutsByAccountType(PayoutAccountType accountType) throws StorageException {
+        try {
+            log.info("Trying to get unpaid payouts by account type, accountType='{}'", accountType);
+            List<Payout> payouts = payoutDao.getUnpaidPayoutsByAccountType(accountType);
+            log.info("Unpaid payouts has been found, accountType='{}', payouts='{}'", accountType, payouts);
+            return payouts;
+        } catch (DaoException ex) {
+            throw new StorageException(String.format("Failed to get unpaid payouts by account type, accountType='%s'", accountType), ex);
+        }
+    }
+
+    @Override
     public List<Payout> search(Optional<PayoutStatus> payoutStatus, Optional<LocalDateTime> fromTime, Optional<LocalDateTime> toTime, Optional<List<Long>> payoutIds, Optional<Long> fromId, Optional<Integer> size) {
         return payoutDao.search(payoutStatus, fromTime, toTime, payoutIds, fromId, size);
-    }
-
-    @Scheduled(fixedDelay = 5000)
-    @Transactional(propagation = Propagation.REQUIRED)
-    public void processUnpaidPayouts() {
-        List<Payout> unpaidPayouts = payoutDao.getUnpaidPayouts();
-        if (unpaidPayouts.isEmpty()) return;
-        unpaidPayouts.forEach(p -> pay(p.getId()));
-        report1CService.generate(unpaidPayouts);
-    }
-
-    @Scheduled(fixedDelay = 5000)
-    public void sendReports() {
-        List<Report> reportsForSend = reportDao.getForSend();
-        if (reportsForSend.isEmpty()) return;
-        report1CSendService.send(reportsForSend);
     }
 
     private Payout buildPayout(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType) {

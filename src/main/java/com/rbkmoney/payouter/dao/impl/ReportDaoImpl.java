@@ -8,6 +8,7 @@ import com.rbkmoney.payouter.exception.DaoException;
 import org.jooq.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
@@ -28,11 +29,14 @@ public class ReportDaoImpl extends AbstractGenericDao implements ReportDao {
     }
 
     @Override
-    public void save(Report report) throws DaoException {
+    public long save(Report report) throws DaoException {
         Query query = getDslContext().insertInto(REPORT)
                 .set(getDslContext().newRecord(REPORT, report));
 
-        executeOne(query);
+        GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
+        executeOneWithReturn(query, keyHolder);
+
+        return keyHolder.getKey().longValue();
     }
 
     @Override

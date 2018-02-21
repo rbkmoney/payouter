@@ -84,6 +84,7 @@ public class CashFlowDescriptionServiceImpl implements CashFlowDescriptionServic
             LocalDateTime adjustmentToTime = adjustments.stream().map(Adjustment::getCreatedAt).max(LocalDateTime::compareTo).get();
             CashFlowDescription adjustmentCashFlow = new CashFlowDescription();
             adjustmentCashFlow.setAmount(adjustmentFee - adjustmentNewFee);
+            adjustmentCashFlow.setFee(0L);
             adjustmentCashFlow.setCurrencyCode(currencyCode);
             adjustmentCashFlow.setCashFlowType(com.rbkmoney.payouter.domain.enums.CashFlowType.adjustment);
             adjustmentCashFlow.setCount(adjustments.size());
