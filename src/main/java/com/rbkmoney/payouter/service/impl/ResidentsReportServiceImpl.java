@@ -74,14 +74,16 @@ public class ResidentsReportServiceImpl implements ReportService {
     @Scheduled(cron="${report.residents.cron}", zone="${report.residents.timezone}")
     @Transactional(propagation = Propagation.REQUIRED)
     public long generateAndSave() throws StorageException {
-        List<Payout> payouts = payoutService.getUnpaidPayoutsByAccountType(PayoutAccountType.international_payout_account);
-        payouts.forEach(payout -> payoutService.pay(payout.getId()));
+        List<Payout> payouts = payoutService.getUnpaidPayoutsByAccountType(PayoutAccountType.russian_payout_account);
 
-        return generateAndSave(payouts);
+        long reportId = generateAndSave(payouts);
+        payouts.forEach(payout -> payoutService.pay(payout.getId()));
+        return reportId;
     }
 
     @Override
     public long generateAndSave(List<Payout> payouts) throws StorageException {
+        log.info("Trying to generate and save report for residents, payouts='%s'", payouts);
         final List<Map<String, Object>> payoutsAttributes = new ArrayList<>();
         final StringBuilder reportDescription = new StringBuilder("Выплаты для резидентов: <br>");
         for (Payout payout : payouts) {
@@ -122,6 +124,7 @@ public class ResidentsReportServiceImpl implements ReportService {
         report.setEncoding(encoding);
         report.setPayoutIds(String.join(",", payoutIds));
         report.setCreatedAt(createdAt);
+        log.info("Report for residents have been successfully generated, report='{}', payouts='{}'", report, payouts);
 
         return save(report);
     }

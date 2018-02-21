@@ -37,6 +37,7 @@ report:
       name:
         prefix: test_nonresidents
         extension: .csv
+      delimiter: ;
       encoding: UTF-8
     cron: "0 0 9 * * *"
     timezone: Europe/Moscow

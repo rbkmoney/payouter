@@ -29,6 +29,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.opencsv.CSVWriter.DEFAULT_ESCAPE_CHARACTER;
+import static com.opencsv.CSVWriter.DEFAULT_LINE_END;
+import static com.opencsv.CSVWriter.DEFAULT_QUOTE_CHARACTER;
+
 @Service
 public class NonresidentsReportServiceImpl implements ReportService {
 
@@ -68,8 +72,8 @@ public class NonresidentsReportServiceImpl implements ReportService {
     @Value("${report.nonresidents.file.name.extension}")
     private String extension;
 
-    @Value("${report.nonresidents.templateFileName}")
-    private String templateFileName;
+    @Value("${report.nonresidents.file.delimiter}")
+    private char delimiter;
 
     @Value("${report.nonresidents.file.encoding}")
     private String encoding;
@@ -88,17 +92,24 @@ public class NonresidentsReportServiceImpl implements ReportService {
     @Transactional(propagation = Propagation.REQUIRED)
     public long generateAndSave() throws StorageException {
         List<Payout> payouts = payoutService.getUnpaidPayoutsByAccountType(PayoutAccountType.international_payout_account);
-        payouts.forEach(payout -> payoutService.pay(payout.getId()));
 
-        return generateAndSave(payouts);
+        long reportId = generateAndSave(payouts);
+        payouts.forEach(payout -> payoutService.pay(payout.getId()));
+        return reportId;
     }
 
     @Override
     public long generateAndSave(List<Payout> payouts) {
+        log.info("Trying to generate and save report for nonresidents, payouts='%s'", payouts);
         String reportContent;
         try (StringWriter stringWriter = new StringWriter()) {
-            try (CSVWriter csvWriter = new CSVWriter(stringWriter)) {
-
+            try (CSVWriter csvWriter = new CSVWriter(
+                    stringWriter,
+                    delimiter,
+                    DEFAULT_QUOTE_CHARACTER,
+                    DEFAULT_ESCAPE_CHARACTER,
+                    DEFAULT_LINE_END
+            )) {
                 csvWriter.writeNext(headerRow);
                 csvWriter.writeAll(buildRows(payouts));
                 reportContent = stringWriter.getBuffer().toString();
@@ -120,6 +131,7 @@ public class NonresidentsReportServiceImpl implements ReportService {
         report.setContent(reportContent);
         report.setEncoding(encoding);
         report.setCreatedAt(createdAt);
+        log.info("Report for nonresidents have been successfully generated, report='{}', payouts='{}'", report, payouts);
 
         return save(report);
     }
