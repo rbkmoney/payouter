@@ -32,13 +32,22 @@ service:
       from: no-reply@rbkmoney.com
       to: trash@rbkmoney.com
 report:
-  1c:
+  nonresidents:
+    file:
+      name:
+        prefix: test_nonresidents
+        extension: .csv
+      encoding: UTF-8
+    cron: "0 0 9 * * *"
+    timezone: Europe/Moscow
+  residents:
     file:
       name:
         prefix: test_1c
         extension: .txt
       encoding: Windows-1251
     templateFileName: 1c_payout.ftl
+    cron: "0 0 9 * * *"
     timezone: Europe/Moscow
 scheduler:
   user-id: test

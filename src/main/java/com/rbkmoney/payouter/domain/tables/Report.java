@@ -37,7 +37,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Report extends TableImpl<ReportRecord> {
 
-    private static final long serialVersionUID = -224746813;
+    private static final long serialVersionUID = 58022910;
 
     /**
      * The reference instance of <code>sht.report</code>
@@ -63,9 +63,9 @@ public class Report extends TableImpl<ReportRecord> {
     public final TableField<ReportRecord, LocalDateTime> CREATED_AT = createField("created_at", org.jooq.impl.SQLDataType.LOCALDATETIME.nullable(false), this, "");
 
     /**
-     * The column <code>sht.report.payoutids</code>.
+     * The column <code>sht.report.payout_ids</code>.
      */
-    public final TableField<ReportRecord, String> PAYOUTIDS = createField("payoutids", org.jooq.impl.SQLDataType.VARCHAR.nullable(false), this, "");
+    public final TableField<ReportRecord, String> PAYOUT_IDS = createField("payout_ids", org.jooq.impl.SQLDataType.VARCHAR.nullable(false), this, "");
 
     /**
      * The column <code>sht.report.name</code>.

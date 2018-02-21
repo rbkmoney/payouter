@@ -31,7 +31,7 @@ import org.jooq.impl.UpdatableRecordImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class ReportRecord extends UpdatableRecordImpl<ReportRecord> implements Record8<Long, LocalDateTime, String, String, String, String, ReportStatus, LocalDateTime> {
 
-    private static final long serialVersionUID = 1232425145;
+    private static final long serialVersionUID = -670988528;
 
     /**
      * Setter for <code>sht.report.id</code>.
@@ -62,16 +62,16 @@ public class ReportRecord extends UpdatableRecordImpl<ReportRecord> implements R
     }
 
     /**
-     * Setter for <code>sht.report.payoutids</code>.
+     * Setter for <code>sht.report.payout_ids</code>.
      */
-    public void setPayoutids(String value) {
+    public void setPayoutIds(String value) {
         set(2, value);
     }
 
     /**
-     * Getter for <code>sht.report.payoutids</code>.
+     * Getter for <code>sht.report.payout_ids</code>.
      */
-    public String getPayoutids() {
+    public String getPayoutIds() {
         return (String) get(2);
     }
 
@@ -198,7 +198,7 @@ public class ReportRecord extends UpdatableRecordImpl<ReportRecord> implements R
      */
     @Override
     public Field<String> field3() {
-        return Report.REPORT.PAYOUTIDS;
+        return Report.REPORT.PAYOUT_IDS;
     }
 
     /**
@@ -262,7 +262,7 @@ public class ReportRecord extends UpdatableRecordImpl<ReportRecord> implements R
      */
     @Override
     public String value3() {
-        return getPayoutids();
+        return getPayoutIds();
     }
 
     /**
@@ -328,7 +328,7 @@ public class ReportRecord extends UpdatableRecordImpl<ReportRecord> implements R
      */
     @Override
     public ReportRecord value3(String value) {
-        setPayoutids(value);
+        setPayoutIds(value);
         return this;
     }
 
@@ -407,12 +407,12 @@ public class ReportRecord extends UpdatableRecordImpl<ReportRecord> implements R
     /**
      * Create a detached, initialised ReportRecord
      */
-    public ReportRecord(Long id, LocalDateTime createdAt, String payoutids, String name, String content, String description, ReportStatus status, LocalDateTime lastSendAt) {
+    public ReportRecord(Long id, LocalDateTime createdAt, String payoutIds, String name, String content, String description, ReportStatus status, LocalDateTime lastSendAt) {
         super(Report.REPORT);
 
         set(0, id);
         set(1, createdAt);
-        set(2, payoutids);
+        set(2, payoutIds);
         set(3, name);
         set(4, content);
         set(5, description);

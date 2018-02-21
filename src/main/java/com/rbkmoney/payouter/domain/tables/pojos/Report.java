@@ -25,11 +25,11 @@ import javax.annotation.Generated;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Report implements Serializable {
 
-    private static final long serialVersionUID = -1913627739;
+    private static final long serialVersionUID = 2073420485;
 
     private Long          id;
     private LocalDateTime createdAt;
-    private String        payoutids;
+    private String        payoutIds;
     private String        name;
     private String        content;
     private String        description;
@@ -41,7 +41,7 @@ public class Report implements Serializable {
     public Report(Report value) {
         this.id = value.id;
         this.createdAt = value.createdAt;
-        this.payoutids = value.payoutids;
+        this.payoutIds = value.payoutIds;
         this.name = value.name;
         this.content = value.content;
         this.description = value.description;
@@ -52,7 +52,7 @@ public class Report implements Serializable {
     public Report(
         Long          id,
         LocalDateTime createdAt,
-        String        payoutids,
+        String        payoutIds,
         String        name,
         String        content,
         String        description,
@@ -61,7 +61,7 @@ public class Report implements Serializable {
     ) {
         this.id = id;
         this.createdAt = createdAt;
-        this.payoutids = payoutids;
+        this.payoutIds = payoutIds;
         this.name = name;
         this.content = content;
         this.description = description;
@@ -85,12 +85,12 @@ public class Report implements Serializable {
         this.createdAt = createdAt;
     }
 
-    public String getPayoutids() {
-        return this.payoutids;
+    public String getPayoutIds() {
+        return this.payoutIds;
     }
 
-    public void setPayoutids(String payoutids) {
-        this.payoutids = payoutids;
+    public void setPayoutIds(String payoutIds) {
+        this.payoutIds = payoutIds;
     }
 
     public String getName() {
@@ -154,11 +154,11 @@ public class Report implements Serializable {
         }
         else if (!createdAt.equals(other.createdAt))
             return false;
-        if (payoutids == null) {
-            if (other.payoutids != null)
+        if (payoutIds == null) {
+            if (other.payoutIds != null)
                 return false;
         }
-        else if (!payoutids.equals(other.payoutids))
+        else if (!payoutIds.equals(other.payoutIds))
             return false;
         if (name == null) {
             if (other.name != null)
@@ -199,7 +199,7 @@ public class Report implements Serializable {
         int result = 1;
         result = prime * result + ((this.id == null) ? 0 : this.id.hashCode());
         result = prime * result + ((this.createdAt == null) ? 0 : this.createdAt.hashCode());
-        result = prime * result + ((this.payoutids == null) ? 0 : this.payoutids.hashCode());
+        result = prime * result + ((this.payoutIds == null) ? 0 : this.payoutIds.hashCode());
         result = prime * result + ((this.name == null) ? 0 : this.name.hashCode());
         result = prime * result + ((this.content == null) ? 0 : this.content.hashCode());
         result = prime * result + ((this.description == null) ? 0 : this.description.hashCode());
@@ -214,7 +214,7 @@ public class Report implements Serializable {
 
         sb.append(id);
         sb.append(", ").append(createdAt);
-        sb.append(", ").append(payoutids);
+        sb.append(", ").append(payoutIds);
         sb.append(", ").append(name);
         sb.append(", ").append(content);
         sb.append(", ").append(description);
