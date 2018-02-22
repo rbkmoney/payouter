@@ -109,19 +109,13 @@ public class FreezeTimeCronTrigger extends CronTriggerImpl {
     @Override
     public void triggered(Calendar calendar) {
         setPreviousFireTime(getNextFireTime());
-        Date fireTime;
-        do {
-            cronTime = getFireTimeAfter(cronTime);
-            fireTime = computeNextFireTime(cronTime, calendar);
-        } while (fireTime.equals(getNextFireTime()));
-        setNextFireTime(fireTime);
+        nextFireTime(cronTime, calendar);
     }
 
     @Override
     public void updateWithNewCalendar(Calendar calendar, long misfireThreshold) {
         Instant now = Instant.now();
-        cronTime = getFireTimeAfter(getPreviousFireTime());
-        setNextFireTime(computeNextFireTime(cronTime, calendar));
+        nextFireTime(computePrevFireTime(Optional.ofNullable(getPreviousFireTime()).orElse(new Date()), calendar), calendar);
 
         if (getNextFireTime() != null && getNextFireTime().toInstant().isBefore(now)) {
             long diff = Duration.between(getNextFireTime().toInstant(), now).toMillis();
@@ -132,40 +126,87 @@ public class FreezeTimeCronTrigger extends CronTriggerImpl {
         }
     }
 
+    private void nextFireTime(Date currentTime, Calendar calendar) {
+        cronTime = currentTime;
+        Date fireTime;
+        do {
+            cronTime = getFireTimeAfter(cronTime);
+            fireTime = computeNextFireTime(cronTime, calendar);
+        } while (fireTime.equals(computeNextFireTime(getFireTimeAfter(cronTime), calendar)));
+        setNextFireTime(fireTime);
+    }
+
+    @Override
+    public Date getFireTimeAfter(Date afterTime) {
+        if (afterTime == null) {
+            afterTime = new Date();
+        }
+
+        if (getEndTime() != null && (afterTime.compareTo(getEndTime()) >= 0)) {
+            return null;
+        }
+
+        Date pot = getTimeAfter(afterTime);
+        if (getEndTime() != null && pot != null && pot.after(getEndTime())) {
+            return null;
+        }
+
+        return pot;
+    }
+
     @Override
     public Date computeFirstFireTime(Calendar calendar) {
-        cronTime = getFireTimeAfter(new Date(getStartTime().getTime() - 1000L));
-        setNextFireTime(computeNextFireTime(cronTime, calendar));
+        nextFireTime(computePrevFireTime(new Date(getStartTime().getTime() - 1000L), calendar), calendar);
         return getNextFireTime();
+    }
+
+    private Date computePrevFireTime(Date cronTime, Calendar calendar) {
+        return Optional.ofNullable(cronTime)
+                .map(time -> Date.from(
+                        computeBoundByDuration(cronTime.toInstant(), -1, computeBackwardFreezeTimeDuration(cronTime), calendar)
+                )).orElse(null);
     }
 
     private Date computeNextFireTime(Date cronTime, Calendar calendar) {
         return Optional.ofNullable(cronTime)
                 .map(time -> Date.from(
-                        computeBoundByDuration(cronTime.toInstant(), computeFreezeTimeDuration(cronTime), calendar)
+                        computeBoundByDuration(cronTime.toInstant(), 1, computeForwardFreezeTimeDuration(cronTime), calendar)
                 )).orElse(null);
     }
 
-    private Instant computeBoundByDuration(Instant cronTime, Duration duration, Calendar calendar) {
+    private Instant computeBoundByDuration(Instant cronTime, long amountToAdd, Duration duration, Calendar calendar) {
         for (TemporalUnit temporalUnit : Arrays.asList(DAYS, HOURS, MINUTES, SECONDS)) {
-            cronTime = skipExcludedTimes(cronTime, temporalUnit, calendar);
+            cronTime = skipExcludedTimes(cronTime, amountToAdd, temporalUnit, calendar);
             long unitCount = duration.getSeconds() / temporalUnit.getDuration().getSeconds();
             for (int unit = 0; unit < unitCount; unit++) {
-                cronTime = skipExcludedTimes(cronTime.plus(1, temporalUnit), temporalUnit, calendar);
+                cronTime = skipExcludedTimes(cronTime.plus(amountToAdd, temporalUnit), amountToAdd, temporalUnit, calendar);
             }
             duration = duration.minus(unitCount, temporalUnit);
         }
         return cronTime;
     }
 
-    private Instant skipExcludedTimes(Instant time, TemporalUnit temporalUnit, Calendar calendar) {
+    private Instant skipExcludedTimes(Instant time, long amountToAdd, TemporalUnit temporalUnit, Calendar calendar) {
         while (calendar != null && !calendar.isTimeIncluded(time.toEpochMilli())) {
-            time = time.plus(1, temporalUnit);
+            time = time.plus(amountToAdd, temporalUnit);
         }
         return time;
     }
 
-    private Duration computeFreezeTimeDuration(Date cronTime) {
+    private Duration computeBackwardFreezeTimeDuration(Date cronTime) {
+        LocalDateTime dateTime = toLocalDateTime(cronTime.toInstant());
+        return Duration.between(
+                dateTime.minusYears(years)
+                        .minusMonths(months)
+                        .minusDays(days)
+                        .minusHours(hours)
+                        .minusMinutes(minutes)
+                        .minusSeconds(seconds),
+                dateTime
+        );
+    }
+
+    private Duration computeForwardFreezeTimeDuration(Date cronTime) {
         LocalDateTime dateTime = toLocalDateTime(cronTime.toInstant());
         return Duration.between(
                 dateTime,
