@@ -29,9 +29,18 @@ public class ReportDaoImpl extends AbstractGenericDao implements ReportDao {
     }
 
     @Override
+    public Report get(long reportId) throws DaoException {
+        Query query = getDslContext().selectFrom(REPORT)
+                .where(REPORT.ID.eq(reportId));
+
+        return fetchOne(query, reportRowMapper);
+    }
+
+    @Override
     public long save(Report report) throws DaoException {
         Query query = getDslContext().insertInto(REPORT)
-                .set(getDslContext().newRecord(REPORT, report));
+                .set(getDslContext().newRecord(REPORT, report))
+                .returning(REPORT.ID);
 
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         executeOneWithReturn(query, keyHolder);

@@ -88,7 +88,7 @@ public class ResidentsReportServiceImpl implements ReportService {
 
     @Override
     public long generateAndSave(List<Payout> payouts) throws StorageException {
-        log.info("Trying to generate and save report for residents, payouts='%s'", payouts);
+        log.info("Trying to generate and save report for residents, payouts='{}'", payouts);
         final List<Map<String, Object>> payoutsAttributes = new ArrayList<>();
         final StringBuilder reportDescription = new StringBuilder("Выплаты для резидентов: <br>");
         for (Payout payout : payouts) {
@@ -130,17 +130,17 @@ public class ResidentsReportServiceImpl implements ReportService {
         report.setEncoding(encoding);
         report.setPayoutIds(String.join(",", payoutIds));
         report.setCreatedAt(createdAt);
-        log.info("Report for residents have been successfully generated, report='{}', payouts='{}'", report, payouts);
+        log.info("Report for residents have been successfully generated, reportSubject='{}', payoutsIds='{}'", report.getSubject(), report.getPayoutIds());
 
         return save(report);
     }
 
     @Override
     public long save(Report report) throws StorageException {
-        log.info("Trying to save report for residents, payoutIds='{}'", report.getPayoutIds());
+        log.info("Trying to save report for residents, reportSubject='{}', payoutIds='{}'", report.getSubject(), report.getPayoutIds());
         try {
             long reportId = reportDao.save(report);
-            log.info("Report for residents have been successfully saved, reportId='{}', payoutIds='{}'", reportId, report.getPayoutIds());
+            log.info("Report for residents have been successfully saved, reportId='{}', reportSubject='{}', payoutIds='{}'", reportId, report.getSubject(), report.getPayoutIds());
             return reportId;
         } catch (DaoException ex) {
             throw new StorageException(String.format("Failed to save report for residents, payoutIds='%s'", report.getPayoutIds()), ex);

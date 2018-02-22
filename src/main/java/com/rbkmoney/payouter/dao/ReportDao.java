@@ -9,6 +9,8 @@ import java.util.List;
 
 public interface ReportDao {
 
+    Report get(long reportId) throws DaoException;
+
     long save(Report report) throws DaoException;
 
     List<Report> getForSend() throws DaoException;
