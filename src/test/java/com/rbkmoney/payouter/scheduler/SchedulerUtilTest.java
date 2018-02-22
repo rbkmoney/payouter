@@ -104,7 +104,7 @@ public class SchedulerUtilTest {
                 trigger.getNextFireTime().toInstant()
         );
         assertEquals(
-                LocalDate.of(2018, java.time.Month.JANUARY, 01)
+                LocalDate.of(2018, java.time.Month.JANUARY, 8)
                         .atStartOfDay(ZoneId.of("Europe/Moscow"))
                         .toInstant(),
                 trigger.getCronTime().toInstant()

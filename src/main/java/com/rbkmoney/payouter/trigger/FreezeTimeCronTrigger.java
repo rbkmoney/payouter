@@ -109,19 +109,13 @@ public class FreezeTimeCronTrigger extends CronTriggerImpl {
     @Override
     public void triggered(Calendar calendar) {
         setPreviousFireTime(getNextFireTime());
-        Date fireTime;
-        do {
-            cronTime = getFireTimeAfter(cronTime);
-            fireTime = computeNextFireTime(cronTime, calendar);
-        } while (fireTime.equals(computeNextFireTime(getFireTimeAfter(cronTime), calendar)));
-        setNextFireTime(fireTime);
+        nextFireTime(cronTime, calendar);
     }
 
     @Override
     public void updateWithNewCalendar(Calendar calendar, long misfireThreshold) {
         Instant now = Instant.now();
-        cronTime = getFireTimeAfter(computePrevFireTime(Optional.ofNullable(getPreviousFireTime()).orElse(new Date()), calendar));
-        setNextFireTime(computeNextFireTime(cronTime, calendar));
+        nextFireTime(computePrevFireTime(Optional.ofNullable(getPreviousFireTime()).orElse(new Date()), calendar), calendar);
 
         if (getNextFireTime() != null && getNextFireTime().toInstant().isBefore(now)) {
             long diff = Duration.between(getNextFireTime().toInstant(), now).toMillis();
@@ -130,6 +124,16 @@ public class FreezeTimeCronTrigger extends CronTriggerImpl {
                 setNextFireTime(computeNextFireTime(cronTime, calendar));
             }
         }
+    }
+
+    private void nextFireTime(Date currentTime, Calendar calendar) {
+        cronTime = currentTime;
+        Date fireTime;
+        do {
+            cronTime = getFireTimeAfter(cronTime);
+            fireTime = computeNextFireTime(cronTime, calendar);
+        } while (fireTime.equals(computeNextFireTime(getFireTimeAfter(cronTime), calendar)));
+        setNextFireTime(fireTime);
     }
 
     @Override
@@ -152,8 +156,7 @@ public class FreezeTimeCronTrigger extends CronTriggerImpl {
 
     @Override
     public Date computeFirstFireTime(Calendar calendar) {
-        cronTime = getFireTimeAfter(computePrevFireTime(new Date(getStartTime().getTime() - 1000L), calendar));
-        setNextFireTime(computeNextFireTime(cronTime, calendar));
+        nextFireTime(computePrevFireTime(new Date(getStartTime().getTime() - 1000L), calendar), calendar);
         return getNextFireTime();
     }
 
