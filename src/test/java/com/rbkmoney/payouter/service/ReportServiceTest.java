@@ -22,7 +22,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.randomStreamOf;
-import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doAnswer;
@@ -80,8 +79,5 @@ public class ReportServiceTest extends AbstractIntegrationTest {
 
         nonresidentsReportService.createNewReportsJob();
         assertTrue(payoutDao.getUnpaidPayoutsByAccountType(PayoutAccountType.international_payout_account).isEmpty());
-        List<Report> reports = reportDao.getForSend();
-        assertTrue(!reports.isEmpty());
-        assertEquals(1, reports.size());
     }
 }
