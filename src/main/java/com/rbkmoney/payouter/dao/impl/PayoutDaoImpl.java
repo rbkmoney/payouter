@@ -3,6 +3,7 @@ package com.rbkmoney.payouter.dao.impl;
 import com.rbkmoney.damsel.payout_processing.ShopParams;
 import com.rbkmoney.payouter.dao.PayoutDao;
 import com.rbkmoney.payouter.dao.mapper.RecordRowMapper;
+import com.rbkmoney.payouter.domain.enums.PayoutAccountType;
 import com.rbkmoney.payouter.domain.enums.PayoutStatus;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.exception.DaoException;
@@ -71,6 +72,15 @@ public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
     }
 
     @Override
+    public void changePurpose(long payoutId, String purpose) throws DaoException {
+        Query query = getDslContext().update(PAYOUT)
+                .set(PAYOUT.PURPOSE, purpose)
+                .where(PAYOUT.ID.eq(payoutId));
+
+        executeOne(query);
+    }
+
+    @Override
     public void changeStatus(long payoutId, PayoutStatus payoutStatus) throws DaoException {
         Query query = getDslContext().update(PAYOUT)
                 .set(PAYOUT.STATUS, payoutStatus)
@@ -80,9 +90,12 @@ public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
     }
 
     @Override
-    public List<Payout> getUnpaidPayouts() throws DaoException {
+    public List<Payout> getUnpaidPayoutsByAccountType(PayoutAccountType accountType) throws DaoException {
         Query query = getDslContext().selectFrom(PAYOUT)
-                .where(PAYOUT.STATUS.eq(PayoutStatus.UNPAID))
+                .where(
+                        PAYOUT.STATUS.eq(PayoutStatus.UNPAID)
+                                .and(PAYOUT.ACCOUNT_TYPE.eq(accountType))
+                )
                 .forUpdate();
 
         return fetch(query, payoutRowMapper);

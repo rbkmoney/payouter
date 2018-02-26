@@ -1,13 +1,17 @@
 package com.rbkmoney.payouter.service;
 
+import com.rbkmoney.damsel.domain.FinalCashFlowPosting;
+
+import java.util.List;
+
 public interface ShumwayService {
 
-    void hold(long payoutId);
+    void hold(String payoutId, List<FinalCashFlowPosting> finalCashFlowPostings);
 
-    void commit(long payoutId);
+    void commit(String payoutId);
 
-    void rollback(long payoutId);
+    void rollback(String payoutId);
 
-    void revert(long payoutId);
+    void revert(String payoutId);
 
 }

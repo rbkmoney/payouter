@@ -2,6 +2,7 @@ package com.rbkmoney.payouter.service;
 
 import com.rbkmoney.damsel.accounter.AccounterSrv;
 import com.rbkmoney.damsel.accounter.InvalidPostingParams;
+import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.payouter.AbstractIntegrationTest;
 import com.rbkmoney.payouter.dao.PayoutDao;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
@@ -12,12 +13,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
+import java.util.Arrays;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
 
@@ -35,15 +34,27 @@ public class ShumwayServiceTest extends AbstractIntegrationTest {
     @Test
     @Transactional
     public void testRevertWhenHoldIsFailed() throws TException {
-        given(shumwayClient.hold(any()))
-                .willThrow(InvalidPostingParams.class);
-        given(shumwayClient.rollbackPlan(any()))
-                .willThrow(InvalidPostingParams.class);
-
         Payout payout = random(Payout.class);
         payoutDao.save(payout);
         try {
-            shumwayService.revert(payout.getId());
+            shumwayService.hold(String.valueOf(payout.getId()), Arrays.asList(
+                    new FinalCashFlowPosting(
+                            new FinalCashFlowAccount(
+                                    CashFlowAccount.merchant(MerchantCashFlowAccount.settlement),
+                                    2L
+                            ),
+                            new FinalCashFlowAccount(
+                                    CashFlowAccount.system(SystemCashFlowAccount.settlement),
+                                    3L
+                            ),
+                            new Cash(300, new CurrencyRef("RUB"))
+                    )
+            ));
+            given(shumwayClient.hold(any()))
+                    .willThrow(InvalidPostingParams.class);
+            given(shumwayClient.rollbackPlan(any()))
+                    .willThrow(InvalidPostingParams.class);
+            shumwayService.revert(String.valueOf(payout.getId()));
             fail();
         } catch (AccounterException ex) {
             Throwable throwable = ex.getCause();

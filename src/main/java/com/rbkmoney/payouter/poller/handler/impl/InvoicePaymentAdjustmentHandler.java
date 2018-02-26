@@ -1,13 +1,15 @@
 package com.rbkmoney.payouter.poller.handler.impl;
 
 import com.rbkmoney.damsel.domain.InvoicePaymentAdjustment;
-import com.rbkmoney.damsel.event_stock.StockEvent;
 import com.rbkmoney.damsel.payment_processing.Event;
 import com.rbkmoney.damsel.payment_processing.InvoiceChange;
 import com.rbkmoney.damsel.payment_processing.InvoicePaymentAdjustmentChange;
 import com.rbkmoney.damsel.payment_processing.InvoicePaymentChange;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.geck.filter.Filter;
+import com.rbkmoney.geck.filter.PathConditionFilter;
+import com.rbkmoney.geck.filter.condition.IsNullCondition;
+import com.rbkmoney.geck.filter.rule.PathConditionRule;
 import com.rbkmoney.payouter.dao.AdjustmentDao;
 import com.rbkmoney.payouter.dao.PaymentDao;
 import com.rbkmoney.payouter.domain.enums.AdjustmentStatus;
@@ -27,7 +29,7 @@ import java.util.Map;
 import static com.rbkmoney.payouter.util.CashFlowType.*;
 
 @Component
-public class InvoicePaymentAdjustmentHandler implements Handler {
+public class InvoicePaymentAdjustmentHandler implements Handler<InvoiceChange, Event> {
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -35,15 +37,19 @@ public class InvoicePaymentAdjustmentHandler implements Handler {
 
     private final PaymentDao paymentDao;
 
+    private final Filter filter;
+
     @Autowired
     public InvoicePaymentAdjustmentHandler(AdjustmentDao adjustmentDao, PaymentDao paymentDao) {
         this.adjustmentDao = adjustmentDao;
         this.paymentDao = paymentDao;
+        this.filter = new PathConditionFilter(new PathConditionRule(
+                "invoice_payment_change.payload.invoice_payment_adjustment_change.payload.invoice_payment_adjustment_created",
+                new IsNullCondition().not()));
     }
 
     @Override
-    public void handle(InvoiceChange invoiceChange, StockEvent stockEvent) {
-        Event event = stockEvent.getSourceEvent().getProcessingEvent();
+    public void handle(InvoiceChange invoiceChange, Event event) {
         long eventId = event.getId();
         String invoiceId = event.getSource().getInvoiceId();
 
@@ -90,9 +96,6 @@ public class InvoicePaymentAdjustmentHandler implements Handler {
 
     @Override
     public Filter<InvoiceChange> getFilter() {
-        return invoiceChange -> invoiceChange.isSetInvoicePaymentChange()
-                && invoiceChange.getInvoicePaymentChange().getPayload().isSetInvoicePaymentAdjustmentChange()
-                && invoiceChange.getInvoicePaymentChange().getPayload().getInvoicePaymentAdjustmentChange()
-                .getPayload().isSetInvoicePaymentAdjustmentCreated();
+        return filter;
     }
 }

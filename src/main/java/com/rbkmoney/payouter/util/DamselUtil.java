@@ -48,6 +48,12 @@ public class DamselUtil {
         }
         if (checkRoute(
                 CashFlowAccount.merchant(MerchantCashFlowAccount.settlement),
+                CashFlowAccount.merchant(MerchantCashFlowAccount.payout),
+                cashFlowPosting)) {
+            return PAYOUT_AMOUNT;
+        }
+        if (checkRoute(
+                CashFlowAccount.merchant(MerchantCashFlowAccount.settlement),
                 CashFlowAccount.system(SystemCashFlowAccount.settlement),
                 cashFlowPosting)) {
             return FEE;
@@ -85,7 +91,6 @@ public class DamselUtil {
 
         throw new UnsupportedOperationException("Unsupported cashflow");
     }
-
 
     public static boolean checkRoute(CashFlowAccount source, CashFlowAccount destination, FinalCashFlowPosting cashFlow) {
         return source.equals(cashFlow.getSource().getAccountType()) &&
@@ -202,24 +207,66 @@ public class DamselUtil {
                         )
                 ));
             case BANK_ACCOUNT:
-                LegalAgreement legalAgreement = new LegalAgreement();
-                legalAgreement.setLegalAgreementId(payoutEvent.getPayoutAccountLegalAgreementId());
-                legalAgreement.setSignedAt(TypeUtil.temporalToString(payoutEvent.getPayoutAccountLegalAgreementSignedAt()));
-
-                return PayoutType.bank_account(new PayoutAccount(
-                        new RussianBankAccount(
-                                payoutEvent.getPayoutAccountId(),
-                                payoutEvent.getPayoutAccountBankName(),
-                                payoutEvent.getPayoutAccountBankPostId(),
-                                payoutEvent.getPayoutAccountBankBik()
-                        ),
-                        payoutEvent.getPayoutAccountInn(),
-                        payoutEvent.getPayoutAccountPurpose(),
-                        legalAgreement
-                ));
+                return PayoutType.bank_account(toPayoutAccount(payoutEvent));
             default:
                 throw new NotFoundException(String.format("Payout type not found, type = %s", payoutType));
         }
+    }
+
+    public static PayoutAccount toPayoutAccount(PayoutEvent payoutEvent) {
+        LegalAgreement legalAgreement = new LegalAgreement();
+        legalAgreement.setLegalAgreementId(payoutEvent.getPayoutAccountLegalAgreementId());
+        legalAgreement.setSignedAt(TypeUtil.temporalToString(payoutEvent.getPayoutAccountLegalAgreementSignedAt()));
+
+        PayoutAccount._Fields payoutAccountType = PayoutAccount._Fields.findByName(payoutEvent.getPayoutAccountType());
+        switch (payoutAccountType) {
+            case RUSSIAN_PAYOUT_ACCOUNT:
+                return PayoutAccount.russian_payout_account(
+                        new RussianPayoutAccount(
+                                new RussianBankAccount(
+                                        payoutEvent.getPayoutAccountId(),
+                                        payoutEvent.getPayoutAccountBankName(),
+                                        payoutEvent.getPayoutAccountBankPostId(),
+                                        payoutEvent.getPayoutAccountBankLocalCode()
+                                ),
+                                payoutEvent.getPayoutAccountInn(),
+                                payoutEvent.getPayoutAccountPurpose(),
+                                legalAgreement
+                        )
+                );
+            case INTERNATIONAL_PAYOUT_ACCOUNT:
+                return PayoutAccount.international_payout_account(
+                        new InternationalPayoutAccount(
+                                toInternationalBankAccount(payoutEvent),
+                                toInternationalLegalEntity(payoutEvent),
+                                payoutEvent.getPayoutAccountPurpose(),
+                                legalAgreement
+                        )
+                );
+            default:
+                throw new NotFoundException(String.format("Payout account type not found, type = %s", payoutAccountType));
+        }
+    }
+
+    private static InternationalLegalEntity toInternationalLegalEntity(PayoutEvent payoutEvent) {
+        InternationalLegalEntity legalEntity = new InternationalLegalEntity();
+        legalEntity.setLegalName(payoutEvent.getPayoutAccountLegalName());
+        legalEntity.setTradingName(payoutEvent.getPayoutAccountTradingName());
+        legalEntity.setRegisteredAddress(payoutEvent.getPayoutAccountRegisteredAddress());
+        legalEntity.setActualAddress(payoutEvent.getPayoutAccountActualAddress());
+        legalEntity.setRegisteredNumber(payoutEvent.getPayoutAccountRegisteredNumber());
+        return legalEntity;
+    }
+
+    private static InternationalBankAccount toInternationalBankAccount(PayoutEvent payoutEvent) {
+        InternationalBankAccount bankAccount = new InternationalBankAccount();
+        bankAccount.setAccountHolder(payoutEvent.getPayoutAccountId());
+        bankAccount.setBankName(payoutEvent.getPayoutAccountBankName());
+        bankAccount.setBankAddress(payoutEvent.getPayoutAccountBankAddress());
+        bankAccount.setIban(payoutEvent.getPayoutAccountBankIban());
+        bankAccount.setBic(payoutEvent.getPayoutAccountBankBic());
+        bankAccount.setLocalBankCode(payoutEvent.getPayoutAccountBankLocalCode());
+        return bankAccount;
     }
 
     public static PayoutPaid toDamselPayoutStatusPaid(PayoutEvent payoutEvent) {
@@ -282,5 +329,17 @@ public class DamselUtil {
                 DamselUtil.toDamselPayoutChange(payoutEvent)
         )));
         return event;
+    }
+
+    public static List<CashFlowDescription> toDamselCashFlowDescription(List<com.rbkmoney.payouter.domain.tables.pojos.CashFlowDescription> cashFlowDescriptions) {
+        return cashFlowDescriptions.stream().map(cfd -> {
+            CashFlowDescription cashFlowDescription = new CashFlowDescription();
+            cashFlowDescription.setCash(new Cash(cfd.getAmount(), new CurrencyRef(cfd.getCurrencyCode())));
+            cashFlowDescription.setFee(new Cash(cfd.getFee(), new CurrencyRef(cfd.getCurrencyCode())));
+            cashFlowDescription.setCount(cfd.getCount());
+            cashFlowDescription.setCashFlowType(com.rbkmoney.damsel.payout_processing.CashFlowType.valueOf(cfd.getCashFlowType().getLiteral()));
+            cashFlowDescription.setTimeRange(new TimeRange(TypeUtil.temporalToString(cfd.getFromTime()), TypeUtil.temporalToString(cfd.getToTime())));
+            return cashFlowDescription;
+        }).collect(Collectors.toList());
     }
 }

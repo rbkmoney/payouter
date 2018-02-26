@@ -10,6 +10,8 @@ spring:
     hikari:
       idle-timeout: 30000
       maximum-pool-size: 3
+flyway:
+  schemas: sht
 retry-policy:
   maxAttempts: 10
 service:
@@ -17,11 +19,11 @@ service:
     url: http://localhost:8022/accounter
     networkTimeout: 60000
   partyManagement:
-    url: http://localhost:8022/v1/processing/partymgmt
+    url: http://hellgate:8022/v1/processing/partymgmt
   dominant:
     url: http://dominant:8022/v1/domain/repository_client
   bustermaze:
-    url: http://localhost:8022/repo
+    url: http://bustermaze:8022/repo
     polling:
       delay: 10000
       retryDelay: 1000
@@ -32,20 +34,25 @@ service:
       from: no-reply@rbkmoney.com
       to: trash@rbkmoney.com
 report:
-  1c:
+  nonresidents:
+    file:
+      name:
+        prefix: test_nonresidents
+        extension: .csv
+      delimiter: ;
+      encoding: UTF-8
+    cron: "0 0 9 * * *"
+    timezone: Europe/Moscow
+  residents:
     file:
       name:
         prefix: test_1c
         extension: .txt
       encoding: Windows-1251
     templateFileName: 1c_payout.ftl
+    cron: "0 0 9 * * *"
     timezone: Europe/Moscow
 scheduler:
-  enabled: true
-  cron: "0 0 9 * * *"
-  timezone: Europe/Moscow
-  delayDays: 3
-  periodDays: 1
   user-id: test
 
 

@@ -1,10 +1,14 @@
 package com.rbkmoney.payouter.service;
 
-import com.rbkmoney.damsel.base.InvalidRequest;
+import com.rbkmoney.damsel.base.*;
+import com.rbkmoney.damsel.domain.*;
+import com.rbkmoney.damsel.domain.Calendar;
+import com.rbkmoney.damsel.domain_config.RepositoryClientSrv;
+import com.rbkmoney.damsel.domain_config.VersionedObject;
 import com.rbkmoney.damsel.event_stock.SourceEvent;
 import com.rbkmoney.damsel.event_stock.StockEvent;
 import com.rbkmoney.damsel.msgpack.Value;
-import com.rbkmoney.damsel.payment_processing.Event;
+import com.rbkmoney.damsel.payment_processing.*;
 import com.rbkmoney.damsel.payout_processing.GeneratePayoutParams;
 import com.rbkmoney.damsel.payout_processing.PayoutManagementSrv;
 import com.rbkmoney.damsel.payout_processing.ShopParams;
@@ -17,16 +21,18 @@ import com.rbkmoney.generation.RefundGenerator;
 import com.rbkmoney.payouter.AbstractIntegrationTest;
 import com.rbkmoney.payouter.dao.PayoutDao;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
-import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.meta.UserIdentityIdExtensionKit;
 import com.rbkmoney.payouter.meta.UserIdentityRealmExtensionKit;
-import com.rbkmoney.payouter.model.PayoutToolData;
 import com.rbkmoney.woody.api.flow.WFlow;
 import com.rbkmoney.woody.api.trace.ContextUtils;
 import com.rbkmoney.woody.thrift.impl.http.THSpawnClientBuilder;
+import org.apache.thrift.TException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
+import org.quartz.impl.matchers.GroupMatcher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -34,18 +40,17 @@ import org.springframework.test.jdbc.JdbcTestUtils;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 import static com.rbkmoney.payouter.domain.enums.PayoutStatus.*;
-import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 
 public class PayoutServiceTest extends AbstractIntegrationTest {
 
@@ -61,8 +66,14 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
     @Autowired
     JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    Scheduler scheduler;
+
     @MockBean
-    PartyManagementService partyManagementService;
+    PartyManagementSrv.Iface partyManagementClient;
+
+    @MockBean
+    RepositoryClientSrv.Iface dominantClient;
 
     @MockBean
     ShumwayService shumwayService;
@@ -75,23 +86,78 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
 
     String shopId = "test-shop-id";
 
+    String contractId = "test-contract-id";
+
+    String payoutToolId = "test-payout-tool";
+
     @Before
-    public void setUp() throws URISyntaxException {
+    public void setUp() throws URISyntaxException, TException {
         client = new THSpawnClientBuilder()
                 .withAddress(new URI("http://localhost:" + port + "/payout/management"))
                 .withNetworkTimeout(0)
                 .build(PayoutManagementSrv.Iface.class);
 
-        given(partyManagementService.getPayoutToolData(any(), any()))
-                .willReturn(random(PayoutToolData.class));
-        given(partyManagementService.getMetaData(any(), any()))
+        given(partyManagementClient.checkout(any(), any(), any()))
+                .willReturn(buildParty(partyId, shopId, contractId, payoutToolId));
+        given(partyManagementClient.getMetaData(any(), any(), any()))
                 .willReturn(null);
+        given(partyManagementClient.computePayoutCashFlow(any(), any(), any()))
+                .willAnswer(answer -> {
+                    PayoutParams payoutParams = answer.getArgumentAt(2, PayoutParams.class);
+                    return Arrays.asList(
+                            new FinalCashFlowPosting(
+                                    new FinalCashFlowAccount(CashFlowAccount.merchant(MerchantCashFlowAccount.settlement), 12),
+                                    new FinalCashFlowAccount(CashFlowAccount.merchant(MerchantCashFlowAccount.payout), 13),
+                                    payoutParams.getAmount()
+                            )
+                    );
+                });
+        given(dominantClient.checkoutObject(any(), eq(Reference.payment_institution(new PaymentInstitutionRef(1)))))
+                .willReturn(buildPaymentInstitutionObject(new PaymentInstitutionRef(1)));
+        given(dominantClient.checkoutObject(any(), eq(Reference.calendar(new CalendarRef(1)))))
+                .willReturn(buildPaymentCalendarObject(new CalendarRef(1)));
+        given(dominantClient.checkoutObject(any(), eq(Reference.payout_schedule(new PayoutScheduleRef(1)))))
+                .willReturn(buildPayoutScheduleObject(new PayoutScheduleRef(1)));
+        given(dominantClient.checkoutObject(any(), eq(Reference.category(new CategoryRef(1)))))
+                .willReturn(buildCategoryObject(new CategoryRef(1)));
     }
 
     @After
     public void cleanUp() {
         JdbcTestUtils.deleteFromTables(jdbcTemplate,
                 "sht.payout", "sht.payment", "sht.adjustment", "sht.refund");
+    }
+
+    @Test
+    public void testCreatePayoutWithScheduler() {
+        eventStockService.processStockEvent(
+                buildStockEvent(buildScheduleEvent(partyId, shopId))
+        );
+        addCapturedPayment();
+
+        List<Payout> payouts;
+        do {
+            payouts = payoutService.search(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(1));
+        } while (payouts.isEmpty());
+
+        assertEquals(1, payouts.size());
+        Payout payout = payouts.get(0);
+        assertEquals(9500L, (long) payout.getAmount());
+        assertEquals(UNPAID, payout.getStatus());
+    }
+
+    @Test
+    public void testRegisterAndDeregisterScheduler() throws SchedulerException {
+        eventStockService.processStockEvent(
+                buildStockEvent(buildScheduleEvent(partyId, shopId))
+        );
+        assertTrue(!scheduler.getJobKeys(GroupMatcher.anyGroup()).isEmpty());
+        assertTrue(!scheduler.getTriggerKeys(GroupMatcher.anyGroup()).isEmpty());
+        eventStockService.processStockEvent(
+                buildStockEvent(buildScheduleEvent(partyId, shopId, null))
+        );
+        assertTrue(scheduler.getJobKeys(GroupMatcher.anyGroup()).isEmpty());
+        assertTrue(scheduler.getTriggerKeys(GroupMatcher.anyGroup()).isEmpty());
     }
 
     @Test
@@ -160,7 +226,7 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
 
     @Test
     public void testCreatePayoutsWithInvalidStateException() throws Exception {
-        given(partyManagementService.getMetaData(any(), any()))
+        given(partyManagementClient.getMetaData(any(), any(), any()))
                 .willReturn(Value.b(true));
         addCapturedPayment("payment-id");
 
@@ -269,6 +335,164 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
                     ContextUtils.setCustomMetadataValue(UserIdentityRealmExtensionKit.KEY, "internal");
                     return callable.call();
                 }).call();
+    }
+
+    private Event buildScheduleEvent(String partyId, String shopId) {
+        return buildScheduleEvent(partyId, shopId, new PayoutScheduleRef(1));
+    }
+
+    private Event buildScheduleEvent(String partyId, String shopId, PayoutScheduleRef payoutScheduleRef) {
+        ClaimStatusChanged claimStatusChanged = new ClaimStatusChanged();
+        ClaimAccepted claimAccepted = new ClaimAccepted();
+        ClaimEffect claimEffect = new ClaimEffect();
+        ShopEffectUnit shopEffectUnit = new ShopEffectUnit();
+        shopEffectUnit.setShopId(shopId);
+
+        ScheduleChanged scheduleChanged = new ScheduleChanged();
+        scheduleChanged.setSchedule(payoutScheduleRef);
+        shopEffectUnit.setEffect(ShopEffect.payout_schedule_changed(scheduleChanged));
+        claimEffect.setShopEffect(shopEffectUnit);
+        claimAccepted.setEffects(Arrays.asList(claimEffect));
+        claimStatusChanged.setStatus(ClaimStatus.accepted(claimAccepted));
+
+        return new Event(
+                1,
+                TypeUtil.temporalToString(Instant.now()),
+                EventSource.party_id(partyId),
+                EventPayload.party_changes(Arrays.asList(PartyChange.claim_status_changed(claimStatusChanged)))
+        );
+    }
+
+    private Party buildParty(String partyId, String shopId, String contractId, String payoutToolId) {
+        Instant timestamp = Instant.now();
+
+        Party party = new Party();
+        party.setId(partyId);
+        party.setBlocking(Blocking.unblocked(new Unblocked("", TypeUtil.temporalToString(timestamp))));
+        party.setCreatedAt(TypeUtil.temporalToString(timestamp));
+        party.setRevision(1L);
+        party.setContactInfo(new PartyContactInfo("me@party.com"));
+        party.setShops(buildShops(shopId, contractId, payoutToolId));
+        party.setContracts(buildContracts(contractId, payoutToolId));
+        return party;
+    }
+
+    private VersionedObject buildPayoutScheduleObject(PayoutScheduleRef payoutScheduleRef) {
+        ScheduleEvery nth5 = new ScheduleEvery();
+        nth5.setNth((byte) 5);
+
+        PayoutSchedule payoutSchedule = new PayoutSchedule();
+        payoutSchedule.setName("schedule");
+        payoutSchedule.setSchedule(new Schedule(
+                ScheduleYear.every(new ScheduleEvery()),
+                ScheduleMonth.every(new ScheduleEvery()),
+                ScheduleFragment.every(new ScheduleEvery()),
+                ScheduleDayOfWeek.every(new ScheduleEvery()),
+                ScheduleFragment.every(new ScheduleEvery()),
+                ScheduleFragment.every(new ScheduleEvery()),
+                ScheduleFragment.every(new ScheduleEvery(nth5))
+        ));
+        payoutSchedule.setPolicy(new PayoutCompilationPolicy(new TimeSpan()));
+
+        return new VersionedObject(
+                1,
+                DomainObject.payout_schedule(new PayoutScheduleObject(
+                        payoutScheduleRef,
+                        payoutSchedule
+                ))
+        );
+    }
+
+    private VersionedObject buildCategoryObject(CategoryRef categoryRef) {
+        Category category = new Category();
+        category.setType(CategoryType.live);
+
+        return new VersionedObject(
+                1,
+                DomainObject.category(new CategoryObject(
+                        categoryRef,
+                        category
+                ))
+        );
+    }
+
+    private VersionedObject buildPaymentCalendarObject(CalendarRef calendarRef) {
+        Calendar calendar = new Calendar("calendar", "Europe/Moscow", Collections.emptyMap());
+
+        return new VersionedObject(
+                1,
+                DomainObject.calendar(new CalendarObject(
+                        calendarRef,
+                        calendar
+                ))
+        );
+    }
+
+    private VersionedObject buildPaymentInstitutionObject(PaymentInstitutionRef paymentInstitutionRef) {
+        PaymentInstitution paymentInstitution = new PaymentInstitution();
+        paymentInstitution.setCalendar(new CalendarRef(1));
+
+        return new VersionedObject(
+                1,
+                DomainObject.payment_institution(new PaymentInstitutionObject(
+                        paymentInstitutionRef,
+                        paymentInstitution
+                ))
+        );
+    }
+
+    private Map<String, Contract> buildContracts(String contractId, String payoutToolId) {
+        Map<String, Contract> contracts = new HashMap<>();
+        Contract contract = new Contract();
+        contract.setId(contractId);
+        contract.setLegalAgreement(new LegalAgreement(
+                TypeUtil.temporalToString(Instant.now()),
+                "12/12")
+        );
+        contract.setPaymentInstitution(new PaymentInstitutionRef(1));
+        contract.setPayoutTools(Arrays.asList(
+                new PayoutTool(
+                        payoutToolId,
+                        TypeUtil.temporalToString(Instant.now()),
+                        new CurrencyRef("RUB"),
+                        PayoutToolInfo.international_bank_account(
+                                new InternationalBankAccount(
+                                        "123",
+                                        "123",
+                                        "123",
+                                        "123",
+                                        "123"
+                                )
+                        )
+                )
+        ));
+        contract.setContractor(
+                Contractor.legal_entity(
+                        LegalEntity.international_legal_entity(new InternationalLegalEntity(
+                                "kek",
+                                "711-2880 Nulla St. Mankato Mississippi 96522"
+                        ))
+                )
+        );
+        contracts.put(contractId, contract);
+        return contracts;
+    }
+
+    private Map<String, Shop> buildShops(String shopId, String contractId, String payoutToolId) {
+        Map<String, Shop> shops = new HashMap<>();
+        Shop shop = new Shop();
+        shop.setContractId(contractId);
+        shop.setCategory(new CategoryRef(1));
+        shop.setAccount(new ShopAccount(
+                new CurrencyRef("RUB"),
+                1,
+                2,
+                3
+        ));
+        shop.setPayoutToolId(payoutToolId);
+        shops.put(shopId, shop);
+
+        return shops;
     }
 
 }

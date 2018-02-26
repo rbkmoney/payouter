@@ -4,6 +4,7 @@ import com.rbkmoney.damsel.event_stock.StockEvent;
 import com.rbkmoney.eventstock.client.EventAction;
 import com.rbkmoney.eventstock.client.EventHandler;
 import com.rbkmoney.payouter.exception.DaoException;
+import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.exception.StorageException;
 import com.rbkmoney.payouter.service.EventStockService;
 import com.rbkmoney.woody.api.flow.error.WRuntimeException;

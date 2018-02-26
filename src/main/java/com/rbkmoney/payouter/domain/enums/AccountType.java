@@ -26,13 +26,19 @@ import org.jooq.Schema;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public enum AccountType implements EnumType {
 
-    merchant("merchant"),
+    MERCHANT_SETTLEMENT("MERCHANT_SETTLEMENT"),
 
-    provider("provider"),
+    MERCHANT_GUARANTEE("MERCHANT_GUARANTEE"),
 
-    system("system"),
+    MERCHANT_PAYOUT("MERCHANT_PAYOUT"),
 
-    external("external");
+    PROVIDER_SETTLEMENT("PROVIDER_SETTLEMENT"),
+
+    SYSTEM_SETTLEMENT("SYSTEM_SETTLEMENT"),
+
+    EXTERNAL_INCOME("EXTERNAL_INCOME"),
+
+    EXTERNAL_OUTCOME("EXTERNAL_OUTCOME");
 
     private final String literal;
 

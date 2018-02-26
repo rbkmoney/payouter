@@ -12,6 +12,9 @@ import org.springframework.stereotype.Component;
 import javax.sql.DataSource;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.AbstractMap;
+import java.util.List;
+import java.util.Map;
 
 import static com.rbkmoney.payouter.domain.Tables.SHOP_META;
 
@@ -47,6 +50,24 @@ public class ShopMetaDaoImpl extends AbstractGenericDao implements ShopMetaDao {
     }
 
     @Override
+    public void save(String partyId, String shopId, int calendarId, int schedulerId) throws DaoException {
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
+
+        Query query = getDslContext().insertInto(SHOP_META)
+                .set(SHOP_META.PARTY_ID, partyId)
+                .set(SHOP_META.SHOP_ID, shopId)
+                .set(SHOP_META.CALENDAR_ID, calendarId)
+                .set(SHOP_META.SCHEDULER_ID, schedulerId)
+                .set(SHOP_META.WTIME, now)
+                .onDuplicateKeyUpdate()
+                .set(SHOP_META.CALENDAR_ID, calendarId)
+                .set(SHOP_META.SCHEDULER_ID, schedulerId)
+                .set(SHOP_META.WTIME, now);
+
+        executeOne(query);
+    }
+
+    @Override
     public ShopMeta get(String partyId, String shopId) throws DaoException {
         Query query = getDslContext().selectFrom(SHOP_META)
                 .where(SHOP_META.PARTY_ID.eq(partyId)
@@ -62,6 +83,37 @@ public class ShopMetaDaoImpl extends AbstractGenericDao implements ShopMetaDao {
                 .forUpdate();
 
         return fetchOne(query, shopMetaRowMapper);
+    }
+
+    @Override
+    public List<ShopMeta> getByCalendarAndSchedulerId(int calendarId, int schedulerId) {
+        Query query = getDslContext().selectFrom(SHOP_META)
+                .where(
+                        SHOP_META.CALENDAR_ID.eq(calendarId)
+                                .and(SHOP_META.SCHEDULER_ID.eq(schedulerId))
+                );
+
+        return fetch(query, shopMetaRowMapper);
+    }
+
+    @Override
+    public List<ShopMeta> getAllActiveShops() {
+        Query query = getDslContext().selectFrom(SHOP_META)
+                .where(SHOP_META.SCHEDULER_ID.isNotNull()
+                        .and(SHOP_META.CALENDAR_ID.isNotNull()));
+
+        return fetch(query, shopMetaRowMapper);
+    }
+
+    @Override
+    public void disableShop(String partyId, String shopId) throws DaoException {
+        Query query = getDslContext().update(SHOP_META)
+                .set(SHOP_META.CALENDAR_ID, (Integer) null)
+                .set(SHOP_META.SCHEDULER_ID, (Integer) null)
+                .where(SHOP_META.PARTY_ID.eq(partyId)
+                        .and(SHOP_META.SHOP_ID.eq(shopId)));
+
+        executeOne(query);
     }
 
     @Override

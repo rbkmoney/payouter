@@ -1,10 +1,12 @@
 package com.rbkmoney.payouter.poller.handler.impl;
 
 import com.rbkmoney.damsel.domain.InvoicePaymentRefund;
-import com.rbkmoney.damsel.event_stock.StockEvent;
 import com.rbkmoney.damsel.payment_processing.*;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.geck.filter.Filter;
+import com.rbkmoney.geck.filter.PathConditionFilter;
+import com.rbkmoney.geck.filter.condition.IsNullCondition;
+import com.rbkmoney.geck.filter.rule.PathConditionRule;
 import com.rbkmoney.payouter.dao.PaymentDao;
 import com.rbkmoney.payouter.dao.RefundDao;
 import com.rbkmoney.payouter.domain.enums.RefundStatus;
@@ -26,7 +28,7 @@ import static com.rbkmoney.payouter.util.CashFlowType.FEE;
 import static com.rbkmoney.payouter.util.CashFlowType.REFUND_AMOUNT;
 
 @Component
-public class InvoicePaymentRefundHandler implements Handler {
+public class InvoicePaymentRefundHandler implements Handler<InvoiceChange, Event> {
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -34,18 +36,19 @@ public class InvoicePaymentRefundHandler implements Handler {
 
     private final PaymentDao paymentDao;
 
-    private final PartyManagementService partyManagementService;
+    private final Filter filter;
 
     @Autowired
-    public InvoicePaymentRefundHandler(RefundDao refundDao, PaymentDao paymentDao, PartyManagementService partyManagementService) {
+    public InvoicePaymentRefundHandler(RefundDao refundDao, PaymentDao paymentDao) {
         this.refundDao = refundDao;
         this.paymentDao = paymentDao;
-        this.partyManagementService = partyManagementService;
+        this.filter = new PathConditionFilter(new PathConditionRule(
+                "invoice_payment_change.payload.invoice_payment_refund_change.payload.invoice_payment_refund_created",
+                new IsNullCondition().not()));
     }
 
     @Override
-    public void handle(InvoiceChange invoiceChange, StockEvent stockEvent) {
-        Event event = stockEvent.getSourceEvent().getProcessingEvent();
+    public void handle(InvoiceChange invoiceChange, Event event) {
         long eventId = event.getId();
         String invoiceId = event.getSource().getInvoiceId();
 
@@ -90,9 +93,6 @@ public class InvoicePaymentRefundHandler implements Handler {
 
     @Override
     public Filter<InvoiceChange> getFilter() {
-        return invoiceChange -> invoiceChange.isSetInvoicePaymentChange()
-                && invoiceChange.getInvoicePaymentChange().getPayload().isSetInvoicePaymentRefundChange()
-                && invoiceChange.getInvoicePaymentChange().getPayload().getInvoicePaymentRefundChange()
-                .getPayload().isSetInvoicePaymentRefundCreated();
+        return filter;
     }
 }

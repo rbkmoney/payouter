@@ -25,48 +25,56 @@ import javax.annotation.Generated;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Report implements Serializable {
 
-    private static final long serialVersionUID = -1913627739;
+    private static final long serialVersionUID = -1095891934;
 
     private Long          id;
     private LocalDateTime createdAt;
-    private String        payoutids;
+    private String        payoutIds;
     private String        name;
     private String        content;
     private String        description;
     private ReportStatus  status;
     private LocalDateTime lastSendAt;
+    private String        encoding;
+    private String        subject;
 
     public Report() {}
 
     public Report(Report value) {
         this.id = value.id;
         this.createdAt = value.createdAt;
-        this.payoutids = value.payoutids;
+        this.payoutIds = value.payoutIds;
         this.name = value.name;
         this.content = value.content;
         this.description = value.description;
         this.status = value.status;
         this.lastSendAt = value.lastSendAt;
+        this.encoding = value.encoding;
+        this.subject = value.subject;
     }
 
     public Report(
         Long          id,
         LocalDateTime createdAt,
-        String        payoutids,
+        String        payoutIds,
         String        name,
         String        content,
         String        description,
         ReportStatus  status,
-        LocalDateTime lastSendAt
+        LocalDateTime lastSendAt,
+        String        encoding,
+        String        subject
     ) {
         this.id = id;
         this.createdAt = createdAt;
-        this.payoutids = payoutids;
+        this.payoutIds = payoutIds;
         this.name = name;
         this.content = content;
         this.description = description;
         this.status = status;
         this.lastSendAt = lastSendAt;
+        this.encoding = encoding;
+        this.subject = subject;
     }
 
     public Long getId() {
@@ -85,12 +93,12 @@ public class Report implements Serializable {
         this.createdAt = createdAt;
     }
 
-    public String getPayoutids() {
-        return this.payoutids;
+    public String getPayoutIds() {
+        return this.payoutIds;
     }
 
-    public void setPayoutids(String payoutids) {
-        this.payoutids = payoutids;
+    public void setPayoutIds(String payoutIds) {
+        this.payoutIds = payoutIds;
     }
 
     public String getName() {
@@ -133,6 +141,22 @@ public class Report implements Serializable {
         this.lastSendAt = lastSendAt;
     }
 
+    public String getEncoding() {
+        return this.encoding;
+    }
+
+    public void setEncoding(String encoding) {
+        this.encoding = encoding;
+    }
+
+    public String getSubject() {
+        return this.subject;
+    }
+
+    public void setSubject(String subject) {
+        this.subject = subject;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj)
@@ -154,11 +178,11 @@ public class Report implements Serializable {
         }
         else if (!createdAt.equals(other.createdAt))
             return false;
-        if (payoutids == null) {
-            if (other.payoutids != null)
+        if (payoutIds == null) {
+            if (other.payoutIds != null)
                 return false;
         }
-        else if (!payoutids.equals(other.payoutids))
+        else if (!payoutIds.equals(other.payoutIds))
             return false;
         if (name == null) {
             if (other.name != null)
@@ -190,6 +214,18 @@ public class Report implements Serializable {
         }
         else if (!lastSendAt.equals(other.lastSendAt))
             return false;
+        if (encoding == null) {
+            if (other.encoding != null)
+                return false;
+        }
+        else if (!encoding.equals(other.encoding))
+            return false;
+        if (subject == null) {
+            if (other.subject != null)
+                return false;
+        }
+        else if (!subject.equals(other.subject))
+            return false;
         return true;
     }
 
@@ -199,12 +235,14 @@ public class Report implements Serializable {
         int result = 1;
         result = prime * result + ((this.id == null) ? 0 : this.id.hashCode());
         result = prime * result + ((this.createdAt == null) ? 0 : this.createdAt.hashCode());
-        result = prime * result + ((this.payoutids == null) ? 0 : this.payoutids.hashCode());
+        result = prime * result + ((this.payoutIds == null) ? 0 : this.payoutIds.hashCode());
         result = prime * result + ((this.name == null) ? 0 : this.name.hashCode());
         result = prime * result + ((this.content == null) ? 0 : this.content.hashCode());
         result = prime * result + ((this.description == null) ? 0 : this.description.hashCode());
         result = prime * result + ((this.status == null) ? 0 : this.status.hashCode());
         result = prime * result + ((this.lastSendAt == null) ? 0 : this.lastSendAt.hashCode());
+        result = prime * result + ((this.encoding == null) ? 0 : this.encoding.hashCode());
+        result = prime * result + ((this.subject == null) ? 0 : this.subject.hashCode());
         return result;
     }
 
@@ -214,12 +252,14 @@ public class Report implements Serializable {
 
         sb.append(id);
         sb.append(", ").append(createdAt);
-        sb.append(", ").append(payoutids);
+        sb.append(", ").append(payoutIds);
         sb.append(", ").append(name);
         sb.append(", ").append(content);
         sb.append(", ").append(description);
         sb.append(", ").append(status);
         sb.append(", ").append(lastSendAt);
+        sb.append(", ").append(encoding);
+        sb.append(", ").append(subject);
 
         sb.append(")");
         return sb.toString();

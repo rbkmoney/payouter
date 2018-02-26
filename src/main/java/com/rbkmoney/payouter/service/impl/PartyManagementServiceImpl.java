@@ -4,9 +4,7 @@ import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.msgpack.Value;
 import com.rbkmoney.damsel.payment_processing.*;
 import com.rbkmoney.geck.common.util.TypeUtil;
-import com.rbkmoney.payouter.exception.InvalidStateException;
 import com.rbkmoney.payouter.exception.NotFoundException;
-import com.rbkmoney.payouter.model.PayoutToolData;
 import com.rbkmoney.payouter.service.DominantService;
 import com.rbkmoney.payouter.service.PartyManagementService;
 import org.apache.thrift.TException;
@@ -16,8 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.time.format.DateTimeFormatter;
-import java.util.Optional;
+import java.util.List;
 
 @Service
 public class PartyManagementServiceImpl implements PartyManagementService {
@@ -37,6 +34,11 @@ public class PartyManagementServiceImpl implements PartyManagementService {
     }
 
     @Override
+    public Party getParty(String partyId) throws NotFoundException {
+        return getParty(partyId, Instant.now());
+    }
+
+    @Override
     public Party getParty(String partyId, Instant timestamp) throws NotFoundException {
         return getParty(partyId, PartyRevisionParam.timestamp(TypeUtil.temporalToString(timestamp)));
     }
@@ -48,7 +50,7 @@ public class PartyManagementServiceImpl implements PartyManagementService {
 
     @Override
     public Party getParty(String partyId, PartyRevisionParam partyRevisionParam) throws NotFoundException {
-        log.debug("Trying to get party, partyId='{}', partyRevisionParam='{}'", partyId, partyRevisionParam);
+        log.info("Trying to get party, partyId='{}', partyRevisionParam='{}'", partyId, partyRevisionParam);
         try {
             Party party = partyManagementClient.checkout(userInfo, partyId, partyRevisionParam);
             log.info("Party has been found, partyId='{}', partyRevisionParam='{}'", partyId, partyRevisionParam);
@@ -69,16 +71,88 @@ public class PartyManagementServiceImpl implements PartyManagementService {
     }
 
     @Override
+    public Shop getShop(String partyId, String shopId) throws NotFoundException {
+        return getShop(partyId, shopId, Instant.now());
+    }
+
+    @Override
+    public Shop getShop(String partyId, String shopId, long partyRevision) throws NotFoundException {
+        return getShop(partyId, shopId, PartyRevisionParam.revision(partyRevision));
+    }
+
+    @Override
     public Shop getShop(String partyId, String shopId, Instant timestamp) throws NotFoundException {
-        log.debug("Trying to get shop, partyId='{}', shopId='{}', timestamp='{}'", partyId, shopId, timestamp);
-        Party party = getParty(partyId, timestamp);
+        return getShop(partyId, shopId, PartyRevisionParam.timestamp(TypeUtil.temporalToString(timestamp)));
+    }
+
+    @Override
+    public Shop getShop(String partyId, String shopId, PartyRevisionParam partyRevisionParam) throws NotFoundException {
+        log.info("Trying to get shop, partyId='{}', shopId='{}', partyRevisionParam='{}'", partyId, shopId, partyRevisionParam);
+        Party party = getParty(partyId, partyRevisionParam);
 
         Shop shop = party.getShops().get(shopId);
         if (shop == null) {
-            throw new NotFoundException(String.format("Shop not found, partyId='%s', contractId='%s', timestamp='%s'", partyId, shopId, timestamp));
+            throw new NotFoundException(String.format("Shop not found, partyId='%s', shopId='%s', partyRevisionParam='%s'", partyId, shopId, partyRevisionParam));
         }
-        log.info("Shop has been founded, partyId='{}', shopId='{}', timestamp='{}'", partyId, shopId, timestamp);
+        log.info("Shop has been found, partyId='{}', shopId='{}', partyRevisionParam='{}'", partyId, shopId, partyRevisionParam);
         return shop;
+    }
+
+    @Override
+    public Contract getContract(String partyId, String contractId) throws NotFoundException {
+        return getContract(partyId, contractId, Instant.now());
+    }
+
+    @Override
+    public Contract getContract(String partyId, String contractId, long partyRevision) throws NotFoundException {
+        return getContract(partyId, contractId, PartyRevisionParam.revision(partyRevision));
+    }
+
+    @Override
+    public Contract getContract(String partyId, String contractId, Instant timestamp) throws NotFoundException {
+        return getContract(partyId, contractId, PartyRevisionParam.timestamp(TypeUtil.temporalToString(timestamp)));
+    }
+
+    @Override
+    public Contract getContract(String partyId, String contractId, PartyRevisionParam partyRevisionParam) throws NotFoundException {
+        log.info("Trying to get contract, partyId='{}', contractId='{}', partyRevisionParam='{}'", partyId, contractId, partyRevisionParam);
+        Party party = getParty(partyId, partyRevisionParam);
+
+        Contract contract = party.getContracts().get(contractId);
+        if (contract == null) {
+            throw new NotFoundException(String.format("Shop not found, partyId='%s', contractId='%s', partyRevisionParam='%s'", partyId, contractId, partyRevisionParam));
+        }
+        log.info("Contract has been found, partyId='{}', contractId='{}', partyRevisionParam='{}'", partyId, contractId, partyRevisionParam);
+        return contract;
+    }
+
+    @Override
+    public PaymentInstitutionRef getPaymentInstitutionRef(String partyId, String contractId) throws NotFoundException {
+        return getPaymentInstitutionRef(partyId, contractId, Instant.now());
+    }
+
+    @Override
+    public PaymentInstitutionRef getPaymentInstitutionRef(String partyId, String contractId, long partyRevision) throws NotFoundException {
+        return getPaymentInstitutionRef(partyId, contractId, PartyRevisionParam.revision(partyRevision));
+    }
+
+    @Override
+    public PaymentInstitutionRef getPaymentInstitutionRef(String partyId, String contractId, Instant timestamp) throws NotFoundException {
+        return getPaymentInstitutionRef(partyId, contractId, PartyRevisionParam.timestamp(TypeUtil.temporalToString(timestamp)));
+    }
+
+    @Override
+    public PaymentInstitutionRef getPaymentInstitutionRef(String partyId, String contractId, PartyRevisionParam partyRevisionParam) throws NotFoundException {
+        log.debug("Trying to get paymentInstitutionRef, partyId='{}', contractId='{}', partyRevisionParam='{}'", partyId, contractId, partyRevisionParam);
+        Contract contract = getContract(partyId, contractId, partyRevisionParam);
+
+        if (!contract.isSetPaymentInstitution()) {
+            throw new NotFoundException(String.format("PaymentInstitutionRef not found, partyId='%s', contractId='%s', partyRevisionParam='%s'", partyId, contractId, partyRevisionParam));
+        }
+
+        PaymentInstitutionRef paymentInstitutionRef = contract.getPaymentInstitution();
+        log.info("PaymentInstitutionRef has been found, partyId='{}', contractId='{}', paymentInstitutionRef='{}', partyRevisionParam='{}'", partyId, contractId, paymentInstitutionRef, partyRevisionParam);
+        return paymentInstitutionRef;
     }
 
     @Override
@@ -100,88 +174,27 @@ public class PartyManagementServiceImpl implements PartyManagementService {
     }
 
     @Override
-    public PayoutToolData getPayoutToolData(String partyId, String shopId) throws InvalidStateException, NotFoundException {
-        return getPayoutToolData(partyId, shopId, Instant.now());
+    public List<FinalCashFlowPosting> computePayoutCashFlow(String partyId, String shopId, Cash amount, Instant timestamp) throws NotFoundException {
+        return computePayoutCashFlow(partyId, new PayoutParams(shopId, amount, TypeUtil.temporalToString(timestamp)));
     }
 
     @Override
-    public PayoutToolData getPayoutToolData(String partyId, String shopId, Instant timestamp) throws InvalidStateException, NotFoundException {
-        log.debug("Trying to get payout tool data, partyId='{}', shopId='{}', timestamp='{}'", partyId, shopId, timestamp);
-        Party party = getParty(partyId, timestamp);
-
-        Shop shop = party.getShops().get(shopId);
-        if (shop == null) {
-            throw new NotFoundException(String.format("Shop not found, partyId='%s', contractId='%s', timestamp='%s'", partyId, shopId, timestamp));
+    public List<FinalCashFlowPosting> computePayoutCashFlow(String partyId, PayoutParams payoutParams) throws NotFoundException {
+        log.debug("Trying to compute payout cash flow, partyId='{}', payoutParams='{}'", partyId, payoutParams);
+        try {
+            List<FinalCashFlowPosting> finalCashFlowPostings = partyManagementClient.computePayoutCashFlow(userInfo, partyId, payoutParams);
+            log.info("Payout cash flow has been computed, partyId='{}', payoutParams='{}', postings='{}'", partyId, payoutParams, finalCashFlowPostings);
+            return finalCashFlowPostings;
+        } catch (PartyNotFound | PartyNotExistsYet | ShopNotFound ex) {
+            throw new NotFoundException(String.format("%s, partyId='%s', payoutParams='%s'", ex.getClass().getSimpleName(), partyId, payoutParams), ex);
+        } catch (TException ex) {
+            throw new RuntimeException(String.format("Failed to compute payout cash flow, partyId='%s', payoutParams='%s'", partyId, payoutParams), ex);
         }
-
-        PayoutToolData payoutToolData = new PayoutToolData();
-
-        ShopAccount shopAccount = shop.getAccount();
-        payoutToolData.setShopAccountId(shopAccount.getSettlement());
-        payoutToolData.setShopPayoutAccountId(shopAccount.getPayout());
-        payoutToolData.setCurrencyCode(shopAccount.getCurrency().getSymbolicCode());
-
-
-        Contract contract = party.getContracts().get(shop.getContractId());
-        if (contract == null) {
-            throw new NotFoundException(String.format("Contract not found, partyId='%s', contractId='%s', timestamp='%s'", partyId, shop.getId(), timestamp));
-        }
-
-        Optional<PayoutTool> payoutToolOptional = contract.getPayoutTools().stream()
-                .filter(payoutTool ->
-                        payoutTool.getPayoutToolInfo().isSetRussianBankAccount()
-                                && payoutTool.getId().equals(shop.getPayoutToolId()))
-                .findFirst();
-
-        if (!payoutToolOptional.isPresent()) {
-            throw new NotFoundException(
-                    String.format("Payout tool with bank account not found, partyId='%s', shopId='%s', payoutToolId='%s'",
-                            partyId, shopId, shop.getPayoutToolId()));
-        }
-
-        PayoutTool payoutTool = payoutToolOptional.get();
-        if (!payoutToolData.getCurrencyCode().equals(payoutTool.getCurrency().getSymbolicCode())) {
-            throw new InvalidStateException("Shop account and payout tool currency must be equals");
-        }
-
-        RussianBankAccount bankAccount = payoutTool.getPayoutToolInfo().getRussianBankAccount();
-
-        payoutToolData.setBankAccount(bankAccount.getAccount());
-        payoutToolData.setBankBik(bankAccount.getBankBik());
-        payoutToolData.setBankName(bankAccount.getBankName());
-        payoutToolData.setBankPostAccount(bankAccount.getBankPostAccount());
-
-        if (contract.getContractor().getLegalEntity().isSetRussianLegalEntity()) {
-            RussianLegalEntity russianLegalEntity = contract.getContractor().getLegalEntity().getRussianLegalEntity();
-            payoutToolData.setInn(russianLegalEntity.getInn());
-            payoutToolData.setDescription(russianLegalEntity.getRegisteredName());
-        }
-
-        if (!contract.isSetLegalAgreement()) {
-            throw new NotFoundException(
-                    String.format("Legal agreement not found, partyId='%s', shopId='%s', contractId='%s'",
-                            partyId, shopId, contract.getId()));
-        }
-
-        payoutToolData.setLegalAgreementId(contract.getLegalAgreement().getLegalAgreementId());
-        payoutToolData.setLegalAgreementSignedAt(
-                TypeUtil.stringToLocalDateTime(contract.getLegalAgreement().getSignedAt())
-        );
-        payoutToolData.setPurpose(
-                String.format(
-                        "Перевод согласно договора номер %s от %s.  Без НДС",
-                        payoutToolData.getLegalAgreementId(),
-                        payoutToolData.getLegalAgreementSignedAt().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
-                )
-        );
-
-        log.info("Payout tool data has been found, partyId='{}', shopId='{}', timestamp='{}', payoutToolData='{}'", partyId, shopId, timestamp, payoutToolData);
-        return payoutToolData;
     }
 
     @Override
     public CategoryType getCategoryType(String partyId, String shopId, long domainRevision, Instant timestamp) throws NotFoundException {
-        log.debug("Trying to get shop category type, partyId='{}', timestamp='{}'", partyId, timestamp);
+        log.info("Trying to get shop category type, partyId='{}', timestamp='{}'", partyId, timestamp);
         Shop shop = getShop(partyId, shopId, timestamp);
 
         CategoryType categoryType = dominantService.getCategoryType(shop.getCategory(), domainRevision);
