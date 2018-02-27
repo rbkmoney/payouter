@@ -25,7 +25,7 @@ import javax.annotation.Generated;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Report implements Serializable {
 
-    private static final long serialVersionUID = -1095891934;
+    private static final long serialVersionUID = 531648696;
 
     private Long          id;
     private LocalDateTime createdAt;
@@ -35,8 +35,8 @@ public class Report implements Serializable {
     private String        description;
     private ReportStatus  status;
     private LocalDateTime lastSendAt;
-    private String        encoding;
     private String        subject;
+    private String        encoding;
 
     public Report() {}
 
@@ -49,8 +49,8 @@ public class Report implements Serializable {
         this.description = value.description;
         this.status = value.status;
         this.lastSendAt = value.lastSendAt;
-        this.encoding = value.encoding;
         this.subject = value.subject;
+        this.encoding = value.encoding;
     }
 
     public Report(
@@ -62,8 +62,8 @@ public class Report implements Serializable {
         String        description,
         ReportStatus  status,
         LocalDateTime lastSendAt,
-        String        encoding,
-        String        subject
+        String        subject,
+        String        encoding
     ) {
         this.id = id;
         this.createdAt = createdAt;
@@ -73,8 +73,8 @@ public class Report implements Serializable {
         this.description = description;
         this.status = status;
         this.lastSendAt = lastSendAt;
-        this.encoding = encoding;
         this.subject = subject;
+        this.encoding = encoding;
     }
 
     public Long getId() {
@@ -141,20 +141,20 @@ public class Report implements Serializable {
         this.lastSendAt = lastSendAt;
     }
 
-    public String getEncoding() {
-        return this.encoding;
-    }
-
-    public void setEncoding(String encoding) {
-        this.encoding = encoding;
-    }
-
     public String getSubject() {
         return this.subject;
     }
 
     public void setSubject(String subject) {
         this.subject = subject;
+    }
+
+    public String getEncoding() {
+        return this.encoding;
+    }
+
+    public void setEncoding(String encoding) {
+        this.encoding = encoding;
     }
 
     @Override
@@ -214,17 +214,17 @@ public class Report implements Serializable {
         }
         else if (!lastSendAt.equals(other.lastSendAt))
             return false;
-        if (encoding == null) {
-            if (other.encoding != null)
-                return false;
-        }
-        else if (!encoding.equals(other.encoding))
-            return false;
         if (subject == null) {
             if (other.subject != null)
                 return false;
         }
         else if (!subject.equals(other.subject))
+            return false;
+        if (encoding == null) {
+            if (other.encoding != null)
+                return false;
+        }
+        else if (!encoding.equals(other.encoding))
             return false;
         return true;
     }
@@ -241,8 +241,8 @@ public class Report implements Serializable {
         result = prime * result + ((this.description == null) ? 0 : this.description.hashCode());
         result = prime * result + ((this.status == null) ? 0 : this.status.hashCode());
         result = prime * result + ((this.lastSendAt == null) ? 0 : this.lastSendAt.hashCode());
-        result = prime * result + ((this.encoding == null) ? 0 : this.encoding.hashCode());
         result = prime * result + ((this.subject == null) ? 0 : this.subject.hashCode());
+        result = prime * result + ((this.encoding == null) ? 0 : this.encoding.hashCode());
         return result;
     }
 
@@ -258,8 +258,8 @@ public class Report implements Serializable {
         sb.append(", ").append(description);
         sb.append(", ").append(status);
         sb.append(", ").append(lastSendAt);
-        sb.append(", ").append(encoding);
         sb.append(", ").append(subject);
+        sb.append(", ").append(encoding);
 
         sb.append(")");
         return sb.toString();

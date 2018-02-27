@@ -37,7 +37,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Report extends TableImpl<ReportRecord> {
 
-    private static final long serialVersionUID = -446817941;
+    private static final long serialVersionUID = -288825019;
 
     /**
      * The reference instance of <code>sht.report</code>
@@ -93,14 +93,14 @@ public class Report extends TableImpl<ReportRecord> {
     public final TableField<ReportRecord, LocalDateTime> LAST_SEND_AT = createField("last_send_at", org.jooq.impl.SQLDataType.LOCALDATETIME, this, "");
 
     /**
-     * The column <code>sht.report.encoding</code>.
-     */
-    public final TableField<ReportRecord, String> ENCODING = createField("encoding", org.jooq.impl.SQLDataType.VARCHAR.nullable(false), this, "");
-
-    /**
      * The column <code>sht.report.subject</code>.
      */
     public final TableField<ReportRecord, String> SUBJECT = createField("subject", org.jooq.impl.SQLDataType.VARCHAR.nullable(false), this, "");
+
+    /**
+     * The column <code>sht.report.encoding</code>.
+     */
+    public final TableField<ReportRecord, String> ENCODING = createField("encoding", org.jooq.impl.SQLDataType.VARCHAR.nullable(false), this, "");
 
     /**
      * Create a <code>sht.report</code> table reference

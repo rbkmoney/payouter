@@ -25,7 +25,7 @@ import javax.annotation.Generated;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Refund implements Serializable {
 
-    private static final long serialVersionUID = 1347940737;
+    private static final long serialVersionUID = 1534528379;
 
     private Long          id;
     private Long          eventId;
@@ -42,6 +42,7 @@ public class Refund implements Serializable {
     private Long          payoutId;
     private LocalDateTime succeededAt;
     private Long          domainRevision;
+    private String        currencyCode;
 
     public Refund() {}
 
@@ -61,6 +62,7 @@ public class Refund implements Serializable {
         this.payoutId = value.payoutId;
         this.succeededAt = value.succeededAt;
         this.domainRevision = value.domainRevision;
+        this.currencyCode = value.currencyCode;
     }
 
     public Refund(
@@ -78,7 +80,8 @@ public class Refund implements Serializable {
         Long          fee,
         Long          payoutId,
         LocalDateTime succeededAt,
-        Long          domainRevision
+        Long          domainRevision,
+        String        currencyCode
     ) {
         this.id = id;
         this.eventId = eventId;
@@ -95,6 +98,7 @@ public class Refund implements Serializable {
         this.payoutId = payoutId;
         this.succeededAt = succeededAt;
         this.domainRevision = domainRevision;
+        this.currencyCode = currencyCode;
     }
 
     public Long getId() {
@@ -217,6 +221,14 @@ public class Refund implements Serializable {
         this.domainRevision = domainRevision;
     }
 
+    public String getCurrencyCode() {
+        return this.currencyCode;
+    }
+
+    public void setCurrencyCode(String currencyCode) {
+        this.currencyCode = currencyCode;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj)
@@ -316,6 +328,12 @@ public class Refund implements Serializable {
         }
         else if (!domainRevision.equals(other.domainRevision))
             return false;
+        if (currencyCode == null) {
+            if (other.currencyCode != null)
+                return false;
+        }
+        else if (!currencyCode.equals(other.currencyCode))
+            return false;
         return true;
     }
 
@@ -338,6 +356,7 @@ public class Refund implements Serializable {
         result = prime * result + ((this.payoutId == null) ? 0 : this.payoutId.hashCode());
         result = prime * result + ((this.succeededAt == null) ? 0 : this.succeededAt.hashCode());
         result = prime * result + ((this.domainRevision == null) ? 0 : this.domainRevision.hashCode());
+        result = prime * result + ((this.currencyCode == null) ? 0 : this.currencyCode.hashCode());
         return result;
     }
 
@@ -360,6 +379,7 @@ public class Refund implements Serializable {
         sb.append(", ").append(payoutId);
         sb.append(", ").append(succeededAt);
         sb.append(", ").append(domainRevision);
+        sb.append(", ").append(currencyCode);
 
         sb.append(")");
         return sb.toString();
