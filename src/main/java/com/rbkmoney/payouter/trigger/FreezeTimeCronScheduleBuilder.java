@@ -41,7 +41,7 @@ public class FreezeTimeCronScheduleBuilder extends ScheduleBuilder<FreezeTimeCro
         freezeTimeCronTrigger.setMisfireInstruction(misfireInstruction);
         freezeTimeCronTrigger.withYears(years);
         freezeTimeCronTrigger.withMonths(months);
-        freezeTimeCronTrigger.withMonths(days);
+        freezeTimeCronTrigger.withDays(days);
         freezeTimeCronTrigger.withHours(hours);
         freezeTimeCronTrigger.withMinutes(minutes);
         freezeTimeCronTrigger.withSeconds(seconds);
