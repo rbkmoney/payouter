@@ -50,7 +50,7 @@ report:
         extension: .txt
       encoding: Windows-1251
     templateFileName: 1c_payout.ftl
-    cron: "0 0 9 * * *"
+    cron: "*/5 * * * * *"
     timezone: Europe/Moscow
 scheduler:
   user-id: test
