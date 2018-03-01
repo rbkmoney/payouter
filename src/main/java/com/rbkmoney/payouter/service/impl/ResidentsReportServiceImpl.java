@@ -99,7 +99,7 @@ public class ResidentsReportServiceImpl implements ReportService {
             payoutData.put("calc_account", payout.getBankAccount());
             payoutData.put("descr", payout.getDescription());
             payoutData.put("inn", payout.getInn());
-            payoutData.put("sum", BigDecimal.valueOf(payout.getAmount()).movePointLeft(2));
+            payoutData.put("sum", BigDecimal.valueOf(payout.getAmount()).movePointLeft(2).toString());
             payoutData.put("purpose", payout.getPurpose());
 
             reportDescription

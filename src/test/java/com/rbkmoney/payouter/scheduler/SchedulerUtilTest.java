@@ -53,7 +53,7 @@ public class SchedulerUtilTest {
                 LocalDate.of(2018, java.time.Month.APRIL, 23)
                         .atStartOfDay(ZoneId.of("Europe/Moscow"))
                         .toInstant(),
-                trigger.getCronTime().toInstant()
+                trigger.getNextCronTime().toInstant()
         );
 
         //continue from 25 April, 2018
@@ -68,7 +68,7 @@ public class SchedulerUtilTest {
                 LocalDate.of(2018, java.time.Month.APRIL, 30)
                         .atStartOfDay(ZoneId.of("Europe/Moscow"))
                         .toInstant(),
-                trigger.getCronTime().toInstant()
+                trigger.getNextCronTime().toInstant()
         );
 
         //continue from 7 May, 2018
@@ -84,7 +84,7 @@ public class SchedulerUtilTest {
                 LocalDate.of(2018, java.time.Month.MAY, 07)
                         .atStartOfDay(ZoneId.of("Europe/Moscow"))
                         .toInstant(),
-                trigger.getCronTime().toInstant()
+                trigger.getNextCronTime().toInstant()
         );
 
         //since December 29, 2017
@@ -107,7 +107,7 @@ public class SchedulerUtilTest {
                 LocalDate.of(2018, java.time.Month.JANUARY, 8)
                         .atStartOfDay(ZoneId.of("Europe/Moscow"))
                         .toInstant(),
-                trigger.getCronTime().toInstant()
+                trigger.getNextCronTime().toInstant()
         );
 
         //continue 11 january, 2018
@@ -122,7 +122,7 @@ public class SchedulerUtilTest {
                 LocalDate.of(2018, java.time.Month.JANUARY, 15)
                         .atStartOfDay(ZoneId.of("Europe/Moscow"))
                         .toInstant(),
-                trigger.getCronTime().toInstant()
+                trigger.getNextCronTime().toInstant()
         );
 
         trigger.updateWithNewCalendar(calendar, 1000L);
@@ -136,7 +136,7 @@ public class SchedulerUtilTest {
                 LocalDate.of(2018, java.time.Month.JANUARY, 22)
                         .atStartOfDay(ZoneId.of("Europe/Moscow"))
                         .toInstant(),
-                trigger.getCronTime().toInstant()
+                trigger.getNextCronTime().toInstant()
         );
     }
 
@@ -168,7 +168,7 @@ public class SchedulerUtilTest {
                 LocalDate.of(2018, java.time.Month.MAY, 01)
                         .atStartOfDay(ZoneId.of("Europe/Moscow"))
                         .toInstant(),
-                trigger.getCronTime().toInstant()
+                trigger.getNextCronTime().toInstant()
         );
 
         //continue from 7 May, 2018
@@ -183,7 +183,7 @@ public class SchedulerUtilTest {
                 LocalDate.of(2018, java.time.Month.JUNE, 01)
                         .atStartOfDay(ZoneId.of("Europe/Moscow"))
                         .toInstant(),
-                trigger.getCronTime().toInstant()
+                trigger.getNextCronTime().toInstant()
         );
 
         //since December 29, 2017
@@ -206,7 +206,7 @@ public class SchedulerUtilTest {
                 LocalDate.of(2018, java.time.Month.JANUARY, 01)
                         .atStartOfDay(ZoneId.of("Europe/Moscow"))
                         .toInstant(),
-                trigger.getCronTime().toInstant()
+                trigger.getNextCronTime().toInstant()
         );
 
         //continue 11 january, 2018
@@ -221,7 +221,7 @@ public class SchedulerUtilTest {
                 LocalDate.of(2018, java.time.Month.FEBRUARY, 1)
                         .atStartOfDay(ZoneId.of("Europe/Moscow"))
                         .toInstant(),
-                trigger.getCronTime().toInstant()
+                trigger.getNextCronTime().toInstant()
         );
 
         trigger.updateWithNewCalendar(calendar, 1000L);
@@ -235,7 +235,7 @@ public class SchedulerUtilTest {
                 LocalDate.of(2018, java.time.Month.MARCH, 1)
                         .atStartOfDay(ZoneId.of("Europe/Moscow"))
                         .toInstant(),
-                trigger.getCronTime().toInstant()
+                trigger.getNextCronTime().toInstant()
         );
     }
 
@@ -267,7 +267,7 @@ public class SchedulerUtilTest {
                 LocalDate.of(2017, java.time.Month.DECEMBER, 27)
                         .atStartOfDay(ZoneId.of("Europe/Moscow"))
                         .toInstant(),
-                trigger.getCronTime().toInstant()
+                trigger.getNextCronTime().toInstant()
         );
 
         trigger.triggered(calendar);
@@ -281,7 +281,7 @@ public class SchedulerUtilTest {
                 LocalDate.of(2017, java.time.Month.DECEMBER, 28)
                         .atStartOfDay(ZoneId.of("Europe/Moscow"))
                         .toInstant(),
-                trigger.getCronTime().toInstant()
+                trigger.getNextCronTime().toInstant()
         );
 
         trigger.triggered(calendar);
@@ -295,7 +295,7 @@ public class SchedulerUtilTest {
                 LocalDate.of(2017, java.time.Month.DECEMBER, 29)
                         .atStartOfDay(ZoneId.of("Europe/Moscow"))
                         .toInstant(),
-                trigger.getCronTime().toInstant()
+                trigger.getNextCronTime().toInstant()
         );
 
         trigger.triggered(calendar);
@@ -309,7 +309,7 @@ public class SchedulerUtilTest {
                 LocalDate.of(2018, java.time.Month.JANUARY, 9)
                         .atStartOfDay(ZoneId.of("Europe/Moscow"))
                         .toInstant(),
-                trigger.getCronTime().toInstant()
+                trigger.getNextCronTime().toInstant()
         );
 
         trigger.triggered(calendar);
@@ -323,7 +323,7 @@ public class SchedulerUtilTest {
                 LocalDate.of(2018, java.time.Month.JANUARY, 10)
                         .atStartOfDay(ZoneId.of("Europe/Moscow"))
                         .toInstant(),
-                trigger.getCronTime().toInstant()
+                trigger.getNextCronTime().toInstant()
         );
 
         //since March 6, 2018
@@ -346,7 +346,7 @@ public class SchedulerUtilTest {
                 LocalDate.of(2018, java.time.Month.MARCH, 2)
                         .atStartOfDay(ZoneId.of("Europe/Moscow"))
                         .toInstant(),
-                trigger.getCronTime().toInstant()
+                trigger.getNextCronTime().toInstant()
         );
 
         trigger.triggered(calendar);
@@ -360,7 +360,7 @@ public class SchedulerUtilTest {
                 LocalDate.of(2018, java.time.Month.MARCH, 5)
                         .atStartOfDay(ZoneId.of("Europe/Moscow"))
                         .toInstant(),
-                trigger.getCronTime().toInstant()
+                trigger.getNextCronTime().toInstant()
         );
 
         trigger.triggered(calendar);
@@ -374,7 +374,7 @@ public class SchedulerUtilTest {
                 LocalDate.of(2018, java.time.Month.MARCH, 6)
                         .atStartOfDay(ZoneId.of("Europe/Moscow"))
                         .toInstant(),
-                trigger.getCronTime().toInstant()
+                trigger.getNextCronTime().toInstant()
         );
 
         trigger.triggered(calendar);
@@ -388,7 +388,7 @@ public class SchedulerUtilTest {
                 LocalDate.of(2018, java.time.Month.MARCH, 7)
                         .atStartOfDay(ZoneId.of("Europe/Moscow"))
                         .toInstant(),
-                trigger.getCronTime().toInstant()
+                trigger.getNextCronTime().toInstant()
         );
 
         trigger.triggered(calendar);
@@ -402,7 +402,7 @@ public class SchedulerUtilTest {
                 LocalDate.of(2018, java.time.Month.MARCH, 12)
                         .atStartOfDay(ZoneId.of("Europe/Moscow"))
                         .toInstant(),
-                trigger.getCronTime().toInstant()
+                trigger.getNextCronTime().toInstant()
         );
 
         trigger.updateWithNewCalendar(calendar, 1000L);
@@ -416,7 +416,7 @@ public class SchedulerUtilTest {
                 LocalDate.of(2018, java.time.Month.MARCH, 12)
                         .atStartOfDay(ZoneId.of("Europe/Moscow"))
                         .toInstant(),
-                trigger.getCronTime().toInstant()
+                trigger.getNextCronTime().toInstant()
         );
     }
 

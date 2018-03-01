@@ -149,7 +149,7 @@ public class SchedulerServiceImpl implements SchedulerService {
                 triggers.add(trigger);
             }
             scheduler.scheduleJob(jobDetail, triggers, true);
-            log.info("Jobs have been successfully created or updated, partyId='{}', shopId='{}', calendarRef='{}', scheduleRef='{}', jobDetail='{}', triggers='{}'", calendarRef, scheduleRef, jobDetail, triggers);
+            log.info("Jobs have been successfully created or updated, partyId='{}', shopId='{}', calendarRef='{}', scheduleRef='{}', jobDetail='{}', triggers='{}'", partyId, shopId, calendarRef, scheduleRef, jobDetail, triggers);
         } catch (DaoException ex) {
             throw new StorageException(
                     String.format("failed to create job on storage, partyId='%s', shopId='%s', calendarRef='%s', scheduleRef='%s'",

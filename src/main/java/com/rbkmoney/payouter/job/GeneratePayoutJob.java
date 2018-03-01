@@ -53,7 +53,7 @@ public class GeneratePayoutJob implements Job {
                 partyId, shopId, trigger, jobExecutionContext);
         try {
             try {
-                LocalDateTime toTime = toLocalDateTime(trigger.getCronTime().toInstant());
+                LocalDateTime toTime = toLocalDateTime(trigger.getCurrentCronTime().toInstant());
                 long payoutId = wFlow.createServiceFork(
                         () -> {
                             WoodyUtils.setUserInfo(userId, UserType.internal_user(new InternalUser()));
