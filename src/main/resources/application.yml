@@ -49,7 +49,8 @@ report:
         prefix: test_1c
         extension: .txt
       encoding: Windows-1251
-    templateFileName: 1c_payout.ftl
+    reportTemplateFileName: 1c_payout.ftl
+    mailTemplateFileName: residents_mail_template.ftl
     cron: "*/5 * * * * *"
     timezone: Europe/Moscow
 scheduler:
