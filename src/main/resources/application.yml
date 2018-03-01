@@ -51,7 +51,7 @@ report:
       encoding: Windows-1251
     reportTemplateFileName: 1c_payout.ftl
     mailTemplateFileName: residents_mail_template.ftl
-    cron: "*/5 * * * * *"
+    cron: "0 0 9 * * *"
     timezone: Europe/Moscow
 scheduler:
   user-id: test

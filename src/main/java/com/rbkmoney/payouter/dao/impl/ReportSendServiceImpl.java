@@ -71,7 +71,7 @@ public class ReportSendServiceImpl implements ReportSendService {
         message.setMessageMail(messageMail);
 
         try {
-            reportDao.changeStatus(report.getId(), ReportStatus.READY, LocalDateTime.now(ZoneOffset.UTC));
+            reportDao.changeStatus(report.getId(), ReportStatus.SENT, LocalDateTime.now(ZoneOffset.UTC));
             dudoser.send(message);
             log.info("Report have been sent, reportId='{}', subject='{}', mailFrom='{}', mailTo='{}'", report.getId(), report.getSubject(), mailFrom, mailTo);
         } catch (DaoException ex) {

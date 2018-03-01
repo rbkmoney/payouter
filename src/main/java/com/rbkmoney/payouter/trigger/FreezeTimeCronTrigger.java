@@ -29,7 +29,9 @@ public class FreezeTimeCronTrigger extends CronTriggerImpl {
 
     private long seconds;
 
-    private Date cronTime;
+    private Date currentCronTime;
+
+    private Date nextCronTime;
 
     public FreezeTimeCronTrigger() {
         super();
@@ -83,8 +85,12 @@ public class FreezeTimeCronTrigger extends CronTriggerImpl {
         return seconds;
     }
 
-    public Date getCronTime() {
-        return cronTime;
+    public Date getCurrentCronTime() {
+        return currentCronTime;
+    }
+
+    public Date getNextCronTime() {
+        return nextCronTime;
     }
 
     @Override
@@ -99,8 +105,8 @@ public class FreezeTimeCronTrigger extends CronTriggerImpl {
         }
 
         if (instr == MISFIRE_INSTRUCTION_DO_NOTHING) {
-            cronTime = getFireTimeAfter(new Date());
-            setNextFireTime(computeNextFireTime(cronTime, calendar));
+            nextCronTime = getFireTimeAfter(new Date());
+            setNextFireTime(computeNextFireTime(nextCronTime, calendar));
         } else if (instr == MISFIRE_INSTRUCTION_FIRE_ONCE_NOW) {
             setNextFireTime(new Date());
         }
@@ -109,7 +115,8 @@ public class FreezeTimeCronTrigger extends CronTriggerImpl {
     @Override
     public void triggered(Calendar calendar) {
         setPreviousFireTime(getNextFireTime());
-        nextFireTime(cronTime, calendar);
+        currentCronTime = nextCronTime;
+        nextFireTime(nextCronTime, calendar);
     }
 
     @Override
@@ -120,19 +127,19 @@ public class FreezeTimeCronTrigger extends CronTriggerImpl {
         if (getNextFireTime() != null && getNextFireTime().toInstant().isBefore(now)) {
             long diff = Duration.between(getNextFireTime().toInstant(), now).toMillis();
             if (diff >= misfireThreshold) {
-                cronTime = getFireTimeAfter(cronTime);
-                setNextFireTime(computeNextFireTime(cronTime, calendar));
+                nextCronTime = getFireTimeAfter(nextCronTime);
+                setNextFireTime(computeNextFireTime(nextCronTime, calendar));
             }
         }
     }
 
     private void nextFireTime(Date currentTime, Calendar calendar) {
-        cronTime = currentTime;
+        nextCronTime = currentTime;
         Date fireTime;
         do {
-            cronTime = getFireTimeAfter(cronTime);
-            fireTime = computeNextFireTime(cronTime, calendar);
-        } while (fireTime.equals(computeNextFireTime(getFireTimeAfter(cronTime), calendar)));
+            nextCronTime = getFireTimeAfter(nextCronTime);
+            fireTime = computeNextFireTime(nextCronTime, calendar);
+        } while (fireTime.equals(computeNextFireTime(getFireTimeAfter(nextCronTime), calendar)));
         setNextFireTime(fireTime);
     }
 
@@ -226,7 +233,8 @@ public class FreezeTimeCronTrigger extends CronTriggerImpl {
                 ", nextFireTime=" + getNextFireTime() +
                 ", misfireInstruction=" + getMisfireInstruction() +
                 ", cronExpression='" + getCronExpression() + "'" +
-                ", cronTime=" + cronTime +
+                ", currentCronTime=" + currentCronTime +
+                ", nextCronTime=" + nextCronTime +
                 ", years=" + years +
                 ", months=" + months +
                 ", days=" + days +
