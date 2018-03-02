@@ -90,7 +90,14 @@ public class ReportServiceTest extends AbstractIntegrationTest {
                     payout.setStatus(PayoutStatus.UNPAID);
                     return payout;
                 }).collect(Collectors.toList());
-        payouts.forEach(payout -> payoutDao.save(payout));
+        payouts.forEach(payout -> {
+            long payoutId = payoutDao.save(payout);
+            List<CashFlowDescription> cfds = randomListOf(2, CashFlowDescription.class);
+            cfds.forEach(cfd -> cfd.setPayoutId(String.valueOf(payoutId)));
+            cfds.get(0).setCashFlowType(CashFlowType.payment);
+            cfds.get(1).setCashFlowType(CashFlowType.refund);
+            cashFlowDescriptionDao.save(cfds);
+        });
 
         nonresidentsReportService.createNewReportsJob();
         assertTrue(payoutDao.getUnpaidPayoutsByAccountType(PayoutAccountType.international_payout_account).isEmpty());
