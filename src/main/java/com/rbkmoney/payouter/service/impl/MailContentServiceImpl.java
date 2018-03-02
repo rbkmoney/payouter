@@ -1,8 +1,6 @@
 package com.rbkmoney.payouter.service.impl;
 
 import com.rbkmoney.payouter.dao.CashFlowDescriptionDao;
-import com.rbkmoney.payouter.domain.enums.CashFlowType;
-import com.rbkmoney.payouter.domain.tables.pojos.CashFlowDescription;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.service.MailContentService;
 import freemarker.template.Configuration;
@@ -26,7 +24,7 @@ public abstract class MailContentServiceImpl implements MailContentService {
 
     private final FreeMarkerConfigurer freeMarkerConfigurer;
 
-    private final CashFlowDescriptionDao cashFlowDescriptionDao;
+    protected final CashFlowDescriptionDao cashFlowDescriptionDao;
 
     private Map<String, Object> data;
 
@@ -47,22 +45,9 @@ public abstract class MailContentServiceImpl implements MailContentService {
         return reportMailContent;
     }
 
-    protected Map<String, Object> buildPayoutRecordDescription(Payout payout) {
-        Map<String, Object> reportDescription = new HashMap<>();
-        reportDescription.put("name", payout.getDescription());
-        reportDescription.put("sum", getFormattedAmount(payout.getAmount()));
-        reportDescription.put("inn", payout.getInn());
-        reportDescription.put("from_date", payout.getFromTime().format(dateTimeFormatter));
-        reportDescription.put("to_date", payout.getToTime().format(dateTimeFormatter));
-        List<CashFlowDescription> cashFlowDescriptions = cashFlowDescriptionDao.get(String.valueOf(payout.getId()));
-        reportDescription.put("payment_sum", getFormattedAmount(cashFlowDescriptions.stream().filter(cfd -> cfd.getCashFlowType() == CashFlowType.payment).findFirst().get().getAmount()));
-        reportDescription.put("rbk_fee_sum", getFormattedAmount(cashFlowDescriptions.stream().filter(cfd -> cfd.getCashFlowType() == CashFlowType.payment).findFirst().get().getFee()));
-        cashFlowDescriptions.stream().filter(cfd -> cfd.getCashFlowType() == CashFlowType.refund).findFirst().ifPresent(x -> reportDescription.put("refund_sum", getFormattedAmount(x.getAmount())));
-        reportDescription.put("fee_sum", getFormattedAmount(payout.getFee()));
-        return reportDescription;
-    }
+    abstract protected Map<String, Object> buildPayoutRecordDescription(Payout payout);
 
-    private String getFormattedAmount(Long amount) {
+    protected String getFormattedAmount(Long amount) {
         return BigDecimal.valueOf(amount).movePointLeft(2).toString();
     }
 
