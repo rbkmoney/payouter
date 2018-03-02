@@ -47,7 +47,7 @@ public class ResidentsReportServiceImpl implements ReportService {
 
     private final ReportDao reportDao;
 
-    private final CashFlowDescriptionDao cashFlowDescriptionDao;
+    private final ResidentsMailContentServiceImpl residentsMailContentService;
 
     private final PayoutService payoutService;
 
@@ -72,9 +72,9 @@ public class ResidentsReportServiceImpl implements ReportService {
     private ZoneId zoneId;
 
     @Autowired
-    public ResidentsReportServiceImpl(ReportDao reportDao, CashFlowDescriptionDao cashFlowDescriptionDao, PayoutService payoutService, FreeMarkerConfigurer freeMarkerConfigurer) {
+    public ResidentsReportServiceImpl(ReportDao reportDao, ResidentsMailContentServiceImpl residentsMailContentService, PayoutService payoutService, FreeMarkerConfigurer freeMarkerConfigurer) {
         this.reportDao = reportDao;
-        this.cashFlowDescriptionDao = cashFlowDescriptionDao;
+        this.residentsMailContentService = residentsMailContentService;
         this.payoutService = payoutService;
         this.freeMarkerConfigurer = freeMarkerConfigurer;
     }
@@ -99,10 +99,8 @@ public class ResidentsReportServiceImpl implements ReportService {
     public long generateAndSave(List<Payout> payouts) throws StorageException {
         log.info("Trying to generate and save report for residents, payouts='{}'", payouts);
         final List<Map<String, Object>> payoutsAttributes = new ArrayList<>();
-        final List<Map<String, Object>> reportDescriptionAttributes = new ArrayList<>();
         for (Payout payout : payouts) {
             Map<String, Object> payoutData = new HashMap<>();
-            Map<String, Object> reportDescription = new HashMap<>();
 
             payoutData.put("corr_account", payout.getBankPostAccount());
             payoutData.put("bik", payout.getBankLocalCode());
@@ -111,24 +109,7 @@ public class ResidentsReportServiceImpl implements ReportService {
             payoutData.put("inn", payout.getInn());
             payoutData.put("sum", getFormattedAmount(payout.getAmount()));
             payoutData.put("purpose", payout.getPurpose());
-
-            reportDescription.put("name", payoutData.get("descr"));
-            reportDescription.put("sum", payoutData.get("sum"));
-            reportDescription.put("inn", payoutData.get("inn"));
-            String fromDate = payout.getFromTime().format(dateTimeFormatter);
-            reportDescription.put("from_date", fromDate);
-            String toDate = payout.getToTime().format(dateTimeFormatter);
-            if (!toDate.equals(fromDate)) {
-                reportDescription.put("to_date", toDate);
-            }
-            List<CashFlowDescription> cashFlowDescriptions = cashFlowDescriptionDao.get(String.valueOf(payout.getId()));
-            reportDescription.put("payment_sum", getFormattedAmount(cashFlowDescriptions.stream().filter(cfd -> cfd.getCashFlowType() == CashFlowType.payment).findFirst().get().getAmount()));
-            reportDescription.put("rbk_fee_sum", getFormattedAmount(cashFlowDescriptions.stream().filter(cfd -> cfd.getCashFlowType() == CashFlowType.payment).findFirst().get().getFee()));
-            cashFlowDescriptions.stream().filter(cfd -> cfd.getCashFlowType() == CashFlowType.refund).findFirst().ifPresent(x -> reportDescription.put("refund_sum", getFormattedAmount(x.getAmount())));
-            reportDescription.put("fee_sum", getFormattedAmount(payout.getFee()));
-
             payoutsAttributes.add(payoutData);
-            reportDescriptionAttributes.add(reportDescription);
         }
 
         LocalDateTime createdAt = LocalDateTime.now(ZoneOffset.UTC);
@@ -136,11 +117,10 @@ public class ResidentsReportServiceImpl implements ReportService {
 
         final Map<String, Object> dataModel = new HashMap<>();
         dataModel.put("payouts", payoutsAttributes);
-        dataModel.put("reportDescriptions", reportDescriptionAttributes);
         dataModel.put("date", createdAtFormatted);
 
         final String reportContent = processTemplate(dataModel, reportTemplateFileName);
-        final String reportMailContent = processTemplate(dataModel, mailTemplateFileName);
+        final String reportMailContent = residentsMailContentService.generateContent(payouts);
 
         List<String> payoutIds = payouts.stream().map(p -> p.getId().toString()).collect(Collectors.toList());
         Report report = new Report();

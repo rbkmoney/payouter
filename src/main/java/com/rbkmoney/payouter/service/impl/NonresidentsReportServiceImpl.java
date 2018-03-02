@@ -64,6 +64,8 @@ public class NonresidentsReportServiceImpl implements ReportService {
 
     private final ReportDao reportDao;
 
+    private final NonResidentsMailContentServiceImpl nonResidentsMailContentService;
+
     private final PayoutService payoutService;
 
     @Value("${report.nonresidents.file.name.prefix}")
@@ -82,8 +84,9 @@ public class NonresidentsReportServiceImpl implements ReportService {
     private ZoneId zoneId;
 
     @Autowired
-    public NonresidentsReportServiceImpl(ReportDao reportDao, PayoutService payoutService) {
+    public NonresidentsReportServiceImpl(ReportDao reportDao, NonResidentsMailContentServiceImpl nonResidentsMailContentService, PayoutService payoutService) {
         this.reportDao = reportDao;
+        this.nonResidentsMailContentService = nonResidentsMailContentService;
         this.payoutService = payoutService;
     }
 
@@ -131,7 +134,7 @@ public class NonresidentsReportServiceImpl implements ReportService {
         Report report = new Report();
         report.setName(prefix + "_" + createdAtFormatted + extension);
         report.setSubject("Выплаты для нерезидентов, сгенерированные " + createdAtFormatted);
-        report.setDescription(buildDescription(payouts));
+        report.setDescription(nonResidentsMailContentService.generateContent(payouts));
         report.setPayoutIds(String.join(",", payoutIds));
         report.setStatus(ReportStatus.READY);
         report.setContent(reportContent);
@@ -140,20 +143,6 @@ public class NonresidentsReportServiceImpl implements ReportService {
         log.info("Report for nonresidents have been successfully generated, report='{}', payouts='{}'", report, payouts);
 
         return save(report);
-    }
-
-    private String buildDescription(List<Payout> payouts) {
-        StringBuilder stringBuilder = new StringBuilder("Выплаты для нерезидентов: <br>");
-        payouts.forEach(payout ->
-                stringBuilder
-                        .append(payout.getAccountLegalName())
-                        .append(": ")
-                        .append(BigDecimal.valueOf(payout.getAmount()).movePointLeft(2))
-                        .append(", комиссия ")
-                        .append(BigDecimal.valueOf(payout.getFee()).movePointLeft(2))
-                        .append(" <br> ")
-        );
-        return stringBuilder.toString();
     }
 
     private List<String[]> buildRows(List<Payout> payouts) {

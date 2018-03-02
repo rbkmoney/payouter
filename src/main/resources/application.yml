@@ -43,6 +43,7 @@ report:
       encoding: UTF-8
     cron: "0 0 9 * * *"
     timezone: Europe/Moscow
+    mailTemplateFileName: nonresidents_mail_template.ftl
   residents:
     file:
       name:
