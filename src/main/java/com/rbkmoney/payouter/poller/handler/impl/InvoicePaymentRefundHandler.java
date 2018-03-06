@@ -1,5 +1,6 @@
 package com.rbkmoney.payouter.poller.handler.impl;
 
+import com.rbkmoney.damsel.domain.Cash;
 import com.rbkmoney.damsel.domain.InvoicePaymentRefund;
 import com.rbkmoney.damsel.payment_processing.*;
 import com.rbkmoney.geck.common.util.TypeUtil;
@@ -83,8 +84,16 @@ public class InvoicePaymentRefundHandler implements Handler<InvoiceChange, Event
         refund.setReason(invoicePaymentRefund.getReason());
         refund.setDomainRevision(invoicePaymentRefund.getDomainRevision());
 
+        if (invoicePaymentRefund.isSetCash()) {
+            Cash refundCash = invoicePaymentRefund.getCash();
+            refund.setAmount(refundCash.getAmount());
+            refund.setCurrencyCode(refundCash.getCurrency().getSymbolicCode());
+        } else {
+            refund.setAmount(payment.getAmount());
+            refund.setCurrencyCode(payment.getCurrencyCode());
+        }
+
         Map<CashFlowType, Long> cashFlow = DamselUtil.parseCashFlow(invoicePaymentRefundCreated.getCashFlow());
-        refund.setAmount(cashFlow.getOrDefault(REFUND_AMOUNT, 0L));
         refund.setFee(cashFlow.getOrDefault(FEE, 0L));
 
         refundDao.save(refund);
