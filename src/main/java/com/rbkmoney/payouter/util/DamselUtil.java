@@ -13,10 +13,7 @@ import com.rbkmoney.payouter.exception.NotFoundException;
 import org.apache.thrift.TBase;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.rbkmoney.payouter.util.CashFlowType.*;
@@ -334,11 +331,13 @@ public class DamselUtil {
     public static List<CashFlowDescription> toDamselCashFlowDescription(List<com.rbkmoney.payouter.domain.tables.pojos.CashFlowDescription> cashFlowDescriptions) {
         return cashFlowDescriptions.stream().map(cfd -> {
             CashFlowDescription cashFlowDescription = new CashFlowDescription();
-            cashFlowDescription.setCash(new Cash(cfd.getAmount(), new CurrencyRef(cfd.getCurrencyCode())));
-            cashFlowDescription.setFee(new Cash(cfd.getFee(), new CurrencyRef(cfd.getCurrencyCode())));
+            cashFlowDescription.setAmount(cfd.getAmount());
+            cashFlowDescription.setFee(Optional.ofNullable(cfd.getFee()).orElse(0L));
+            cashFlowDescription.setCurrencySymbolicCode(cfd.getCurrencyCode());
             cashFlowDescription.setCount(cfd.getCount());
             cashFlowDescription.setCashFlowType(com.rbkmoney.damsel.payout_processing.CashFlowType.valueOf(cfd.getCashFlowType().getLiteral()));
-            cashFlowDescription.setTimeRange(new TimeRange(TypeUtil.temporalToString(cfd.getFromTime()), TypeUtil.temporalToString(cfd.getToTime())));
+            cashFlowDescription.setFromTime(TypeUtil.temporalToString(cfd.getFromTime()));
+            cashFlowDescription.setToTime(TypeUtil.temporalToString(cfd.getToTime()));
             return cashFlowDescription;
         }).collect(Collectors.toList());
     }
