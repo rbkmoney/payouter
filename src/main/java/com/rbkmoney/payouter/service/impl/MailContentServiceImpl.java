@@ -59,7 +59,7 @@ public abstract class MailContentServiceImpl implements MailContentService {
     protected String getFormattedDateDescription(LocalDateTime dateTime, ZoneId zoneId) {
         LocalDateTime localizedDate = dateTime.atZone(ZoneOffset.UTC).withZoneSameInstant(zoneId).toLocalDateTime();
         if (localizedDate.truncatedTo(ChronoUnit.DAYS).isEqual(localizedDate)) {
-            return localizedDate.format(dateFormatter) + " включительно";
+            return localizedDate.minusDays(1).format(dateFormatter) + " включительно";
         }
         return localizedDate.format(dateTimeFormatter);
     }
