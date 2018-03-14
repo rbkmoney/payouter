@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +18,9 @@ public class NonResidentsMailContentServiceImpl extends MailContentServiceImpl{
 
     @Value("${report.nonresidents.mailTemplateFileName}")
     private String mailTemplateFileName;
+
+    @Value("${report.nonresidents.timezone}")
+    private ZoneId zoneId;
 
     public NonResidentsMailContentServiceImpl(FreeMarkerConfigurer freeMarkerConfigurer, CashFlowDescriptionDao cashFlowDescriptionDao) {
         super(freeMarkerConfigurer, cashFlowDescriptionDao);
@@ -28,13 +32,16 @@ public class NonResidentsMailContentServiceImpl extends MailContentServiceImpl{
         reportDescription.put("name", payout.getAccountLegalName());
         reportDescription.put("sum", getFormattedAmount(payout.getAmount()));
         reportDescription.put("curr", payout.getCurrencyCode());
-        reportDescription.put("from_date", payout.getFromTime().format(dateTimeFormatter));
-        reportDescription.put("to_date", payout.getToTime().format(dateTimeFormatter));
+        reportDescription.put("to_date_description", getFormattedDateDescription(payout.getToTime(), zoneId));
         List<CashFlowDescription> cashFlowDescriptions = cashFlowDescriptionDao.get(String.valueOf(payout.getId()));
         CashFlowDescription paymentCashFlowDescription = cashFlowDescriptions.stream().filter(cfd -> cfd.getCashFlowType() == CashFlowType.payment).findFirst().get();
         reportDescription.put("payment_sum", getFormattedAmount(paymentCashFlowDescription.getAmount()));
         reportDescription.put("rbk_fee_sum", getFormattedAmount(paymentCashFlowDescription.getFee()));
-        cashFlowDescriptions.stream().filter(cfd -> cfd.getCashFlowType() == CashFlowType.refund).findFirst().ifPresent(x -> reportDescription.put("refund_sum", getFormattedAmount(x.getAmount())));
+        reportDescription.put("payment_count", paymentCashFlowDescription.getCount());
+        cashFlowDescriptions.stream().filter(cfd -> cfd.getCashFlowType() == CashFlowType.refund).findFirst().ifPresent(x -> {
+            reportDescription.put("refund_sum", getFormattedAmount(x.getAmount()));
+            reportDescription.put("refund_count", x.getCount());
+        });
         reportDescription.put("fee_sum", getFormattedAmount(payout.getFee()));
         return reportDescription;
     }

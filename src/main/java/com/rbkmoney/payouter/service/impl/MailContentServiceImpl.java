@@ -12,7 +12,11 @@ import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,7 +24,8 @@ import java.util.Map;
 
 public abstract class MailContentServiceImpl implements MailContentService {
 
-    public static DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    public static DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    public static DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy hh:mm");
 
     private final FreeMarkerConfigurer freeMarkerConfigurer;
 
@@ -49,6 +54,14 @@ public abstract class MailContentServiceImpl implements MailContentService {
 
     protected String getFormattedAmount(Long amount) {
         return BigDecimal.valueOf(amount).movePointLeft(2).toString();
+    }
+
+    protected String getFormattedDateDescription(LocalDateTime dateTime, ZoneId zoneId) {
+        LocalDateTime localizedDate = dateTime.atZone(ZoneOffset.UTC).withZoneSameInstant(zoneId).toLocalDateTime();
+        if (localizedDate.truncatedTo(ChronoUnit.DAYS).isEqual(localizedDate)) {
+            return localizedDate.format(dateFormatter) + " включительно";
+        }
+        return localizedDate.format(dateTimeFormatter);
     }
 
     private String processTemplate(Map<String, Object> data, String templateName) {
