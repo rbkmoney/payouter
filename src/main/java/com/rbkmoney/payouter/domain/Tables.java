@@ -5,13 +5,13 @@ package com.rbkmoney.payouter.domain;
 
 
 import com.rbkmoney.payouter.domain.tables.Adjustment;
-import com.rbkmoney.payouter.domain.tables.CashFlowDescription;
 import com.rbkmoney.payouter.domain.tables.CashFlowPosting;
 import com.rbkmoney.payouter.domain.tables.EventStockMeta;
 import com.rbkmoney.payouter.domain.tables.Invoice;
 import com.rbkmoney.payouter.domain.tables.Payment;
 import com.rbkmoney.payouter.domain.tables.Payout;
 import com.rbkmoney.payouter.domain.tables.PayoutEvent;
+import com.rbkmoney.payouter.domain.tables.PayoutSummary;
 import com.rbkmoney.payouter.domain.tables.Refund;
 import com.rbkmoney.payouter.domain.tables.Report;
 import com.rbkmoney.payouter.domain.tables.ShopMeta;
@@ -36,11 +36,6 @@ public class Tables {
      * The table <code>sht.adjustment</code>.
      */
     public static final Adjustment ADJUSTMENT = com.rbkmoney.payouter.domain.tables.Adjustment.ADJUSTMENT;
-
-    /**
-     * The table <code>sht.cash_flow_description</code>.
-     */
-    public static final CashFlowDescription CASH_FLOW_DESCRIPTION = com.rbkmoney.payouter.domain.tables.CashFlowDescription.CASH_FLOW_DESCRIPTION;
 
     /**
      * The table <code>sht.cash_flow_posting</code>.
@@ -71,6 +66,11 @@ public class Tables {
      * The table <code>sht.payout_event</code>.
      */
     public static final PayoutEvent PAYOUT_EVENT = com.rbkmoney.payouter.domain.tables.PayoutEvent.PAYOUT_EVENT;
+
+    /**
+     * The table <code>sht.payout_summary</code>.
+     */
+    public static final PayoutSummary PAYOUT_SUMMARY = com.rbkmoney.payouter.domain.tables.PayoutSummary.PAYOUT_SUMMARY;
 
     /**
      * The table <code>sht.refund</code>.

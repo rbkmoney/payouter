@@ -2,8 +2,9 @@ package com.rbkmoney.payouter.handler;
 
 import com.rbkmoney.damsel.base.InvalidRequest;
 import com.rbkmoney.damsel.payout_processing.*;
+import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
 import com.rbkmoney.payouter.domain.tables.pojos.PayoutEvent;
-import com.rbkmoney.payouter.service.CashFlowDescriptionService;
+import com.rbkmoney.payouter.service.PayoutSummaryService;
 import com.rbkmoney.payouter.service.EventSinkService;
 import com.rbkmoney.payouter.util.DamselUtil;
 import org.apache.thrift.TException;
@@ -19,12 +20,12 @@ import java.util.stream.Collectors;
 public class EventSinkHandler implements EventSinkSrv.Iface {
 
     private final EventSinkService eventSinkService;
-    private final CashFlowDescriptionService cashFlowDescriptionService;
+    private final PayoutSummaryService payoutSummaryService;
 
     @Autowired
-    public EventSinkHandler(EventSinkService eventSinkService, CashFlowDescriptionService cashFlowDescriptionService) {
+    public EventSinkHandler(EventSinkService eventSinkService, PayoutSummaryService payoutSummaryService) {
         this.eventSinkService = eventSinkService;
-        this.cashFlowDescriptionService = cashFlowDescriptionService;
+        this.payoutSummaryService = payoutSummaryService;
     }
 
     @Override
@@ -50,8 +51,8 @@ public class EventSinkHandler implements EventSinkSrv.Iface {
             for (PayoutChange pc : event.getPayload().getPayoutChanges()) {
                 if (pc.isSetPayoutCreated()) {
                     Payout payout = pc.getPayoutCreated().getPayout();
-                    List<com.rbkmoney.payouter.domain.tables.pojos.CashFlowDescription> cashFlowDescriptions = cashFlowDescriptionService.get(payout.getId());
-                    payout.setCashFlowDescriptions(DamselUtil.toDamselCashFlowDescription(cashFlowDescriptions));
+                    List<PayoutSummary> cashFlowDescriptions = payoutSummaryService.get(payout.getId());
+                    payout.setSummary(DamselUtil.toDamselPayoutSummary(cashFlowDescriptions));
                 }
             }
         }

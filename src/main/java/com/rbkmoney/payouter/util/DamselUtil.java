@@ -8,6 +8,7 @@ import com.rbkmoney.damsel.payout_processing.*;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.geck.serializer.kit.json.JsonProcessor;
 import com.rbkmoney.geck.serializer.kit.tbase.TBaseHandler;
+import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
 import com.rbkmoney.payouter.domain.tables.pojos.PayoutEvent;
 import com.rbkmoney.payouter.exception.NotFoundException;
 import org.apache.thrift.TBase;
@@ -328,17 +329,17 @@ public class DamselUtil {
         return event;
     }
 
-    public static List<CashFlowDescription> toDamselCashFlowDescription(List<com.rbkmoney.payouter.domain.tables.pojos.CashFlowDescription> cashFlowDescriptions) {
-        return cashFlowDescriptions.stream().map(cfd -> {
-            CashFlowDescription cashFlowDescription = new CashFlowDescription();
-            cashFlowDescription.setAmount(cfd.getAmount());
-            cashFlowDescription.setFee(Optional.ofNullable(cfd.getFee()).orElse(0L));
-            cashFlowDescription.setCurrencySymbolicCode(cfd.getCurrencyCode());
-            cashFlowDescription.setCount(cfd.getCount());
-            cashFlowDescription.setCashFlowType(com.rbkmoney.damsel.payout_processing.CashFlowType.valueOf(cfd.getCashFlowType().getLiteral()));
-            cashFlowDescription.setFromTime(TypeUtil.temporalToString(cfd.getFromTime()));
-            cashFlowDescription.setToTime(TypeUtil.temporalToString(cfd.getToTime()));
-            return cashFlowDescription;
+    public static List<PayoutSummaryItem> toDamselPayoutSummary(List<PayoutSummary> payoutSummaries) {
+        return payoutSummaries.stream().map(cfd -> {
+            PayoutSummaryItem payoutSummaryItem = new PayoutSummaryItem();
+            payoutSummaryItem.setAmount(cfd.getAmount());
+            payoutSummaryItem.setFee(Optional.ofNullable(cfd.getFee()).orElse(0L));
+            payoutSummaryItem.setCurrencySymbolicCode(cfd.getCurrencyCode());
+            payoutSummaryItem.setCount(cfd.getCount());
+            payoutSummaryItem.setOperationType(OperationType.valueOf(cfd.getCashFlowType().getLiteral()));
+            payoutSummaryItem.setFromTime(TypeUtil.temporalToString(cfd.getFromTime()));
+            payoutSummaryItem.setToTime(TypeUtil.temporalToString(cfd.getToTime()));
+            return payoutSummaryItem;
         }).collect(Collectors.toList());
     }
 }

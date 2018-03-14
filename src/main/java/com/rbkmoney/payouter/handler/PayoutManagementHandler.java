@@ -8,12 +8,12 @@ import com.rbkmoney.damsel.domain.RussianBankAccount;
 import com.rbkmoney.damsel.payout_processing.*;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.payouter.domain.enums.PayoutType;
-import com.rbkmoney.payouter.domain.tables.pojos.CashFlowDescription;
+import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.exception.InvalidStateException;
 import com.rbkmoney.payouter.exception.NotFoundException;
-import com.rbkmoney.payouter.service.CashFlowDescriptionService;
 import com.rbkmoney.payouter.service.PayoutService;
+import com.rbkmoney.payouter.service.PayoutSummaryService;
 import com.rbkmoney.payouter.util.DamselUtil;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
@@ -32,12 +32,12 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
 
     private final PayoutService payoutService;
 
-    private final CashFlowDescriptionService cashFlowDescriptionService;
+    private final PayoutSummaryService payoutSummaryService;
 
     @Autowired
-    public PayoutManagementHandler(PayoutService payoutService, CashFlowDescriptionService cashFlowDescriptionService) {
+    public PayoutManagementHandler(PayoutService payoutService, PayoutSummaryService payoutSummaryService) {
         this.payoutService = payoutService;
-        this.cashFlowDescriptionService = cashFlowDescriptionService;
+        this.payoutSummaryService = payoutSummaryService;
     }
 
     @Override
@@ -124,7 +124,7 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
 
         List<Payout> payoutList = payoutService.search(payoutStatus, fromTime, toTime, payoutIds, fromId, size);
         List<PayoutInfo> payoutInfoList = payoutList.stream()
-                .map(payout -> buildPayoutInfo(payout, cashFlowDescriptionService.get(String.valueOf(payout.getId()))))
+                .map(payout -> buildPayoutInfo(payout, payoutSummaryService.get(String.valueOf(payout.getId()))))
                 .collect(Collectors.toList());
         long lastId = payoutInfoList.isEmpty() ? 0 : Long.parseLong(payoutInfoList.get(payoutInfoList.size() - 1).getId());
         PayoutSearchResponse payoutSearchResponse = new PayoutSearchResponse(payoutInfoList, lastId);
@@ -147,7 +147,7 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
         }
     }
 
-    private PayoutInfo buildPayoutInfo(Payout record, List<CashFlowDescription> cashFlowDescriptions) {
+    private PayoutInfo buildPayoutInfo(Payout record, List<PayoutSummary> payoutSummaries) {
         PayoutInfo payoutInfo = new PayoutInfo();
         payoutInfo.setId(String.valueOf(record.getId()));
         payoutInfo.setPartyId(record.getPartyId());
@@ -160,7 +160,7 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
         payoutInfo.setFromTime(TypeUtil.temporalToString(record.getFromTime()));
         payoutInfo.setToTime(TypeUtil.temporalToString(record.getToTime()));
         payoutInfo.setCreatedAt(TypeUtil.temporalToString(record.getCreatedAt()));
-        payoutInfo.setCashFlowDescriptions(DamselUtil.toDamselCashFlowDescription(cashFlowDescriptions));
+        payoutInfo.setSummary(DamselUtil.toDamselPayoutSummary(payoutSummaries));
         return payoutInfo;
     }
 

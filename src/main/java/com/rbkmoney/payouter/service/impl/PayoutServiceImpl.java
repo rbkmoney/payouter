@@ -46,7 +46,7 @@ public class PayoutServiceImpl implements PayoutService {
 
     private final PayoutDao payoutDao;
 
-    private final CashFlowDescriptionService cashFlowDescriptionService;
+    private final PayoutSummaryService cashFlowDescriptionService;
 
     private final ShumwayService shumwayService;
 
@@ -60,7 +60,7 @@ public class PayoutServiceImpl implements PayoutService {
                              RefundDao refundDao,
                              AdjustmentDao adjustmentDao,
                              PayoutDao payoutDao,
-                             CashFlowDescriptionService cashFlowDescriptionService,
+                             PayoutSummaryService cashFlowDescriptionService,
                              ShumwayService shumwayService,
                              PartyManagementService partyManagementService,
                              EventSinkService eventSinkService) {

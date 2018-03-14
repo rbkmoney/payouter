@@ -1,13 +1,14 @@
 package com.rbkmoney.payouter.service.impl;
 
-import com.rbkmoney.payouter.dao.CashFlowDescriptionDao;
+import com.rbkmoney.payouter.dao.PayoutSummaryDao;
+import com.rbkmoney.payouter.domain.enums.PayoutSummaryOperationType;
 import com.rbkmoney.payouter.domain.tables.pojos.Adjustment;
-import com.rbkmoney.payouter.domain.tables.pojos.CashFlowDescription;
 import com.rbkmoney.payouter.domain.tables.pojos.Payment;
+import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
 import com.rbkmoney.payouter.domain.tables.pojos.Refund;
 import com.rbkmoney.payouter.exception.DaoException;
 import com.rbkmoney.payouter.exception.StorageException;
-import com.rbkmoney.payouter.service.CashFlowDescriptionService;
+import com.rbkmoney.payouter.service.PayoutSummaryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,21 +21,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class CashFlowDescriptionServiceImpl implements CashFlowDescriptionService {
+public class CashFlowDescriptionServiceImpl implements PayoutSummaryService {
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    private final CashFlowDescriptionDao cashFlowDescriptionDao;
+    private final PayoutSummaryDao payoutSummaryDao;
 
     @Autowired
-    public CashFlowDescriptionServiceImpl(CashFlowDescriptionDao cashFlowDescriptionDao) {
-        this.cashFlowDescriptionDao = cashFlowDescriptionDao;
+    public CashFlowDescriptionServiceImpl(PayoutSummaryDao payoutSummaryDao) {
+        this.payoutSummaryDao = payoutSummaryDao;
     }
 
     @Override
-    public List<CashFlowDescription> get(String payoutId) throws StorageException {
+    public List<PayoutSummary> get(String payoutId) throws StorageException {
         try {
-            return cashFlowDescriptionDao.get(payoutId);
+            return payoutSummaryDao.get(payoutId);
         } catch (DaoException e) {
             throw new StorageException(String.format("Failed to get cash flow description list for payoutId=%s", payoutId), e);
         }
@@ -43,38 +44,38 @@ public class CashFlowDescriptionServiceImpl implements CashFlowDescriptionServic
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public void save(long payoutId, String currencyCode, List<Payment> payments, List<Refund> refunds, List<Adjustment> adjustments) throws StorageException {
-        List<CashFlowDescription> cashFlowDescriptions = new ArrayList<>();
+        List<PayoutSummary> cashFlowDescriptions = new ArrayList<>();
 
         long paymentAmount = payments.stream().mapToLong(Payment::getAmount).sum();
         long paymentFee = payments.stream().mapToLong(Payment::getFee).sum();
         LocalDateTime paymentFromTime = payments.stream().map(Payment::getCapturedAt).min(LocalDateTime::compareTo).get();
         LocalDateTime paymentToTime = payments.stream().map(Payment::getCapturedAt).max(LocalDateTime::compareTo).get();
-        CashFlowDescription paymentCashFlow = new CashFlowDescription();
-        paymentCashFlow.setAmount(paymentAmount);
-        paymentCashFlow.setFee(paymentFee);
-        paymentCashFlow.setCurrencyCode(currencyCode);
-        paymentCashFlow.setCashFlowType(com.rbkmoney.payouter.domain.enums.CashFlowType.payment);
-        paymentCashFlow.setCount(payments.size());
-        paymentCashFlow.setPayoutId(String.valueOf(payoutId));
-        paymentCashFlow.setFromTime(paymentFromTime);
-        paymentCashFlow.setToTime(paymentToTime);
-        cashFlowDescriptions.add(paymentCashFlow);
+        PayoutSummary paymentSummary = new PayoutSummary();
+        paymentSummary.setAmount(paymentAmount);
+        paymentSummary.setFee(paymentFee);
+        paymentSummary.setCurrencyCode(currencyCode);
+        paymentSummary.setCashFlowType(PayoutSummaryOperationType.payment);
+        paymentSummary.setCount(payments.size());
+        paymentSummary.setPayoutId(String.valueOf(payoutId));
+        paymentSummary.setFromTime(paymentFromTime);
+        paymentSummary.setToTime(paymentToTime);
+        cashFlowDescriptions.add(paymentSummary);
 
         if (!refunds.isEmpty()) {
             long refundAmount = refunds.stream().mapToLong(Refund::getAmount).sum();
             long refundFee = refunds.stream().mapToLong(Refund::getFee).sum();
             LocalDateTime refundFromTime = refunds.stream().map(Refund::getSucceededAt).min(LocalDateTime::compareTo).get();
             LocalDateTime refundToTime = refunds.stream().map(Refund::getSucceededAt).max(LocalDateTime::compareTo).get();
-            CashFlowDescription refundCashFlow = new CashFlowDescription();
-            refundCashFlow.setAmount(refundAmount);
-            refundCashFlow.setFee(refundFee);
-            refundCashFlow.setCurrencyCode(currencyCode);
-            refundCashFlow.setCashFlowType(com.rbkmoney.payouter.domain.enums.CashFlowType.refund);
-            refundCashFlow.setCount(refunds.size());
-            refundCashFlow.setPayoutId(String.valueOf(payoutId));
-            refundCashFlow.setFromTime(refundFromTime);
-            refundCashFlow.setToTime(refundToTime);
-            cashFlowDescriptions.add(refundCashFlow);
+            PayoutSummary refundSummary = new PayoutSummary();
+            refundSummary.setAmount(refundAmount);
+            refundSummary.setFee(refundFee);
+            refundSummary.setCurrencyCode(currencyCode);
+            refundSummary.setCashFlowType(PayoutSummaryOperationType.refund);
+            refundSummary.setCount(refunds.size());
+            refundSummary.setPayoutId(String.valueOf(payoutId));
+            refundSummary.setFromTime(refundFromTime);
+            refundSummary.setToTime(refundToTime);
+            cashFlowDescriptions.add(refundSummary);
         }
 
         if (!adjustments.isEmpty()) {
@@ -82,16 +83,16 @@ public class CashFlowDescriptionServiceImpl implements CashFlowDescriptionServic
             long adjustmentNewFee = adjustments.stream().mapToLong(Adjustment::getNewFee).sum();
             LocalDateTime adjustmentFromTime = adjustments.stream().map(Adjustment::getCapturedAt).min(LocalDateTime::compareTo).get();
             LocalDateTime adjustmentToTime = adjustments.stream().map(Adjustment::getCapturedAt).max(LocalDateTime::compareTo).get();
-            CashFlowDescription adjustmentCashFlow = new CashFlowDescription();
-            adjustmentCashFlow.setAmount(adjustmentFee - adjustmentNewFee);
-            adjustmentCashFlow.setFee(0L);
-            adjustmentCashFlow.setCurrencyCode(currencyCode);
-            adjustmentCashFlow.setCashFlowType(com.rbkmoney.payouter.domain.enums.CashFlowType.adjustment);
-            adjustmentCashFlow.setCount(adjustments.size());
-            adjustmentCashFlow.setPayoutId(String.valueOf(payoutId));
-            adjustmentCashFlow.setFromTime(adjustmentFromTime);
-            adjustmentCashFlow.setToTime(adjustmentToTime);
-            cashFlowDescriptions.add(adjustmentCashFlow);
+            PayoutSummary adjustmentSummary = new PayoutSummary();
+            adjustmentSummary.setAmount(adjustmentFee - adjustmentNewFee);
+            adjustmentSummary.setFee(0L);
+            adjustmentSummary.setCurrencyCode(currencyCode);
+            adjustmentSummary.setCashFlowType(PayoutSummaryOperationType.adjustment);
+            adjustmentSummary.setCount(adjustments.size());
+            adjustmentSummary.setPayoutId(String.valueOf(payoutId));
+            adjustmentSummary.setFromTime(adjustmentFromTime);
+            adjustmentSummary.setToTime(adjustmentToTime);
+            cashFlowDescriptions.add(adjustmentSummary);
         }
 
         save(cashFlowDescriptions);
@@ -99,13 +100,13 @@ public class CashFlowDescriptionServiceImpl implements CashFlowDescriptionServic
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
-    public void save(List<CashFlowDescription> cashFlowDescriptions) throws StorageException {
-        log.info("Trying to save cash flow descriptions, cashFlowDescriptions='{}'", cashFlowDescriptions);
+    public void save(List<PayoutSummary> payoutSummaries) throws StorageException {
+        log.info("Trying to save payout summaries, payoutSummaries='{}'", payoutSummaries);
         try {
-            cashFlowDescriptionDao.save(cashFlowDescriptions);
-            log.info("Cash flow descriptions have been saved, cashFlowDescriptions='{}'", cashFlowDescriptions);
+            payoutSummaryDao.save(payoutSummaries);
+            log.info("Payout summaries have been saved, payoutSummaries='{}'", payoutSummaries);
         } catch (DaoException ex) {
-            throw new StorageException(String.format("Failed to save cash flow descriptions, cashFlowDescriptions='%s'", cashFlowDescriptions), ex);
+            throw new StorageException(String.format("Failed to save payout summaries, payoutSummaries='%s'", payoutSummaries), ex);
         }
     }
 }
