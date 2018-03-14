@@ -47,8 +47,8 @@ public class CashFlowDescriptionServiceImpl implements CashFlowDescriptionServic
 
         long paymentAmount = payments.stream().mapToLong(Payment::getAmount).sum();
         long paymentFee = payments.stream().mapToLong(Payment::getFee).sum();
-        LocalDateTime paymentFromTime = payments.stream().map(Payment::getCreatedAt).min(LocalDateTime::compareTo).get();
-        LocalDateTime paymentToTime = payments.stream().map(Payment::getCreatedAt).max(LocalDateTime::compareTo).get();
+        LocalDateTime paymentFromTime = payments.stream().map(Payment::getCapturedAt).min(LocalDateTime::compareTo).get();
+        LocalDateTime paymentToTime = payments.stream().map(Payment::getCapturedAt).max(LocalDateTime::compareTo).get();
         CashFlowDescription paymentCashFlow = new CashFlowDescription();
         paymentCashFlow.setAmount(paymentAmount);
         paymentCashFlow.setFee(paymentFee);
@@ -63,8 +63,8 @@ public class CashFlowDescriptionServiceImpl implements CashFlowDescriptionServic
         if (!refunds.isEmpty()) {
             long refundAmount = refunds.stream().mapToLong(Refund::getAmount).sum();
             long refundFee = refunds.stream().mapToLong(Refund::getFee).sum();
-            LocalDateTime refundFromTime = refunds.stream().map(Refund::getCreatedAt).min(LocalDateTime::compareTo).get();
-            LocalDateTime refundToTime = refunds.stream().map(Refund::getCreatedAt).max(LocalDateTime::compareTo).get();
+            LocalDateTime refundFromTime = refunds.stream().map(Refund::getSucceededAt).min(LocalDateTime::compareTo).get();
+            LocalDateTime refundToTime = refunds.stream().map(Refund::getSucceededAt).max(LocalDateTime::compareTo).get();
             CashFlowDescription refundCashFlow = new CashFlowDescription();
             refundCashFlow.setAmount(refundAmount);
             refundCashFlow.setFee(refundFee);
@@ -80,8 +80,8 @@ public class CashFlowDescriptionServiceImpl implements CashFlowDescriptionServic
         if (!adjustments.isEmpty()) {
             long adjustmentFee = adjustments.stream().mapToLong(Adjustment::getPaymentFee).sum();
             long adjustmentNewFee = adjustments.stream().mapToLong(Adjustment::getNewFee).sum();
-            LocalDateTime adjustmentFromTime = adjustments.stream().map(Adjustment::getCreatedAt).min(LocalDateTime::compareTo).get();
-            LocalDateTime adjustmentToTime = adjustments.stream().map(Adjustment::getCreatedAt).max(LocalDateTime::compareTo).get();
+            LocalDateTime adjustmentFromTime = adjustments.stream().map(Adjustment::getCapturedAt).min(LocalDateTime::compareTo).get();
+            LocalDateTime adjustmentToTime = adjustments.stream().map(Adjustment::getCapturedAt).max(LocalDateTime::compareTo).get();
             CashFlowDescription adjustmentCashFlow = new CashFlowDescription();
             adjustmentCashFlow.setAmount(adjustmentFee - adjustmentNewFee);
             adjustmentCashFlow.setFee(0L);
