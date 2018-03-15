@@ -44,6 +44,8 @@ public class ResidentsReportServiceImpl implements ReportService {
 
     private final ReportDao reportDao;
 
+    private final ResidentsMailContentServiceImpl residentsMailContentService;
+
     private final PayoutService payoutService;
 
     private final FreeMarkerConfigurer freeMarkerConfigurer;
@@ -54,8 +56,11 @@ public class ResidentsReportServiceImpl implements ReportService {
     @Value("${report.residents.file.name.extension}")
     private String extension;
 
-    @Value("${report.residents.templateFileName}")
-    private String templateFileName;
+    @Value("${report.residents.reportTemplateFileName}")
+    private String reportTemplateFileName;
+
+    @Value("${report.residents.mailTemplateFileName}")
+    private String mailTemplateFileName;
 
     @Value("${report.residents.file.encoding}")
     private String encoding;
@@ -64,8 +69,9 @@ public class ResidentsReportServiceImpl implements ReportService {
     private ZoneId zoneId;
 
     @Autowired
-    public ResidentsReportServiceImpl(ReportDao reportDao, PayoutService payoutService, FreeMarkerConfigurer freeMarkerConfigurer) {
+    public ResidentsReportServiceImpl(ReportDao reportDao, ResidentsMailContentServiceImpl residentsMailContentService, PayoutService payoutService, FreeMarkerConfigurer freeMarkerConfigurer) {
         this.reportDao = reportDao;
+        this.residentsMailContentService = residentsMailContentService;
         this.payoutService = payoutService;
         this.freeMarkerConfigurer = freeMarkerConfigurer;
     }
@@ -90,7 +96,6 @@ public class ResidentsReportServiceImpl implements ReportService {
     public long generateAndSave(List<Payout> payouts) throws StorageException {
         log.info("Trying to generate and save report for residents, payouts='{}'", payouts);
         final List<Map<String, Object>> payoutsAttributes = new ArrayList<>();
-        final StringBuilder reportDescription = new StringBuilder("Выплаты для резидентов: <br>");
         for (Payout payout : payouts) {
             Map<String, Object> payoutData = new HashMap<>();
 
@@ -99,15 +104,8 @@ public class ResidentsReportServiceImpl implements ReportService {
             payoutData.put("calc_account", payout.getBankAccount());
             payoutData.put("descr", payout.getDescription());
             payoutData.put("inn", payout.getInn());
-            payoutData.put("sum", BigDecimal.valueOf(payout.getAmount()).movePointLeft(2).toString());
+            payoutData.put("sum", getFormattedAmount(payout.getAmount()));
             payoutData.put("purpose", payout.getPurpose());
-
-            reportDescription
-                    .append(payoutData.get("descr"))
-                    .append(": ")
-                    .append(payoutData.get("sum"))
-                    .append(" <br> ");
-
             payoutsAttributes.add(payoutData);
         }
 
@@ -118,13 +116,14 @@ public class ResidentsReportServiceImpl implements ReportService {
         dataModel.put("payouts", payoutsAttributes);
         dataModel.put("date", createdAtFormatted);
 
-        final String reportContent = processTemplate(dataModel, templateFileName);
+        final String reportContent = processTemplate(dataModel, reportTemplateFileName);
+        final String reportMailContent = residentsMailContentService.generateContent(payouts);
 
         List<String> payoutIds = payouts.stream().map(p -> p.getId().toString()).collect(Collectors.toList());
         Report report = new Report();
         report.setName(prefix + "_" + createdAtFormatted + extension);
         report.setSubject("Выплаты для резидентов, сгенерированные " + createdAtFormatted);
-        report.setDescription(reportDescription.toString());
+        report.setDescription(reportMailContent);
         report.setStatus(ReportStatus.READY);
         report.setContent(reportContent);
         report.setEncoding(encoding);
@@ -133,6 +132,10 @@ public class ResidentsReportServiceImpl implements ReportService {
         log.info("Report for residents have been successfully generated, reportSubject='{}', payoutsIds='{}'", report.getSubject(), report.getPayoutIds());
 
         return save(report);
+    }
+
+    private String getFormattedAmount(Long amount) {
+        return BigDecimal.valueOf(amount).movePointLeft(2).toString();
     }
 
     @Override

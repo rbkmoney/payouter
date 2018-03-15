@@ -43,13 +43,15 @@ report:
       encoding: UTF-8
     cron: "0 0 9 * * *"
     timezone: Europe/Moscow
+    mailTemplateFileName: nonresidents_mail_template.ftl
   residents:
     file:
       name:
         prefix: test_1c
         extension: .txt
       encoding: Windows-1251
-    templateFileName: 1c_payout.ftl
+    reportTemplateFileName: 1c_payout.ftl
+    mailTemplateFileName: residents_mail_template.ftl
     cron: "0 0 9 * * *"
     timezone: Europe/Moscow
 scheduler:
