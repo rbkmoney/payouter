@@ -1,11 +1,8 @@
 package com.rbkmoney.payouter.service.impl;
 
-import com.rbkmoney.payouter.dao.CashFlowDescriptionDao;
 import com.rbkmoney.payouter.dao.ReportDao;
-import com.rbkmoney.payouter.domain.enums.CashFlowType;
 import com.rbkmoney.payouter.domain.enums.PayoutAccountType;
 import com.rbkmoney.payouter.domain.enums.ReportStatus;
-import com.rbkmoney.payouter.domain.tables.pojos.CashFlowDescription;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.domain.tables.pojos.Report;
 import com.rbkmoney.payouter.exception.DaoException;

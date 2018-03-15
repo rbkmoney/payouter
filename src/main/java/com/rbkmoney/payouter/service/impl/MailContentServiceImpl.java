@@ -1,6 +1,6 @@
 package com.rbkmoney.payouter.service.impl;
 
-import com.rbkmoney.payouter.dao.CashFlowDescriptionDao;
+import com.rbkmoney.payouter.dao.PayoutSummaryDao;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.service.MailContentService;
 import freemarker.template.Configuration;
@@ -29,15 +29,15 @@ public abstract class MailContentServiceImpl implements MailContentService {
 
     private final FreeMarkerConfigurer freeMarkerConfigurer;
 
-    protected final CashFlowDescriptionDao cashFlowDescriptionDao;
+    protected final PayoutSummaryDao payoutSummaryDao;
 
     private Map<String, Object> data;
 
     @Autowired
     public MailContentServiceImpl(FreeMarkerConfigurer freeMarkerConfigurer,
-                                  CashFlowDescriptionDao cashFlowDescriptionDao) {
+                                  PayoutSummaryDao payoutSummaryDao) {
         this.freeMarkerConfigurer = freeMarkerConfigurer;
-        this.cashFlowDescriptionDao = cashFlowDescriptionDao;
+        this.payoutSummaryDao = payoutSummaryDao;
     }
 
     @Override
