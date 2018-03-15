@@ -46,7 +46,7 @@ public class PayoutServiceImpl implements PayoutService {
 
     private final PayoutDao payoutDao;
 
-    private final CashFlowDescriptionService cashFlowDescriptionService;
+    private final PayoutSummaryService payoutSummaryService;
 
     private final ShumwayService shumwayService;
 
@@ -60,7 +60,7 @@ public class PayoutServiceImpl implements PayoutService {
                              RefundDao refundDao,
                              AdjustmentDao adjustmentDao,
                              PayoutDao payoutDao,
-                             CashFlowDescriptionService cashFlowDescriptionService,
+                             PayoutSummaryService payoutSummaryService,
                              ShumwayService shumwayService,
                              PartyManagementService partyManagementService,
                              EventSinkService eventSinkService) {
@@ -69,7 +69,7 @@ public class PayoutServiceImpl implements PayoutService {
         this.refundDao = refundDao;
         this.adjustmentDao = adjustmentDao;
         this.payoutDao = payoutDao;
-        this.cashFlowDescriptionService = cashFlowDescriptionService;
+        this.payoutSummaryService = payoutSummaryService;
         this.shumwayService = shumwayService;
         this.partyManagementService = partyManagementService;
         this.eventSinkService = eventSinkService;
@@ -150,7 +150,7 @@ public class PayoutServiceImpl implements PayoutService {
             }
 
             long payoutId = payoutDao.save(payout);
-            cashFlowDescriptionService.save(payoutId, payout.getCurrencyCode(), payments, refunds, adjustments);
+            payoutSummaryService.save(payoutId, payout.getCurrencyCode(), payments, refunds, adjustments);
 
             String purpose = buildPurpose(payout);
             payoutDao.changePurpose(payoutId, purpose);

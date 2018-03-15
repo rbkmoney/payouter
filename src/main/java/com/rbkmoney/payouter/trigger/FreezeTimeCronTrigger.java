@@ -127,8 +127,7 @@ public class FreezeTimeCronTrigger extends CronTriggerImpl {
         if (getNextFireTime() != null && getNextFireTime().toInstant().isBefore(now)) {
             long diff = Duration.between(getNextFireTime().toInstant(), now).toMillis();
             if (diff >= misfireThreshold) {
-                nextCronTime = getFireTimeAfter(nextCronTime);
-                setNextFireTime(computeNextFireTime(nextCronTime, calendar));
+                nextFireTime(nextCronTime, calendar);
             }
         }
     }

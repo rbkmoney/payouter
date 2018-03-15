@@ -1,8 +1,8 @@
 package com.rbkmoney.payouter.dao;
 
 import com.rbkmoney.payouter.AbstractIntegrationTest;
-import com.rbkmoney.payouter.domain.enums.CashFlowType;
-import com.rbkmoney.payouter.domain.tables.pojos.CashFlowDescription;
+import com.rbkmoney.payouter.domain.enums.PayoutSummaryOperationType;
+import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,37 +10,37 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
-public class CashFlowDescriptionDaoTest extends AbstractIntegrationTest {
+public class PayoutSummaryDaoTest extends AbstractIntegrationTest {
 
     @Autowired
-    CashFlowDescriptionDao cashFlowDescriptionDao;
+    PayoutSummaryDao payoutSummaryDao;
 
 
     @Test
     public void saveAndGet() {
-        ArrayList<CashFlowDescription> cashFlowDescription = new ArrayList<>();
-        CashFlowDescription e = new CashFlowDescription();
+        ArrayList<PayoutSummary> payoutSummaries = new ArrayList<>();
+        PayoutSummary e = new PayoutSummary();
         String payoutId = "1";
         e.setPayoutId(payoutId);
         e.setAmount(123L);
         e.setFee(12L);
-        e.setCashFlowType(CashFlowType.payment);
+        e.setCashFlowType(PayoutSummaryOperationType.payment);
         e.setCurrencyCode("RUB");
         e.setCount(22);
         e.setFromTime(LocalDateTime.now());
         e.setToTime(LocalDateTime.now());
-        cashFlowDescription.add(e);
-        e = new CashFlowDescription();
+        payoutSummaries.add(e);
+        e = new PayoutSummary();
         e.setPayoutId(payoutId);
         e.setAmount(143L);
         e.setFee(14L);
-        e.setCashFlowType(CashFlowType.refund);
+        e.setCashFlowType(PayoutSummaryOperationType.refund);
         e.setCurrencyCode("RUB");
         e.setCount(55);
         e.setFromTime(LocalDateTime.now());
         e.setToTime(LocalDateTime.now());
-        cashFlowDescription.add(e);
-        cashFlowDescriptionDao.save(cashFlowDescription);
-        Assert.assertEquals(2, cashFlowDescriptionDao.get(payoutId).size());
+        payoutSummaries.add(e);
+        payoutSummaryDao.save(payoutSummaries);
+        Assert.assertEquals(2, payoutSummaryDao.get(payoutId).size());
     }
 }
