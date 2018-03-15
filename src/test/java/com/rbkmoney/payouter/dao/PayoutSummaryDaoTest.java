@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
-public class CashFlowDescriptionDaoTest extends AbstractIntegrationTest {
+public class PayoutSummaryDaoTest extends AbstractIntegrationTest {
 
     @Autowired
     PayoutSummaryDao payoutSummaryDao;

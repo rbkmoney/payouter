@@ -165,7 +165,7 @@ public class SchedulerServiceImpl implements SchedulerService {
     @Transactional(propagation = Propagation.REQUIRED)
     public void deregisterJob(String partyId, String shopId) throws NotFoundException, ScheduleProcessingException, StorageException {
         try {
-            log.info("Trying to deregister job, partyId='{}', contractId='{}', payoutToolId='{}'", partyId, shopId);
+            log.info("Trying to deregister job, partyId='{}', shopId='{}'", partyId, shopId);
             ShopMeta shopMeta = shopMetaDao.get(partyId, shopId);
             shopMetaDao.disableShop(partyId, shopId);
             if (shopMeta.getCalendarId() != null && shopMeta.getSchedulerId() != null) {

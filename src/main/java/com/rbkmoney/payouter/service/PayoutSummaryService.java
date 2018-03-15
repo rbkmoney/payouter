@@ -14,6 +14,6 @@ public interface PayoutSummaryService {
 
     void save(long payoutId, String currencyCode, List<Payment> payments, List<Refund> refunds, List<Adjustment> adjustments) throws StorageException;
 
-    void save(List<PayoutSummary> cashFlowDescription) throws StorageException;
+    void save(List<PayoutSummary> payoutSummaries) throws StorageException;
 
 }

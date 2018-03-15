@@ -17,12 +17,12 @@ import java.util.List;
 import static com.rbkmoney.payouter.domain.Tables.PAYOUT_SUMMARY;
 
 @Component
-public class CashFlowDescriptionDaoImpl extends AbstractGenericDao implements PayoutSummaryDao {
+public class PayoutSummaryDaoImpl extends AbstractGenericDao implements PayoutSummaryDao {
 
     private final RowMapper<PayoutSummary> payoutSummaryRowMapper;
 
     @Autowired
-    public CashFlowDescriptionDaoImpl(DataSource dataSource) {
+    public PayoutSummaryDaoImpl(DataSource dataSource) {
         super(dataSource);
         payoutSummaryRowMapper = new RecordRowMapper<>(PAYOUT_SUMMARY, PayoutSummary.class);
     }

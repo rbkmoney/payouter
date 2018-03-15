@@ -21,14 +21,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class CashFlowDescriptionServiceImpl implements PayoutSummaryService {
+public class PayoutSummaryServiceImpl implements PayoutSummaryService {
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private final PayoutSummaryDao payoutSummaryDao;
 
     @Autowired
-    public CashFlowDescriptionServiceImpl(PayoutSummaryDao payoutSummaryDao) {
+    public PayoutSummaryServiceImpl(PayoutSummaryDao payoutSummaryDao) {
         this.payoutSummaryDao = payoutSummaryDao;
     }
 
@@ -44,7 +44,7 @@ public class CashFlowDescriptionServiceImpl implements PayoutSummaryService {
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public void save(long payoutId, String currencyCode, List<Payment> payments, List<Refund> refunds, List<Adjustment> adjustments) throws StorageException {
-        List<PayoutSummary> cashFlowDescriptions = new ArrayList<>();
+        List<PayoutSummary> payoutSummaries = new ArrayList<>();
 
         long paymentAmount = payments.stream().mapToLong(Payment::getAmount).sum();
         long paymentFee = payments.stream().mapToLong(Payment::getFee).sum();
@@ -59,7 +59,7 @@ public class CashFlowDescriptionServiceImpl implements PayoutSummaryService {
         paymentSummary.setPayoutId(String.valueOf(payoutId));
         paymentSummary.setFromTime(paymentFromTime);
         paymentSummary.setToTime(paymentToTime);
-        cashFlowDescriptions.add(paymentSummary);
+        payoutSummaries.add(paymentSummary);
 
         if (!refunds.isEmpty()) {
             long refundAmount = refunds.stream().mapToLong(Refund::getAmount).sum();
@@ -75,7 +75,7 @@ public class CashFlowDescriptionServiceImpl implements PayoutSummaryService {
             refundSummary.setPayoutId(String.valueOf(payoutId));
             refundSummary.setFromTime(refundFromTime);
             refundSummary.setToTime(refundToTime);
-            cashFlowDescriptions.add(refundSummary);
+            payoutSummaries.add(refundSummary);
         }
 
         if (!adjustments.isEmpty()) {
@@ -92,10 +92,10 @@ public class CashFlowDescriptionServiceImpl implements PayoutSummaryService {
             adjustmentSummary.setPayoutId(String.valueOf(payoutId));
             adjustmentSummary.setFromTime(adjustmentFromTime);
             adjustmentSummary.setToTime(adjustmentToTime);
-            cashFlowDescriptions.add(adjustmentSummary);
+            payoutSummaries.add(adjustmentSummary);
         }
 
-        save(cashFlowDescriptions);
+        save(payoutSummaries);
     }
 
     @Override
