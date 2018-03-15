@@ -1,0 +1,1 @@
+UPDATE sht.payout_event SET payout_cash_flow = jsonb_set(payout_cash_flow :: jsonb, '{0, destination, account_type, merchant}', '"payout"');

@@ -31,7 +31,7 @@ import org.jooq.impl.UpdatableRecordImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class ReportRecord extends UpdatableRecordImpl<ReportRecord> implements Record10<Long, LocalDateTime, String, String, String, String, ReportStatus, LocalDateTime, String, String> {
 
-    private static final long serialVersionUID = 1316091900;
+    private static final long serialVersionUID = -465005390;
 
     /**
      * Setter for <code>sht.report.id</code>.
@@ -146,30 +146,30 @@ public class ReportRecord extends UpdatableRecordImpl<ReportRecord> implements R
     }
 
     /**
-     * Setter for <code>sht.report.encoding</code>.
-     */
-    public void setEncoding(String value) {
-        set(8, value);
-    }
-
-    /**
-     * Getter for <code>sht.report.encoding</code>.
-     */
-    public String getEncoding() {
-        return (String) get(8);
-    }
-
-    /**
      * Setter for <code>sht.report.subject</code>.
      */
     public void setSubject(String value) {
-        set(9, value);
+        set(8, value);
     }
 
     /**
      * Getter for <code>sht.report.subject</code>.
      */
     public String getSubject() {
+        return (String) get(8);
+    }
+
+    /**
+     * Setter for <code>sht.report.encoding</code>.
+     */
+    public void setEncoding(String value) {
+        set(9, value);
+    }
+
+    /**
+     * Getter for <code>sht.report.encoding</code>.
+     */
+    public String getEncoding() {
         return (String) get(9);
     }
 
@@ -274,7 +274,7 @@ public class ReportRecord extends UpdatableRecordImpl<ReportRecord> implements R
      */
     @Override
     public Field<String> field9() {
-        return Report.REPORT.ENCODING;
+        return Report.REPORT.SUBJECT;
     }
 
     /**
@@ -282,7 +282,7 @@ public class ReportRecord extends UpdatableRecordImpl<ReportRecord> implements R
      */
     @Override
     public Field<String> field10() {
-        return Report.REPORT.SUBJECT;
+        return Report.REPORT.ENCODING;
     }
 
     /**
@@ -354,7 +354,7 @@ public class ReportRecord extends UpdatableRecordImpl<ReportRecord> implements R
      */
     @Override
     public String value9() {
-        return getEncoding();
+        return getSubject();
     }
 
     /**
@@ -362,7 +362,7 @@ public class ReportRecord extends UpdatableRecordImpl<ReportRecord> implements R
      */
     @Override
     public String value10() {
-        return getSubject();
+        return getEncoding();
     }
 
     /**
@@ -442,7 +442,7 @@ public class ReportRecord extends UpdatableRecordImpl<ReportRecord> implements R
      */
     @Override
     public ReportRecord value9(String value) {
-        setEncoding(value);
+        setSubject(value);
         return this;
     }
 
@@ -451,7 +451,7 @@ public class ReportRecord extends UpdatableRecordImpl<ReportRecord> implements R
      */
     @Override
     public ReportRecord value10(String value) {
-        setSubject(value);
+        setEncoding(value);
         return this;
     }
 
@@ -487,7 +487,7 @@ public class ReportRecord extends UpdatableRecordImpl<ReportRecord> implements R
     /**
      * Create a detached, initialised ReportRecord
      */
-    public ReportRecord(Long id, LocalDateTime createdAt, String payoutIds, String name, String content, String description, ReportStatus status, LocalDateTime lastSendAt, String encoding, String subject) {
+    public ReportRecord(Long id, LocalDateTime createdAt, String payoutIds, String name, String content, String description, ReportStatus status, LocalDateTime lastSendAt, String subject, String encoding) {
         super(Report.REPORT);
 
         set(0, id);
@@ -498,7 +498,7 @@ public class ReportRecord extends UpdatableRecordImpl<ReportRecord> implements R
         set(5, description);
         set(6, status);
         set(7, lastSendAt);
-        set(8, encoding);
-        set(9, subject);
+        set(8, subject);
+        set(9, encoding);
     }
 }

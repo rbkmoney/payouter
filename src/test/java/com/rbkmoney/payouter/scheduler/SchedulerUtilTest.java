@@ -409,13 +409,13 @@ public class SchedulerUtilTest {
 
         trigger.updateWithNewCalendar(calendar, 1000L);
         assertEquals(
-                LocalDate.of(2018, java.time.Month.MARCH, 14)
+                LocalDate.of(2018, java.time.Month.MARCH, 15)
                         .atStartOfDay(ZoneId.of("Europe/Moscow"))
                         .toInstant(),
                 trigger.getNextFireTime().toInstant()
         );
         assertEquals(
-                LocalDate.of(2018, java.time.Month.MARCH, 12)
+                LocalDate.of(2018, java.time.Month.MARCH, 13)
                         .atStartOfDay(ZoneId.of("Europe/Moscow"))
                         .toInstant(),
                 trigger.getNextCronTime().toInstant()

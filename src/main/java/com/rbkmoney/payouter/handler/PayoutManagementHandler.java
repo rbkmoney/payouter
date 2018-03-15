@@ -7,12 +7,13 @@ import com.rbkmoney.damsel.domain.LegalAgreement;
 import com.rbkmoney.damsel.domain.RussianBankAccount;
 import com.rbkmoney.damsel.payout_processing.*;
 import com.rbkmoney.geck.common.util.TypeUtil;
-import com.rbkmoney.payouter.domain.enums.PayoutAccountType;
 import com.rbkmoney.payouter.domain.enums.PayoutType;
+import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.exception.InvalidStateException;
 import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.service.PayoutService;
+import com.rbkmoney.payouter.service.PayoutSummaryService;
 import com.rbkmoney.payouter.util.DamselUtil;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
@@ -31,9 +32,12 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
 
     private final PayoutService payoutService;
 
+    private final PayoutSummaryService payoutSummaryService;
+
     @Autowired
-    public PayoutManagementHandler(PayoutService payoutService) {
+    public PayoutManagementHandler(PayoutService payoutService, PayoutSummaryService payoutSummaryService) {
         this.payoutService = payoutService;
+        this.payoutSummaryService = payoutSummaryService;
     }
 
     @Override
@@ -119,7 +123,9 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
         validateRequest(size, fromTime, toTime);
 
         List<Payout> payoutList = payoutService.search(payoutStatus, fromTime, toTime, payoutIds, fromId, size);
-        List<PayoutInfo> payoutInfoList = payoutList.stream().map(this::buildPayoutInfo).collect(Collectors.toList());
+        List<PayoutInfo> payoutInfoList = payoutList.stream()
+                .map(payout -> buildPayoutInfo(payout, payoutSummaryService.get(String.valueOf(payout.getId()))))
+                .collect(Collectors.toList());
         long lastId = payoutInfoList.isEmpty() ? 0 : Long.parseLong(payoutInfoList.get(payoutInfoList.size() - 1).getId());
         PayoutSearchResponse payoutSearchResponse = new PayoutSearchResponse(payoutInfoList, lastId);
         log.info("GetPayoutsInfo count: {}", payoutInfoList.size());
@@ -141,21 +147,20 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
         }
     }
 
-    private PayoutInfo buildPayoutInfo(Payout record) {
+    private PayoutInfo buildPayoutInfo(Payout record, List<PayoutSummary> payoutSummaries) {
         PayoutInfo payoutInfo = new PayoutInfo();
         payoutInfo.setId(String.valueOf(record.getId()));
         payoutInfo.setPartyId(record.getPartyId());
         payoutInfo.setShopId(record.getShopId());
         payoutInfo.setAmount(record.getAmount());
         if (record.getType().equals(PayoutType.bank_account)) {
-            com.rbkmoney.damsel.payout_processing.PayoutType payoutType = new com.rbkmoney.damsel.payout_processing.PayoutType();
-            payoutType.setBankAccount(toPayoutAccount(record));
-            payoutInfo.setType(payoutType);
+            payoutInfo.setType(com.rbkmoney.damsel.payout_processing.PayoutType.bank_account(toPayoutAccount(record)));
         }
         payoutInfo.setStatus(DamselUtil.toDamselPayoutStatus(record));
         payoutInfo.setFromTime(TypeUtil.temporalToString(record.getFromTime()));
         payoutInfo.setToTime(TypeUtil.temporalToString(record.getToTime()));
         payoutInfo.setCreatedAt(TypeUtil.temporalToString(record.getCreatedAt()));
+        payoutInfo.setSummary(DamselUtil.toDamselPayoutSummary(payoutSummaries));
         return payoutInfo;
     }
 
@@ -164,29 +169,32 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
                 payout.getAccountLegalAgreementId(),
                 TypeUtil.temporalToString(payout.getAccountLegalAgreementSignedAt())
         );
-        if (payout.getAccountType() == PayoutAccountType.russian_payout_account) {
-            return PayoutAccount.russian_payout_account(
-                    new RussianPayoutAccount(
-                            new RussianBankAccount(
-                                    payout.getBankAccount(),
-                                    payout.getBankName(),
-                                    payout.getBankPostAccount(),
-                                    payout.getBankLocalCode()
-                            ),
-                            payout.getInn(),
-                            payout.getPurpose(),
-                            legalAgreement
-                    )
-            );
-        } else {
-            return PayoutAccount.international_payout_account(
-                    new InternationalPayoutAccount(
-                            toInternationalBankAccount(payout),
-                            toInternationalLegalEntity(payout),
-                            payout.getPurpose(),
-                            legalAgreement
-                    )
-            );
+        switch (payout.getAccountType()) {
+            case russian_payout_account:
+                return PayoutAccount.russian_payout_account(
+                        new RussianPayoutAccount(
+                                new RussianBankAccount(
+                                        payout.getBankAccount(),
+                                        payout.getBankName(),
+                                        payout.getBankPostAccount(),
+                                        payout.getBankLocalCode()
+                                ),
+                                payout.getInn(),
+                                payout.getPurpose(),
+                                legalAgreement
+                        )
+                );
+            case international_payout_account:
+                return PayoutAccount.international_payout_account(
+                        new InternationalPayoutAccount(
+                                toInternationalBankAccount(payout),
+                                toInternationalLegalEntity(payout),
+                                payout.getPurpose(),
+                                legalAgreement
+                        )
+                );
+            default:
+                throw new NotFoundException(String.format("PayoutAccount type not found, accountType='%s'", payout.getAccountType()));
         }
     }
 
