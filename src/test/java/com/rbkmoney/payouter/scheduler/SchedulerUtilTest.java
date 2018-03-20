@@ -457,7 +457,7 @@ public class SchedulerUtilTest {
 
         List<String> cronList = SchedulerUtil.buildCron(schedule);
         assertEquals(1, cronList.size());
-        assertEquals("* * * ? * 1,6,7 *", cronList.get(0));
+        assertEquals("* * * ? * 1,2,7 *", cronList.get(0));
         assertTrue(CronExpression.isValidExpression(cronList.get(0)));
 
 
