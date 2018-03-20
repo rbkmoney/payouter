@@ -28,4 +28,6 @@ public interface PayoutService {
 
     List<Payout> search(Optional<PayoutStatus> payoutStatus, Optional<LocalDateTime> fromTime, Optional<LocalDateTime> toTime, Optional<List<Long>> payoutIds, Optional<Long> fromId, Optional<Integer> size);
 
+    void excludeFromPayout(long payoutId) throws StorageException;
+
 }

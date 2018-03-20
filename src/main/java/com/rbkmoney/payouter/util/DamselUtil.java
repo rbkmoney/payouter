@@ -87,7 +87,7 @@ public class DamselUtil {
             return GUARANTEE_DEPOSIT;
         }
 
-        throw new UnsupportedOperationException("Unsupported cashflow");
+        throw new UnsupportedOperationException(String.format("Unsupported cash flow posting, cashFlowPosting='%s'", cashFlowPosting));
     }
 
     public static boolean checkRoute(CashFlowAccount source, CashFlowAccount destination, FinalCashFlowPosting cashFlow) {

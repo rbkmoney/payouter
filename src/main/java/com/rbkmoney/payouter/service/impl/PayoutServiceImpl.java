@@ -208,7 +208,7 @@ public class PayoutServiceImpl implements PayoutService {
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public void pay(long payoutId) throws InvalidStateException, StorageException {
-        log.info("Trying to pay a payout, payoutId={}", payoutId);
+        log.info("Trying to pay a payout, payoutId='{}'", payoutId);
         try {
             Payout payout = payoutDao.getExclusive(payoutId);
 
@@ -220,7 +220,7 @@ public class PayoutServiceImpl implements PayoutService {
 
             payoutDao.changeStatus(payoutId, PayoutStatus.PAID);
             eventSinkService.savePayoutPaidEvent(String.valueOf(payoutId));
-            log.info("Payout have been paid, payoutId={}", payoutId);
+            log.info("Payout have been paid, payoutId='{}'", payoutId);
         } catch (DaoException ex) {
             throw new StorageException(String.format("Failed to pay a payout, payoutId='%d'", payoutId), ex);
         }
@@ -251,9 +251,11 @@ public class PayoutServiceImpl implements PayoutService {
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public void cancel(long payoutId, String details) throws InvalidStateException, StorageException {
-        log.info("Trying to cancel a payout, payoutId={}", payoutId);
+        log.info("Trying to cancel a payout, payoutId='{}'", payoutId);
         try {
             Payout payout = payoutDao.getExclusive(payoutId);
+            payoutDao.changeStatus(payoutId, PayoutStatus.CANCELLED);
+            excludeFromPayout(payoutId);
 
             UserInfo userInfo = WoodyUtils.getUserInfo();
             eventSinkService.savePayoutCancelledEvent(String.valueOf(payoutId), details, userInfo);
@@ -261,11 +263,9 @@ public class PayoutServiceImpl implements PayoutService {
             switch (payout.getStatus()) {
                 case UNPAID:
                 case PAID:
-                    payoutDao.changeStatus(payoutId, PayoutStatus.CANCELLED);
                     shumwayService.rollback(String.valueOf(payoutId));
                     break;
                 case CONFIRMED:
-                    payoutDao.changeStatus(payoutId, PayoutStatus.CANCELLED);
                     shumwayService.revert(String.valueOf(payoutId));
                     break;
                 default:
@@ -292,6 +292,20 @@ public class PayoutServiceImpl implements PayoutService {
     @Override
     public List<Payout> search(Optional<PayoutStatus> payoutStatus, Optional<LocalDateTime> fromTime, Optional<LocalDateTime> toTime, Optional<List<Long>> payoutIds, Optional<Long> fromId, Optional<Integer> size) {
         return payoutDao.search(payoutStatus, fromTime, toTime, payoutIds, fromId, size);
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED)
+    public void excludeFromPayout(long payoutId) throws StorageException {
+        log.info("Trying to exclude operations from payout, payoutId='{}'", payoutId);
+        try {
+            int paymentCount = paymentDao.excludeFromPayout(payoutId);
+            int refundCount = refundDao.excludeFromPayout(payoutId);
+            int adjustmentCount = adjustmentDao.excludeFromPayout(payoutId);
+            log.info("Operations have been excluded from payout, payoutId='{}' (paymentCount='{}', refundCount='{}', adjustmentCount='{}')", payoutId, paymentCount, refundCount, adjustmentCount);
+        } catch (DaoException ex) {
+            throw new StorageException(String.format("Failed to exclude operations from payout, payoutId='%d'", payoutId), ex);
+        }
     }
 
     private Payout buildPayout(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType) {
