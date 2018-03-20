@@ -86,6 +86,12 @@ public class DamselUtil {
                 cashFlowPosting)) {
             return GUARANTEE_DEPOSIT;
         }
+        if (checkRoute(
+                CashFlowAccount.merchant(MerchantCashFlowAccount.payout),
+                CashFlowAccount.system(SystemCashFlowAccount.settlement),
+                cashFlowPosting)) {
+            return PAYOUT_FIXED_FEE;
+        }
 
         throw new UnsupportedOperationException("Unsupported cashflow");
     }

@@ -141,8 +141,8 @@ public class PayoutServiceImpl implements PayoutService {
             );
 
             Map<CashFlowType, Long> cashFlow = DamselUtil.parseCashFlow(cashFlowPostings);
-            payout.setAmount(cashFlow.getOrDefault(CashFlowType.PAYOUT_AMOUNT, 0L));
-            payout.setFee(cashFlow.getOrDefault(CashFlowType.FEE, 0L));
+            payout.setAmount(cashFlow.getOrDefault(CashFlowType.PAYOUT_AMOUNT, 0L) - cashFlow.getOrDefault(CashFlowType.PAYOUT_FIXED_FEE, 0L));
+            payout.setFee(cashFlow.getOrDefault(CashFlowType.FEE, 0L) + cashFlow.getOrDefault(CashFlowType.PAYOUT_FIXED_FEE, 0L));
             if (payout.getAmount() <= 0) {
                 throw new InvalidStateException(
                         String.format("Invalid payout cash flow, amount='%d', fee='%d'", payout.getAmount(), payout.getFee())

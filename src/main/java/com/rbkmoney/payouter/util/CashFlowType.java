@@ -7,5 +7,6 @@ public enum CashFlowType {
     FEE,
     REFUND_AMOUNT,
     GUARANTEE_DEPOSIT,
-    PAYOUT_AMOUNT
+    PAYOUT_AMOUNT,
+    PAYOUT_FIXED_FEE
 }
