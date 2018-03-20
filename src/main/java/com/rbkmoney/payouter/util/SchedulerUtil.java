@@ -1,9 +1,13 @@
 package com.rbkmoney.payouter.util;
 
 import com.cronutils.builder.CronBuilder;
+import com.cronutils.mapper.ConstantsMapper;
+import com.cronutils.mapper.WeekDay;
 import com.cronutils.model.CronType;
+import com.cronutils.model.definition.CronDefinition;
 import com.cronutils.model.definition.CronDefinitionBuilder;
 import com.cronutils.model.field.CronFieldName;
+import com.cronutils.model.field.definition.DayOfWeekFieldDefinition;
 import com.cronutils.model.field.expression.And;
 import com.cronutils.model.field.expression.FieldExpression;
 import com.rbkmoney.damsel.base.*;
@@ -79,7 +83,7 @@ public class SchedulerUtil {
 
     private static FieldExpression buildDaysOfWeekOnExpression(Set<DayOfWeek> days) {
         Set<Integer> dayValues = days.stream()
-                .map(dayValue -> dayValue.getValue())
+                .map(dayValue -> ConstantsMapper.weekDayMapping(ConstantsMapper.JAVA8, ConstantsMapper.QUARTZ_WEEK_DAY, dayValue.getValue()))
                 .collect(Collectors.toSet());
         return buildOnExpression(dayValues);
     }

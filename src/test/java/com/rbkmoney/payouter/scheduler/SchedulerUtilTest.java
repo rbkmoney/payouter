@@ -534,8 +534,25 @@ public class SchedulerUtilTest {
         List<String> cronList = SchedulerUtil.buildCron(schedule);
         assertEquals(2, cronList.size());
         assertEquals("*/5 */5 1,3,4,5,12 */5 1,2,3,4,10,11 ? */5", cronList.get(0));
-        assertEquals("*/5 */5 1,3,4,5,12 ? 1,2,3,4,10,11 1,2,5 */5", cronList.get(1));
+        assertEquals("*/5 */5 1,3,4,5,12 ? 1,2,3,4,10,11 2,3,6 */5", cronList.get(1));
         assertTrue(cronList.stream().allMatch(cron -> CronExpression.isValidExpression(cron)));
+    }
+
+    @Test
+    public void testDOWMapToQuartzFormat() {
+        Schedule schedule = new Schedule(
+                ScheduleYear.every(new ScheduleEvery()),
+                ScheduleMonth.every(new ScheduleEvery()),
+                ScheduleFragment.every(new ScheduleEvery()),
+                ScheduleDayOfWeek.on(new HashSet<>(Arrays.asList(Mon, Fri, Sun))),
+                ScheduleFragment.every(new ScheduleEvery()),
+                ScheduleFragment.every(new ScheduleEvery()),
+                ScheduleFragment.every(new ScheduleEvery())
+        );
+
+        List<String> cronList = SchedulerUtil.buildCron(schedule);
+        assertEquals(1, cronList.size());
+        assertEquals("* * * ? * 1,2,6 *", cronList.get(0));
     }
 
     @Test
