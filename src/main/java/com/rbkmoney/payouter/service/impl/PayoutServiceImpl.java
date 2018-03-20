@@ -141,8 +141,8 @@ public class PayoutServiceImpl implements PayoutService {
             );
 
             Map<CashFlowType, Long> cashFlow = DamselUtil.parseCashFlow(cashFlowPostings);
-            payout.setAmount(cashFlow.getOrDefault(CashFlowType.PAYOUT_AMOUNT, 0L));
-            payout.setFee(cashFlow.getOrDefault(CashFlowType.FEE, 0L));
+            payout.setAmount(cashFlow.getOrDefault(CashFlowType.PAYOUT_AMOUNT, 0L) - cashFlow.getOrDefault(CashFlowType.PAYOUT_FIXED_FEE, 0L));
+            payout.setFee(cashFlow.getOrDefault(CashFlowType.FEE, 0L) + cashFlow.getOrDefault(CashFlowType.PAYOUT_FIXED_FEE, 0L));
             if (payout.getAmount() <= 0) {
                 throw new InvalidStateException(
                         String.format("Invalid payout cash flow, amount='%d', fee='%d'", payout.getAmount(), payout.getFee())
@@ -152,7 +152,7 @@ public class PayoutServiceImpl implements PayoutService {
             long payoutId = payoutDao.save(payout);
             payoutSummaryService.save(payoutId, payout.getCurrencyCode(), payments, refunds, adjustments);
 
-            String purpose = buildPurpose(payout);
+            String purpose = buildPurpose(payoutId, payout);
             payoutDao.changePurpose(payoutId, purpose);
 
             paymentDao.includeToPayout(payoutId, payments);
@@ -181,7 +181,7 @@ public class PayoutServiceImpl implements PayoutService {
         }
     }
 
-    private String buildPurpose(Payout payout) {
+    private String buildPurpose(long payoutId, Payout payout) {
         switch (payout.getAccountType()) {
             case russian_payout_account:
                 return String.format(
@@ -193,7 +193,7 @@ public class PayoutServiceImpl implements PayoutService {
                 return String.format("Agr %s %s, %d for accepted payments.",
                         payout.getAccountLegalAgreementId(),
                         payout.getAccountLegalAgreementSignedAt().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")),
-                        payout.getId()
+                        payoutId
                 );
             default:
                 throw new IllegalArgumentException(String.format("Unknown account type, accountType='%s'", payout.getAccountType()));
