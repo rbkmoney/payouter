@@ -6,7 +6,6 @@ import com.rbkmoney.damsel.domain.Calendar;
 import com.rbkmoney.damsel.domain.CalendarHoliday;
 import com.rbkmoney.payouter.trigger.FreezeTimeCronTrigger;
 import com.rbkmoney.payouter.util.SchedulerUtil;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.quartz.CronExpression;
 import org.quartz.impl.calendar.HolidayCalendar;
@@ -241,7 +240,6 @@ public class SchedulerUtilTest {
     }
 
     @Test
-    @Ignore //TODO PASHA
     public void testEveryDayOnThirdWorkingDay() throws ParseException, IOException {
         FreezeTimeCronTrigger trigger = new FreezeTimeCronTrigger();
         trigger.setCronExpression(new CronExpression("0 0 0 * * ? *"));
