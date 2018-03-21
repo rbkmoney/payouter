@@ -10,6 +10,7 @@ import com.rbkmoney.payouter.exception.DaoException;
 import com.rbkmoney.payouter.exception.StorageException;
 import com.rbkmoney.payouter.service.PayoutService;
 import com.rbkmoney.payouter.service.ReportService;
+import com.rbkmoney.payouter.util.FormatUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,9 +37,9 @@ import static com.opencsv.CSVWriter.DEFAULT_QUOTE_CHARACTER;
 @Service
 public class NonresidentsReportServiceImpl implements ReportService {
 
-    public static DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    public final static DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
-    public static String[] headerRow = {
+    public final static String[] headerRow = {
             "Id участника",
             "Id магазина",
             "Id вывода",
@@ -151,9 +152,9 @@ public class NonresidentsReportServiceImpl implements ReportService {
                         payout.getPartyId(),
                         payout.getShopId(),
                         String.valueOf(payout.getId()),
-                        String.valueOf(payout.getAmount() + payout.getFee()),
-                        String.valueOf(payout.getFee()),
-                        String.valueOf(payout.getAmount()),
+                        FormatUtil.getFormattedAmount(payout.getAmount() + payout.getFee()),
+                        FormatUtil.getFormattedAmount(payout.getFee()),
+                        FormatUtil.getFormattedAmount(payout.getAmount()),
                         payout.getCurrencyCode(),
                         "",
                         payout.getAccountLegalName(),

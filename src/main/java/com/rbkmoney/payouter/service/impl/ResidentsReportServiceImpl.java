@@ -9,6 +9,7 @@ import com.rbkmoney.payouter.exception.DaoException;
 import com.rbkmoney.payouter.exception.StorageException;
 import com.rbkmoney.payouter.service.PayoutService;
 import com.rbkmoney.payouter.service.ReportService;
+import com.rbkmoney.payouter.util.FormatUtil;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
@@ -38,7 +39,7 @@ import java.util.stream.Collectors;
 @Service
 public class ResidentsReportServiceImpl implements ReportService {
 
-    public static DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    public final static DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -104,7 +105,7 @@ public class ResidentsReportServiceImpl implements ReportService {
             payoutData.put("calc_account", payout.getBankAccount());
             payoutData.put("descr", payout.getDescription());
             payoutData.put("inn", payout.getInn());
-            payoutData.put("sum", getFormattedAmount(payout.getAmount()));
+            payoutData.put("sum", FormatUtil.getFormattedAmount(payout.getAmount()));
             payoutData.put("purpose", payout.getPurpose());
             payoutsAttributes.add(payoutData);
         }
@@ -132,10 +133,6 @@ public class ResidentsReportServiceImpl implements ReportService {
         log.info("Report for residents have been successfully generated, reportSubject='{}', payoutsIds='{}'", report.getSubject(), report.getPayoutIds());
 
         return save(report);
-    }
-
-    private String getFormattedAmount(Long amount) {
-        return BigDecimal.valueOf(amount).movePointLeft(2).toString();
     }
 
     @Override
