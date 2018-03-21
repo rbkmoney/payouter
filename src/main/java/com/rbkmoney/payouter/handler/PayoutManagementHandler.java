@@ -148,6 +148,9 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
     @Transactional(propagation = Propagation.REQUIRED)
     public void generateReport(Set<String> sPayoutIds) throws InvalidRequest, TException {
         log.info("Start generate report for payouts: {}", sPayoutIds);
+        if (sPayoutIds.isEmpty()) {
+            throw new InvalidRequest(Collections.singletonList("Empty list of payout ids"));
+        }
         List<Long> payoutIds;
         try {
             payoutIds = sPayoutIds.stream().map(Long::valueOf).collect(Collectors.toList());
@@ -155,9 +158,8 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
             throw new InvalidRequest(Collections.singletonList(e.getMessage()));
         }
         List<Payout> payouts = payoutService.search(Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(payoutIds), Optional.empty(), Optional.empty());
-        if (payouts.isEmpty()) {
-            log.info("Payouts not found");
-            return;
+        if (sPayoutIds.size() != payouts.size()) {
+            throw new InvalidRequest(Collections.singletonList("Some of payouts not found"));
         }
         if (payouts.stream().anyMatch(p -> !p.getStatus().equals(com.rbkmoney.payouter.domain.enums.PayoutStatus.UNPAID))) {
             throw new InvalidRequest(Collections.singletonList("One of payouts has wrong status; it should be UNPAID"));
