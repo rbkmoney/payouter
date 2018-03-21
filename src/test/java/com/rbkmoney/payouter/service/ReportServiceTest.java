@@ -69,6 +69,8 @@ public class ReportServiceTest extends AbstractIntegrationTest {
 
         Report report = reportDao.get(residentsReportService.generateAndSave(payouts));
 
+        System.out.println(report.getDescription());
+
         CountDownLatch countDownLatch = new CountDownLatch(1);
         doAnswer(answer -> {
             countDownLatch.countDown();
