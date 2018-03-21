@@ -52,10 +52,6 @@ public abstract class MailContentServiceImpl implements MailContentService {
 
     abstract protected Map<String, Object> buildPayoutRecordDescription(Payout payout);
 
-    protected String getFormattedAmount(Long amount) {
-        return BigDecimal.valueOf(amount).movePointLeft(2).toString();
-    }
-
     protected String getFormattedDateDescription(LocalDateTime dateTime, ZoneId zoneId) {
         LocalDateTime localizedDate = dateTime.atZone(ZoneOffset.UTC).withZoneSameInstant(zoneId).toLocalDateTime();
         if (localizedDate.truncatedTo(ChronoUnit.DAYS).isEqual(localizedDate)) {
