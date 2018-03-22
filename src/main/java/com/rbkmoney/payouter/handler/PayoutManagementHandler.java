@@ -155,19 +155,23 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
         try {
             payoutIds = sPayoutIds.stream().map(Long::valueOf).collect(Collectors.toList());
         } catch (NumberFormatException e) {
-            throw new InvalidRequest(Collections.singletonList(e.getMessage()));
+            throw new InvalidRequest(Collections.singletonList("Couldn't convert to long value. " + e.getMessage()));
         }
         List<Payout> payouts = payoutService.search(Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(payoutIds), Optional.empty(), Optional.empty());
-        if (sPayoutIds.size() != payouts.size()) {
-            throw new InvalidRequest(Collections.singletonList("Some of payouts not found"));
+        if (payoutIds.size() != payouts.size()) {
+            List<Long> foundedIds = payouts.stream().map(Payout::getId).collect(Collectors.toList());
+            List<Long> diff = payoutIds.stream().filter(id -> !foundedIds.contains(id)).collect(Collectors.toList());
+            throw new InvalidRequest(Collections.singletonList("Some of payouts not found: " + diff));
         }
-        if (payouts.stream().anyMatch(p -> !p.getStatus().equals(com.rbkmoney.payouter.domain.enums.PayoutStatus.UNPAID))) {
-            throw new InvalidRequest(Collections.singletonList("One of payouts has wrong status; it should be UNPAID"));
+        Optional<Payout> wrongPayout = payouts.stream().filter(p -> !p.getStatus().equals(com.rbkmoney.payouter.domain.enums.PayoutStatus.UNPAID)).findFirst();
+        if (wrongPayout.isPresent()) {
+            throw new InvalidRequest(Collections.singletonList("Payout " + wrongPayout.get().getId() + " has wrong status; it should be UNPAID"));
         }
         PayoutAccountType accountType = payouts.get(0).getAccountType();
         if (payouts.size() > 1) {
-            if (payouts.stream().anyMatch(p -> !p.getAccountType().equals(accountType))) {
-                throw new InvalidRequest(Collections.singletonList("All payouts should be only the one type (residents or non-residents)"));
+            Optional<Payout> differentAccTypePayout = payouts.stream().filter(p -> !p.getAccountType().equals(accountType)).findFirst();
+            if (differentAccTypePayout.isPresent()) {
+                throw new InvalidRequest(Collections.singletonList("Payout " + differentAccTypePayout.get().getId() + " has a different type then first payout " + payouts.get(0).getId() + "; should be only the one type (residents or non-residents)"));
             }
         }
         ReportService reportService = accountType.equals(PayoutAccountType.russian_payout_account) ? residentsReportService : nonresidentsReportService;
