@@ -326,6 +326,9 @@ public class PayoutServiceImpl implements PayoutService {
         if (shop == null) {
             throw new NotFoundException(String.format("Shop not found, partyId='%s', contractId='%s', timestamp='%s'", partyId, shopId, timestamp));
         }
+        if (shop.getLocation().isSetUrl()) {
+            payout.setShopUrl(shop.getLocation().getUrl());
+        }
         ShopAccount shopAccount = shop.getAccount();
         payout.setShopAcc(shopAccount.getSettlement());
         payout.setShopPayoutAcc(shopAccount.getPayout());
