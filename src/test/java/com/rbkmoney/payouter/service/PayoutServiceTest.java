@@ -481,6 +481,7 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
     private Map<String, Shop> buildShops(String shopId, String contractId, String payoutToolId) {
         Map<String, Shop> shops = new HashMap<>();
         Shop shop = new Shop();
+        shop.setLocation(ShopLocation.url("http://2ch.ru"));
         shop.setContractId(contractId);
         shop.setCategory(new CategoryRef(1));
         shop.setAccount(new ShopAccount(
