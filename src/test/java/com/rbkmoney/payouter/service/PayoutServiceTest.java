@@ -20,6 +20,7 @@ import com.rbkmoney.generation.InvoicePaymentGenerator;
 import com.rbkmoney.generation.RefundGenerator;
 import com.rbkmoney.payouter.AbstractIntegrationTest;
 import com.rbkmoney.payouter.dao.PayoutDao;
+import com.rbkmoney.payouter.domain.enums.PayoutAccountType;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.meta.UserIdentityIdExtensionKit;
 import com.rbkmoney.payouter.meta.UserIdentityRealmExtensionKit;
@@ -44,9 +45,11 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 import static com.rbkmoney.payouter.domain.enums.PayoutStatus.*;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
@@ -266,6 +269,53 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
 
     }
 
+    @Test
+    public void testGeneratePayoutReport() throws Exception {
+        addCapturedPayment();
+
+        GeneratePayoutParams generatePayoutParams = new GeneratePayoutParams();
+        ShopParams shopParams = new ShopParams();
+        shopParams.setPartyId(partyId);
+        shopParams.setShopId(shopId);
+        generatePayoutParams.setShop(shopParams);
+        generatePayoutParams.setTimeRange(new TimeRange("2015-06-17T00:00:00Z", "2018-06-17T00:00:00Z"));
+
+        List<String> payoutIds = callService(() -> client.generatePayouts(generatePayoutParams));
+
+        addCapturedPayment("for-payment-2");
+        payoutIds.addAll(callService(() -> client.generatePayouts(generatePayoutParams)));
+
+        runService(() -> {
+            try {
+                client.generateReport(Collections.singleton("fff"));
+            } catch (InvalidRequest e) {
+                assertTrue(e.getErrors().get(0).contains("Couldn't convert to long value."));
+            } catch (TException e) {
+            }
+        });
+
+        long maxId = payoutIds.stream().mapToLong(Long::valueOf).max().getAsLong();
+        runService(() -> {
+            try {
+                client.generateReport(Collections.singleton(String.valueOf(maxId + 1)));
+            } catch (InvalidRequest e) {
+                assertTrue(e.getErrors().get(0).contains("Some of payouts not found: " + Collections.singletonList(maxId + 1)));
+            } catch (TException e) {
+            }
+        });
+
+        long payoutId = Long.valueOf(payoutIds.get(0));
+        payoutService.pay(payoutId);
+        runService(() -> {
+            try {
+                client.generateReport(new HashSet<>(payoutIds));
+            } catch (InvalidRequest e) {
+                assertTrue(e.getErrors().get(0).contains("Payout " + payoutId + " has wrong status; it should be UNPAID"));
+            } catch (TException e) {
+            }
+        });
+    }
+
     public void addCapturedAdjustment() {
         addCapturedAdjustment("for-adjustment");
     }
@@ -335,6 +385,15 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
                     ContextUtils.setCustomMetadataValue(UserIdentityRealmExtensionKit.KEY, "internal");
                     return callable.call();
                 }).call();
+    }
+
+    private void runService(Runnable runnable) {
+        wFlow.createServiceFork(
+                () -> {
+                    ContextUtils.setCustomMetadataValue(UserIdentityIdExtensionKit.KEY, "test");
+                    ContextUtils.setCustomMetadataValue(UserIdentityRealmExtensionKit.KEY, "internal");
+                    runnable.run();
+                }).run();
     }
 
     private Event buildScheduleEvent(String partyId, String shopId) {

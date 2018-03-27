@@ -7,6 +7,7 @@ import com.rbkmoney.damsel.domain.LegalAgreement;
 import com.rbkmoney.damsel.domain.RussianBankAccount;
 import com.rbkmoney.damsel.payout_processing.*;
 import com.rbkmoney.geck.common.util.TypeUtil;
+import com.rbkmoney.payouter.domain.enums.PayoutAccountType;
 import com.rbkmoney.payouter.domain.enums.PayoutType;
 import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
@@ -14,12 +15,17 @@ import com.rbkmoney.payouter.exception.InvalidStateException;
 import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.service.PayoutService;
 import com.rbkmoney.payouter.service.PayoutSummaryService;
+import com.rbkmoney.payouter.service.ReportService;
+import com.rbkmoney.payouter.service.impl.NonresidentsReportServiceImpl;
+import com.rbkmoney.payouter.service.impl.ResidentsReportServiceImpl;
 import com.rbkmoney.payouter.util.DamselUtil;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -34,10 +40,16 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
 
     private final PayoutSummaryService payoutSummaryService;
 
+    private final ResidentsReportServiceImpl residentsReportService;
+
+    private final NonresidentsReportServiceImpl nonresidentsReportService;
+
     @Autowired
-    public PayoutManagementHandler(PayoutService payoutService, PayoutSummaryService payoutSummaryService) {
+    public PayoutManagementHandler(PayoutService payoutService, PayoutSummaryService payoutSummaryService, ResidentsReportServiceImpl residentsReportService, NonresidentsReportServiceImpl nonresidentsReportService) {
         this.payoutService = payoutService;
         this.payoutSummaryService = payoutSummaryService;
+        this.residentsReportService = residentsReportService;
+        this.nonresidentsReportService = nonresidentsReportService;
     }
 
     @Override
@@ -130,6 +142,42 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
         PayoutSearchResponse payoutSearchResponse = new PayoutSearchResponse(payoutInfoList, lastId);
         log.info("GetPayoutsInfo count: {}", payoutInfoList.size());
         return payoutSearchResponse;
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED)
+    public void generateReport(Set<String> sPayoutIds) throws InvalidRequest, TException {
+        log.info("Start generate report for payouts: {}", sPayoutIds);
+        if (sPayoutIds.isEmpty()) {
+            throw new InvalidRequest(Collections.singletonList("Empty list of payout ids"));
+        }
+        List<Long> payoutIds;
+        try {
+            payoutIds = sPayoutIds.stream().map(Long::valueOf).collect(Collectors.toList());
+        } catch (NumberFormatException e) {
+            throw new InvalidRequest(Collections.singletonList("Couldn't convert to long value. " + e.getMessage()));
+        }
+        List<Payout> payouts = payoutService.search(Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(payoutIds), Optional.empty(), Optional.empty());
+        if (payoutIds.size() != payouts.size()) {
+            List<Long> foundedIds = payouts.stream().map(Payout::getId).collect(Collectors.toList());
+            List<Long> diff = payoutIds.stream().filter(id -> !foundedIds.contains(id)).collect(Collectors.toList());
+            throw new InvalidRequest(Collections.singletonList("Some of payouts not found: " + diff));
+        }
+        Optional<Payout> wrongPayout = payouts.stream().filter(p -> !p.getStatus().equals(com.rbkmoney.payouter.domain.enums.PayoutStatus.UNPAID)).findFirst();
+        if (wrongPayout.isPresent()) {
+            throw new InvalidRequest(Collections.singletonList("Payout " + wrongPayout.get().getId() + " has wrong status; it should be UNPAID"));
+        }
+        PayoutAccountType accountType = payouts.get(0).getAccountType();
+        if (payouts.size() > 1) {
+            Optional<Payout> differentAccTypePayout = payouts.stream().filter(p -> !p.getAccountType().equals(accountType)).findFirst();
+            if (differentAccTypePayout.isPresent()) {
+                throw new InvalidRequest(Collections.singletonList("Payout " + differentAccTypePayout.get().getId() + " has a different type then first payout " + payouts.get(0).getId() + "; should be only the one type (residents or non-residents)"));
+            }
+        }
+        ReportService reportService = accountType.equals(PayoutAccountType.russian_payout_account) ? residentsReportService : nonresidentsReportService;
+        reportService.generateAndSave(payouts);
+        payouts.forEach(payout -> payoutService.pay(payout.getId()));
+        log.info("End generate report for payouts, count: {}", payouts.size());
     }
 
     private void validateRequest(Optional<Integer> size, Optional<LocalDateTime> fromTime, Optional<LocalDateTime> toTime) throws InvalidRequest {
