@@ -11,14 +11,11 @@ import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -31,8 +28,6 @@ public abstract class MailContentServiceImpl implements MailContentService {
 
     protected final PayoutSummaryDao payoutSummaryDao;
 
-    private Map<String, Object> data;
-
     @Autowired
     public MailContentServiceImpl(FreeMarkerConfigurer freeMarkerConfigurer,
                                   PayoutSummaryDao payoutSummaryDao) {
@@ -42,15 +37,11 @@ public abstract class MailContentServiceImpl implements MailContentService {
 
     @Override
     public String generateContent(List<Payout> payouts) {
-        data = new HashMap<>();
-        List<Map<String, Object>> reportDescriptionAttributes = new ArrayList<>();
-        payouts.forEach(p -> reportDescriptionAttributes.add(buildPayoutRecordDescription(p)));
-        data.put("reportDescriptions", reportDescriptionAttributes);
-        String reportMailContent = processTemplate(data, getTemplateFileName());
-        return reportMailContent;
+        Map<String, Object> data = buildReportData(payouts);
+        return processTemplate(data, getTemplateFileName());
     }
 
-    abstract protected Map<String, Object> buildPayoutRecordDescription(Payout payout);
+    abstract protected Map<String, Object> buildReportData(List<Payout> payouts);
 
     protected String getFormattedDateDescription(LocalDateTime dateTime, ZoneId zoneId) {
         LocalDateTime localizedDate = dateTime.atZone(ZoneOffset.UTC).withZoneSameInstant(zoneId).toLocalDateTime();

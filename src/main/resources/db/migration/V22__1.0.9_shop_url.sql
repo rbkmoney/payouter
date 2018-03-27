@@ -1,0 +1,1 @@
+ALTER TABLE sht.payout ADD COLUMN shop_url CHARACTER VARYING;

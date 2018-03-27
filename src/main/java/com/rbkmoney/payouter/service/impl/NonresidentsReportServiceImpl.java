@@ -1,9 +1,11 @@
 package com.rbkmoney.payouter.service.impl;
 
 import com.opencsv.CSVWriter;
+import com.rbkmoney.payouter.dao.PaymentDao;
 import com.rbkmoney.payouter.dao.ReportDao;
 import com.rbkmoney.payouter.domain.enums.PayoutAccountType;
 import com.rbkmoney.payouter.domain.enums.ReportStatus;
+import com.rbkmoney.payouter.domain.tables.pojos.Payment;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.domain.tables.pojos.Report;
 import com.rbkmoney.payouter.exception.DaoException;
@@ -22,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -42,13 +43,16 @@ public class NonresidentsReportServiceImpl implements ReportService {
     public final static String[] headerRow = {
             "Id участника",
             "Id магазина",
+            "Наименование юридического лица",
+            "URL магазина",
+            "Дата создания заявки на вывод в системе",
             "Id вывода",
+            "Валюта",
             "Сумма списания",
             "Комиссия за вывод",
             "Сумма получения",
-            "Валюта",
+            "Сумма страхового депозита с данных платежей",
             "Курс",
-            "Наименование юридического лица",
             "Адрес юридического лица",
             "Регистрационный номер",
             "Счет получателя",
@@ -64,6 +68,8 @@ public class NonresidentsReportServiceImpl implements ReportService {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private final ReportDao reportDao;
+
+    private final PaymentDao paymentDao;
 
     private final NonResidentsMailContentServiceImpl nonResidentsMailContentService;
 
@@ -85,8 +91,9 @@ public class NonresidentsReportServiceImpl implements ReportService {
     private ZoneId zoneId;
 
     @Autowired
-    public NonresidentsReportServiceImpl(ReportDao reportDao, NonResidentsMailContentServiceImpl nonResidentsMailContentService, PayoutService payoutService) {
+    public NonresidentsReportServiceImpl(ReportDao reportDao, PaymentDao paymentDao, NonResidentsMailContentServiceImpl nonResidentsMailContentService, PayoutService payoutService) {
         this.reportDao = reportDao;
+        this.paymentDao = paymentDao;
         this.nonResidentsMailContentService = nonResidentsMailContentService;
         this.payoutService = payoutService;
     }
@@ -148,27 +155,34 @@ public class NonresidentsReportServiceImpl implements ReportService {
 
     private List<String[]> buildRows(List<Payout> payouts) {
         return payouts.stream().map(
-                payout -> new String[]{
-                        payout.getPartyId(),
-                        payout.getShopId(),
-                        String.valueOf(payout.getId()),
-                        FormatUtil.getFormattedAmount(payout.getAmount() + payout.getFee()),
-                        FormatUtil.getFormattedAmount(payout.getFee()),
-                        FormatUtil.getFormattedAmount(payout.getAmount()),
-                        payout.getCurrencyCode(),
-                        "",
-                        payout.getAccountLegalName(),
-                        payout.getAccountRegisteredAddress(),
-                        payout.getAccountRegisteredNumber(),
-                        payout.getBankIban(),
-                        payout.getBankBic(),
-                        payout.getBankName(),
-                        payout.getBankAddress(),
-                        payout.getBankLocalCode(),
-                        payout.getAccountLegalAgreementId(),
-                        payout.getAccountLegalAgreementSignedAt().format(dateTimeFormatter),
-                        payout.getPurpose()
+                payout -> {
+                    List<Payment> payments = paymentDao.getByPayoutId(payout.getId());
+                    long guaranteeDeposit = payments.stream().mapToLong(Payment::getGuaranteeDeposit).sum();
+                    return new String[]{
+                            payout.getPartyId(),
+                            payout.getShopId(),
+                            payout.getAccountLegalName(),
+                            payout.getShopUrl(),
+                            payout.getCreatedAt().format(dateTimeFormatter),
+                            String.valueOf(payout.getId()),
+                            payout.getCurrencyCode(),
+                            FormatUtil.getFormattedAmount(payout.getAmount() + payout.getFee()),
+                            FormatUtil.getFormattedAmount(payout.getFee()),
+                            FormatUtil.getFormattedAmount(payout.getAmount()),
+                            FormatUtil.getFormattedAmount(guaranteeDeposit),
+                            "",
+                            payout.getAccountRegisteredAddress(),
+                            payout.getAccountRegisteredNumber(),
+                            payout.getBankIban(),
+                            payout.getBankBic(),
+                            payout.getBankName(),
+                            payout.getBankAddress(),
+                            payout.getBankLocalCode(),
+                            payout.getAccountLegalAgreementId(),
+                            payout.getAccountLegalAgreementSignedAt().format(dateTimeFormatter),
+                            payout.getPurpose()
 
+                    };
                 }
         ).collect(Collectors.toList());
     }

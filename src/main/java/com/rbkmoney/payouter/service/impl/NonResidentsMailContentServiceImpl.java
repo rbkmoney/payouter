@@ -13,6 +13,7 @@ import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class NonResidentsMailContentServiceImpl extends MailContentServiceImpl{
@@ -28,23 +29,28 @@ public class NonResidentsMailContentServiceImpl extends MailContentServiceImpl{
     }
 
     @Override
-    protected Map<String, Object> buildPayoutRecordDescription(Payout payout) {
-        Map<String, Object> reportDescription = new HashMap<>();
-        reportDescription.put("name", payout.getAccountLegalName());
-        reportDescription.put("sum", FormatUtil.getFormattedAmount(payout.getAmount()));
-        reportDescription.put("curr", payout.getCurrencyCode());
-        reportDescription.put("to_date_description", getFormattedDateDescription(payout.getToTime(), zoneId));
-        List<PayoutSummary> payoutSummaries = payoutSummaryDao.get(String.valueOf(payout.getId()));
-        PayoutSummary payoutSummary = payoutSummaries.stream().filter(cfd -> cfd.getCashFlowType() == PayoutSummaryOperationType.payment).findFirst().get();
-        reportDescription.put("payment_sum", FormatUtil.getFormattedAmount(payoutSummary.getAmount()));
-        reportDescription.put("rbk_fee_sum", FormatUtil.getFormattedAmount(payoutSummary.getFee()));
-        reportDescription.put("payment_count", payoutSummary.getCount());
-        payoutSummaries.stream().filter(cfd -> cfd.getCashFlowType() == PayoutSummaryOperationType.refund).findFirst().ifPresent(x -> {
-            reportDescription.put("refund_sum", FormatUtil.getFormattedAmount(x.getAmount()));
-            reportDescription.put("refund_count", x.getCount());
-        });
-        reportDescription.put("fee_sum", FormatUtil.getFormattedAmount(payout.getFee()));
-        return reportDescription;
+    protected Map<String, Object> buildReportData(List<Payout> payouts) {
+        Map<String, Object> data = new HashMap<>();
+        List<Map<String, Object>> payoutDescriptionAttributes = payouts.stream().map(payout -> {
+            Map<String, Object> payoutDescription = new HashMap<>();
+            payoutDescription.put("name", payout.getAccountLegalName());
+            payoutDescription.put("sum", FormatUtil.getFormattedAmount(payout.getAmount()));
+            payoutDescription.put("curr", payout.getCurrencyCode());
+            payoutDescription.put("to_date_description", getFormattedDateDescription(payout.getToTime(), zoneId));
+            List<PayoutSummary> payoutSummaries = payoutSummaryDao.get(String.valueOf(payout.getId()));
+            PayoutSummary payoutSummary = payoutSummaries.stream().filter(cfd -> cfd.getCashFlowType() == PayoutSummaryOperationType.payment).findFirst().get();
+            payoutDescription.put("payment_sum", FormatUtil.getFormattedAmount(payoutSummary.getAmount()));
+            payoutDescription.put("rbk_fee_sum", FormatUtil.getFormattedAmount(payoutSummary.getFee()));
+            payoutDescription.put("payment_count", payoutSummary.getCount());
+            payoutSummaries.stream().filter(cfd -> cfd.getCashFlowType() == PayoutSummaryOperationType.refund).findFirst().ifPresent(x -> {
+                payoutDescription.put("refund_sum", FormatUtil.getFormattedAmount(x.getAmount()));
+                payoutDescription.put("refund_count", x.getCount());
+            });
+            payoutDescription.put("fee_sum", FormatUtil.getFormattedAmount(payout.getFee()));
+            return payoutDescription;
+        }).collect(Collectors.toList());
+        data.put("payoutDescriptions", payoutDescriptionAttributes);
+        return data;
     }
 
     @Override

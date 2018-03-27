@@ -39,7 +39,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Payout extends TableImpl<PayoutRecord> {
 
-    private static final long serialVersionUID = -1058238769;
+    private static final long serialVersionUID = -1165403100;
 
     /**
      * The reference instance of <code>sht.payout</code>
@@ -208,6 +208,11 @@ public class Payout extends TableImpl<PayoutRecord> {
      * The column <code>sht.payout.account_registered_number</code>.
      */
     public final TableField<PayoutRecord, String> ACCOUNT_REGISTERED_NUMBER = createField("account_registered_number", org.jooq.impl.SQLDataType.VARCHAR, this, "");
+
+    /**
+     * The column <code>sht.payout.shop_url</code>.
+     */
+    public final TableField<PayoutRecord, String> SHOP_URL = createField("shop_url", org.jooq.impl.SQLDataType.VARCHAR, this, "");
 
     /**
      * Create a <code>sht.payout</code> table reference
