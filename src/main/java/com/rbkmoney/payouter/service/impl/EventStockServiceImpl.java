@@ -52,7 +52,7 @@ public class EventStockServiceImpl implements EventStockService {
         try {
             eventStockMetaDao.setLastEventMeta(eventId, eventCreatedAt);
         } catch (DaoException ex) {
-            throw new StorageException(String.format("Failed to change last event id, eventId=%d, eventCreatedAt='%s'", eventId, eventCreatedAt));
+            throw new StorageException(String.format("Failed to change last event id, eventId='%d', eventCreatedAt='%s'", eventId, eventCreatedAt), ex);
         }
     }
 
