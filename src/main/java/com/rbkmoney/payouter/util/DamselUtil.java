@@ -8,18 +8,22 @@ import com.rbkmoney.damsel.payout_processing.*;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.geck.serializer.kit.json.JsonProcessor;
 import com.rbkmoney.geck.serializer.kit.tbase.TBaseHandler;
-import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
 import com.rbkmoney.payouter.domain.tables.pojos.PayoutEvent;
+import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
 import com.rbkmoney.payouter.exception.NotFoundException;
 import org.apache.thrift.TBase;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.rbkmoney.payouter.util.CashFlowType.*;
+import static com.rbkmoney.payouter.util.CashFlowType.UNKNOWN;
 
 public class DamselUtil {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DamselUtil.class);
 
     public final static ObjectMapper objectMapper = new ObjectMapper();
 
@@ -38,59 +42,17 @@ public class DamselUtil {
     }
 
     public static CashFlowType getCashFlowType(FinalCashFlowPosting cashFlowPosting) {
-        if (checkRoute(
-                CashFlowAccount.provider(ProviderCashFlowAccount.settlement),
-                CashFlowAccount.merchant(MerchantCashFlowAccount.settlement),
-                cashFlowPosting)) {
-            return AMOUNT;
-        }
-        if (checkRoute(
-                CashFlowAccount.merchant(MerchantCashFlowAccount.settlement),
-                CashFlowAccount.merchant(MerchantCashFlowAccount.payout),
-                cashFlowPosting)) {
-            return PAYOUT_AMOUNT;
-        }
-        if (checkRoute(
-                CashFlowAccount.merchant(MerchantCashFlowAccount.settlement),
-                CashFlowAccount.system(SystemCashFlowAccount.settlement),
-                cashFlowPosting)) {
-            return FEE;
-        }
-        if (checkRoute(
-                CashFlowAccount.system(SystemCashFlowAccount.settlement),
-                CashFlowAccount.provider(ProviderCashFlowAccount.settlement),
-                cashFlowPosting)) {
-            return PROVIDER_FEE;
-        }
-        if (checkRoute(
-                CashFlowAccount.system(SystemCashFlowAccount.settlement),
-                CashFlowAccount.external(ExternalCashFlowAccount.income),
-                cashFlowPosting)) {
-            return EXTERNAL_FEE;
-        }
-        if (checkRoute(
-                CashFlowAccount.system(SystemCashFlowAccount.settlement),
-                CashFlowAccount.external(ExternalCashFlowAccount.outcome),
-                cashFlowPosting)) {
-            return EXTERNAL_FEE;
-        }
-        if (checkRoute(
-                CashFlowAccount.merchant(MerchantCashFlowAccount.settlement),
-                CashFlowAccount.provider(ProviderCashFlowAccount.settlement),
-                cashFlowPosting)) {
-            return REFUND_AMOUNT;
-        }
-        if (checkRoute(
-                CashFlowAccount.merchant(MerchantCashFlowAccount.settlement),
-                CashFlowAccount.merchant(MerchantCashFlowAccount.guarantee),
-                cashFlowPosting)) {
-            return GUARANTEE_DEPOSIT;
-        }
-        if (checkRoute(
-                CashFlowAccount.merchant(MerchantCashFlowAccount.payout),
-                CashFlowAccount.system(SystemCashFlowAccount.settlement),
-                cashFlowPosting)) {
-            return PAYOUT_FIXED_FEE;
+        CashFlowType cashFlowType = CashFlowType.getCashFlowType(cashFlowPosting);
+
+        if (cashFlowType == UNKNOWN) {
+            //ignore specific incorrect postings
+            if (cashFlowPosting.getSource().getAccountType().equals(CashFlowAccount.merchant(MerchantCashFlowAccount.guarantee))
+                    && cashFlowPosting.getDestination().getAccountType().equals(CashFlowAccount.merchant(MerchantCashFlowAccount.settlement))) {
+                LOGGER.warn("Ignore specific incorrect posting, posting='{}'", cashFlowPosting);
+                return cashFlowType;
+            }
+        } else {
+            return cashFlowType;
         }
 
         throw new UnsupportedOperationException(String.format("Unsupported cash flow posting, cashFlowPosting='%s'", cashFlowPosting));
