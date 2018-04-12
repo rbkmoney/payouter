@@ -45,7 +45,7 @@ public class DamselUtilTest {
         DamselUtil.getCashFlowType(
                 new FinalCashFlowPosting(
                         new FinalCashFlowAccount(CashFlowAccount.merchant(MerchantCashFlowAccount.guarantee), 1),
-                        new FinalCashFlowAccount(CashFlowAccount.merchant(MerchantCashFlowAccount.settlement), 2),
+                        new FinalCashFlowAccount(CashFlowAccount.system(SystemCashFlowAccount.settlement), 2),
                         new Cash(5, new CurrencyRef("UGA"))
                 )
         );

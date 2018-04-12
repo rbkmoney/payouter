@@ -47,7 +47,7 @@ public class DamselUtil {
         if (cashFlowType == UNKNOWN) {
             //ignore specific incorrect postings
             if (cashFlowPosting.getSource().getAccountType().equals(CashFlowAccount.merchant(MerchantCashFlowAccount.guarantee))
-                    && cashFlowPosting.getDestination().getAccountType().equals(CashFlowAccount.merchant(MerchantCashFlowAccount.settlement))) {
+                    && cashFlowPosting.getDestination().getAccountType().equals(CashFlowAccount.system(SystemCashFlowAccount.settlement))) {
                 LOGGER.warn("Ignore specific incorrect posting, posting='{}'", cashFlowPosting);
                 return cashFlowType;
             }
