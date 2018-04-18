@@ -1,10 +1,7 @@
 package com.rbkmoney.payouter.handler;
 
 import com.rbkmoney.damsel.base.InvalidRequest;
-import com.rbkmoney.damsel.domain.InternationalBankAccount;
-import com.rbkmoney.damsel.domain.InternationalLegalEntity;
-import com.rbkmoney.damsel.domain.LegalAgreement;
-import com.rbkmoney.damsel.domain.RussianBankAccount;
+import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.payout_processing.*;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.payouter.domain.enums.PayoutAccountType;
@@ -200,11 +197,11 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
         payoutInfo.setId(String.valueOf(record.getId()));
         payoutInfo.setPartyId(record.getPartyId());
         payoutInfo.setShopId(record.getShopId());
-        payoutInfo.setAmount(record.getAmount());
+        payoutInfo.setAmount(new Cash(record.getAmount(), new CurrencyRef(record.getCurrencyCode())));
         if (record.getType().equals(PayoutType.bank_account)) {
             payoutInfo.setType(com.rbkmoney.damsel.payout_processing.PayoutType.bank_account(toPayoutAccount(record)));
         }
-        payoutInfo.setStatus(DamselUtil.toDamselPayoutStatus(record));
+        payoutInfo.setStatus(DamselUtil.toDamselPayoutSearchStatus(record));
         payoutInfo.setFromTime(TypeUtil.temporalToString(record.getFromTime()));
         payoutInfo.setToTime(TypeUtil.temporalToString(record.getToTime()));
         payoutInfo.setCreatedAt(TypeUtil.temporalToString(record.getCreatedAt()));
