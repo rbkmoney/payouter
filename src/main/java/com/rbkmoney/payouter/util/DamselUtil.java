@@ -75,37 +75,20 @@ public class DamselUtil {
         return payoutCreated;
     }
 
-    public static UserInfo buildUserInfo() {
-        UserInfo userInfo = new UserInfo();
-        userInfo.setId("TODO: getUser");
-        userInfo.setType(UserType.internal_user(new InternalUser()));
-        return userInfo;
-    }
-
-    public static PayoutStatus toDamselPayoutStatus(com.rbkmoney.payouter.domain.tables.pojos.Payout payout) {
+    public static PayoutSearchStatus toDamselPayoutSearchStatus(com.rbkmoney.payouter.domain.tables.pojos.Payout payout) {
         com.rbkmoney.payouter.domain.enums.PayoutStatus recordStatus = payout.getStatus();
 
         switch (recordStatus) {
-            case UNPAID: {
-                return PayoutStatus.unpaid(new PayoutUnpaid());
-            }
-            case PAID: {
-                PaidDetails paidDetails = new PaidDetails();
-                paidDetails.setAccountDetails(new AccountPaidDetails());
-                return PayoutStatus.paid(new PayoutPaid(paidDetails));
-            }
-            case CONFIRMED: {
-                return PayoutStatus.confirmed(new PayoutConfirmed(buildUserInfo()));
-            }
-            case CANCELLED: {
-                PayoutCancelled payoutCancelled = new PayoutCancelled();
-                payoutCancelled.setDetails(payout.getDescription());
-                payoutCancelled.setUserInfo(buildUserInfo());
-                return PayoutStatus.cancelled(payoutCancelled);
-            }
-            default: {
-                throw new UnsupportedOperationException("Can't parse Payoutstatus enum." + recordStatus.name());
-            }
+            case UNPAID:
+                return PayoutSearchStatus.unpaid;
+            case PAID:
+                return PayoutSearchStatus.paid;
+            case CONFIRMED:
+                return PayoutSearchStatus.confirmed;
+            case CANCELLED:
+                return PayoutSearchStatus.cancelled;
+            default:
+                throw new NotFoundException(String.format("Payout status not found, status = '%s'", recordStatus));
         }
     }
 
