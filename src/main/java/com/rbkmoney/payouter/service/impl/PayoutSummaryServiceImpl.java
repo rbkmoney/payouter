@@ -46,20 +46,22 @@ public class PayoutSummaryServiceImpl implements PayoutSummaryService {
     public void save(long payoutId, String currencyCode, List<Payment> payments, List<Refund> refunds, List<Adjustment> adjustments) throws StorageException {
         List<PayoutSummary> payoutSummaries = new ArrayList<>();
 
-        long paymentAmount = payments.stream().mapToLong(Payment::getAmount).sum();
-        long paymentFee = payments.stream().mapToLong(Payment::getFee).sum();
-        LocalDateTime paymentFromTime = payments.stream().map(Payment::getCapturedAt).min(LocalDateTime::compareTo).get();
-        LocalDateTime paymentToTime = payments.stream().map(Payment::getCapturedAt).max(LocalDateTime::compareTo).get();
-        PayoutSummary paymentSummary = new PayoutSummary();
-        paymentSummary.setAmount(paymentAmount);
-        paymentSummary.setFee(paymentFee);
-        paymentSummary.setCurrencyCode(currencyCode);
-        paymentSummary.setCashFlowType(PayoutSummaryOperationType.payment);
-        paymentSummary.setCount(payments.size());
-        paymentSummary.setPayoutId(String.valueOf(payoutId));
-        paymentSummary.setFromTime(paymentFromTime);
-        paymentSummary.setToTime(paymentToTime);
-        payoutSummaries.add(paymentSummary);
+        if (!payments.isEmpty()) {
+            long paymentAmount = payments.stream().mapToLong(Payment::getAmount).sum();
+            long paymentFee = payments.stream().mapToLong(Payment::getFee).sum();
+            LocalDateTime paymentFromTime = payments.stream().map(Payment::getCapturedAt).min(LocalDateTime::compareTo).get();
+            LocalDateTime paymentToTime = payments.stream().map(Payment::getCapturedAt).max(LocalDateTime::compareTo).get();
+            PayoutSummary paymentSummary = new PayoutSummary();
+            paymentSummary.setAmount(paymentAmount);
+            paymentSummary.setFee(paymentFee);
+            paymentSummary.setCurrencyCode(currencyCode);
+            paymentSummary.setCashFlowType(PayoutSummaryOperationType.payment);
+            paymentSummary.setCount(payments.size());
+            paymentSummary.setPayoutId(String.valueOf(payoutId));
+            paymentSummary.setFromTime(paymentFromTime);
+            paymentSummary.setToTime(paymentToTime);
+            payoutSummaries.add(paymentSummary);
+        }
 
         if (!refunds.isEmpty()) {
             long refundAmount = refunds.stream().mapToLong(Refund::getAmount).sum();
