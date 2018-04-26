@@ -42,6 +42,7 @@ report:
       delimiter: ;
       encoding: UTF-8
     cron: "0 0 9 * * *"
+    calendar: 1
     timezone: Europe/Moscow
     mailTemplateFileName: nonresidents_mail_template.ftl
   residents:
@@ -53,6 +54,7 @@ report:
     reportTemplateFileName: 1c_payout.ftl
     mailTemplateFileName: residents_mail_template.ftl
     cron: "0 0 9 * * *"
+    calendar: 1
     timezone: Europe/Moscow
 scheduler:
   user-id: test
