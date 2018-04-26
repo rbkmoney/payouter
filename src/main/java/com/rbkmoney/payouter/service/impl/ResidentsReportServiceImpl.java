@@ -1,5 +1,6 @@
 package com.rbkmoney.payouter.service.impl;
 
+import com.rbkmoney.damsel.domain.CalendarRef;
 import com.rbkmoney.payouter.dao.ReportDao;
 import com.rbkmoney.payouter.domain.enums.PayoutAccountType;
 import com.rbkmoney.payouter.domain.enums.ReportStatus;
@@ -7,12 +8,15 @@ import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.domain.tables.pojos.Report;
 import com.rbkmoney.payouter.exception.DaoException;
 import com.rbkmoney.payouter.exception.StorageException;
+import com.rbkmoney.payouter.service.DominantService;
 import com.rbkmoney.payouter.service.PayoutService;
 import com.rbkmoney.payouter.service.ReportService;
 import com.rbkmoney.payouter.util.FormatUtil;
+import com.rbkmoney.payouter.util.SchedulerUtil;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
+import org.quartz.impl.calendar.HolidayCalendar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +29,7 @@ import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -51,6 +55,8 @@ public class ResidentsReportServiceImpl implements ReportService {
 
     private final FreeMarkerConfigurer freeMarkerConfigurer;
 
+    private final DominantService dominantService;
+
     @Value("${report.residents.file.name.prefix}")
     private String prefix;
 
@@ -69,12 +75,16 @@ public class ResidentsReportServiceImpl implements ReportService {
     @Value("${report.residents.timezone}")
     private ZoneId zoneId;
 
+    @Value("${report.residents.calendar}")
+    private int calendarId;
+
     @Autowired
-    public ResidentsReportServiceImpl(ReportDao reportDao, ResidentsMailContentServiceImpl residentsMailContentService, PayoutService payoutService, FreeMarkerConfigurer freeMarkerConfigurer) {
+    public ResidentsReportServiceImpl(ReportDao reportDao, ResidentsMailContentServiceImpl residentsMailContentService, PayoutService payoutService, FreeMarkerConfigurer freeMarkerConfigurer, DominantService dominantService) {
         this.reportDao = reportDao;
         this.residentsMailContentService = residentsMailContentService;
         this.payoutService = payoutService;
         this.freeMarkerConfigurer = freeMarkerConfigurer;
+        this.dominantService = dominantService;
     }
 
     @Scheduled(cron = "${report.residents.cron}", zone = "${report.residents.timezone}")
@@ -82,11 +92,14 @@ public class ResidentsReportServiceImpl implements ReportService {
     public void createNewReportsJob() throws StorageException {
         log.info("Report job for residents starting");
         try {
-            List<Payout> payouts = payoutService.getUnpaidPayoutsByAccountType(PayoutAccountType.russian_payout_account);
+            HolidayCalendar holidayCalendar = SchedulerUtil.buildCalendar(dominantService.getCalendar(new CalendarRef(calendarId)));
+            if (holidayCalendar.isTimeIncluded(Instant.now().toEpochMilli())) {
+                List<Payout> payouts = payoutService.getUnpaidPayoutsByAccountType(PayoutAccountType.russian_payout_account);
 
-            if (!payouts.isEmpty()) {
-                generateAndSave(payouts);
-                payouts.forEach(payout -> payoutService.pay(payout.getId()));
+                if (!payouts.isEmpty()) {
+                    generateAndSave(payouts);
+                    payouts.forEach(payout -> payoutService.pay(payout.getId()));
+                }
             }
         } finally {
             log.info("Report job for residents ending");

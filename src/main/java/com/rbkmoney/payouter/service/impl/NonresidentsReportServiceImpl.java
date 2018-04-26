@@ -1,6 +1,7 @@
 package com.rbkmoney.payouter.service.impl;
 
 import com.opencsv.CSVWriter;
+import com.rbkmoney.damsel.domain.CalendarRef;
 import com.rbkmoney.payouter.dao.PaymentDao;
 import com.rbkmoney.payouter.dao.ReportDao;
 import com.rbkmoney.payouter.domain.enums.PayoutAccountType;
@@ -10,9 +11,12 @@ import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.domain.tables.pojos.Report;
 import com.rbkmoney.payouter.exception.DaoException;
 import com.rbkmoney.payouter.exception.StorageException;
+import com.rbkmoney.payouter.service.DominantService;
 import com.rbkmoney.payouter.service.PayoutService;
 import com.rbkmoney.payouter.service.ReportService;
 import com.rbkmoney.payouter.util.FormatUtil;
+import com.rbkmoney.payouter.util.SchedulerUtil;
+import org.quartz.impl.calendar.HolidayCalendar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -31,9 +36,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.opencsv.CSVWriter.DEFAULT_ESCAPE_CHARACTER;
-import static com.opencsv.CSVWriter.DEFAULT_LINE_END;
-import static com.opencsv.CSVWriter.DEFAULT_QUOTE_CHARACTER;
+import static com.opencsv.CSVWriter.*;
 
 @Service
 public class NonresidentsReportServiceImpl implements ReportService {
@@ -75,6 +78,8 @@ public class NonresidentsReportServiceImpl implements ReportService {
 
     private final PayoutService payoutService;
 
+    private final DominantService dominantService;
+
     @Value("${report.nonresidents.file.name.prefix}")
     private String prefix;
 
@@ -90,12 +95,16 @@ public class NonresidentsReportServiceImpl implements ReportService {
     @Value("${report.nonresidents.timezone}")
     private ZoneId zoneId;
 
+    @Value("${report.nonresidents.calendar}")
+    private int calendarId;
+
     @Autowired
-    public NonresidentsReportServiceImpl(ReportDao reportDao, PaymentDao paymentDao, NonResidentsMailContentServiceImpl nonResidentsMailContentService, PayoutService payoutService) {
+    public NonresidentsReportServiceImpl(ReportDao reportDao, PaymentDao paymentDao, NonResidentsMailContentServiceImpl nonResidentsMailContentService, PayoutService payoutService, DominantService dominantService) {
         this.reportDao = reportDao;
         this.paymentDao = paymentDao;
         this.nonResidentsMailContentService = nonResidentsMailContentService;
         this.payoutService = payoutService;
+        this.dominantService = dominantService;
     }
 
     @Scheduled(cron = "${report.nonresidents.cron}", zone = "${report.nonresidents.timezone}")
@@ -103,11 +112,14 @@ public class NonresidentsReportServiceImpl implements ReportService {
     public void createNewReportsJob() throws StorageException {
         log.info("Report job for nonresidents starting");
         try {
-            List<Payout> payouts = payoutService.getUnpaidPayoutsByAccountType(PayoutAccountType.international_payout_account);
+            HolidayCalendar holidayCalendar = SchedulerUtil.buildCalendar(dominantService.getCalendar(new CalendarRef(calendarId)));
+            if (holidayCalendar.isTimeIncluded(Instant.now().toEpochMilli())) {
+                List<Payout> payouts = payoutService.getUnpaidPayoutsByAccountType(PayoutAccountType.international_payout_account);
 
-            if (!payouts.isEmpty()) {
-                generateAndSave(payouts);
-                payouts.forEach(payout -> payoutService.pay(payout.getId()));
+                if (!payouts.isEmpty()) {
+                    generateAndSave(payouts);
+                    payouts.forEach(payout -> payoutService.pay(payout.getId()));
+                }
             }
         } finally {
             log.info("Report job for nonresidents ending");
