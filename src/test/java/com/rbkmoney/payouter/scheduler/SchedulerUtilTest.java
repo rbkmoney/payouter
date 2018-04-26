@@ -587,7 +587,7 @@ public class SchedulerUtilTest {
         }
     }
 
-    private Calendar buildTestCalendar() throws IOException {
+    public static Calendar buildTestCalendar() throws IOException {
         Calendar calendar = new Calendar();
         calendar.setName("test-calendar");
         calendar.setTimezone("Europe/Moscow");

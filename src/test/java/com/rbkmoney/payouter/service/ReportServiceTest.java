@@ -1,5 +1,8 @@
 package com.rbkmoney.payouter.service;
 
+import com.rbkmoney.damsel.domain.*;
+import com.rbkmoney.damsel.domain_config.RepositoryClientSrv;
+import com.rbkmoney.damsel.domain_config.VersionedObject;
 import com.rbkmoney.damsel.message_sender.Message;
 import com.rbkmoney.damsel.message_sender.MessageSenderSrv;
 import com.rbkmoney.payouter.AbstractIntegrationTest;
@@ -15,19 +18,25 @@ import com.rbkmoney.payouter.domain.tables.pojos.Report;
 import com.rbkmoney.payouter.service.impl.NonresidentsReportServiceImpl;
 import com.rbkmoney.payouter.service.impl.ResidentsReportServiceImpl;
 import org.apache.thrift.TException;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
+import static com.rbkmoney.payouter.scheduler.SchedulerUtilTest.buildTestCalendar;
 import static io.github.benas.randombeans.api.EnhancedRandom.randomListOf;
 import static io.github.benas.randombeans.api.EnhancedRandom.randomStreamOf;
 import static junit.framework.TestCase.assertTrue;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doAnswer;
 
 public class ReportServiceTest extends AbstractIntegrationTest {
@@ -49,6 +58,15 @@ public class ReportServiceTest extends AbstractIntegrationTest {
 
     @MockBean
     MessageSenderSrv.Iface dudoser;
+
+    @MockBean
+    RepositoryClientSrv.Iface dominantClient;
+
+    @Before
+    public void setup() throws TException, IOException {
+        given(dominantClient.checkoutObject(any(), eq(Reference.calendar(new CalendarRef(1)))))
+                .willReturn(buildPaymentCalendarObject(new CalendarRef(1)));
+    }
 
     @Test
     public void testCreateReportForResidents() throws TException, InterruptedException {
@@ -101,5 +119,17 @@ public class ReportServiceTest extends AbstractIntegrationTest {
 
         nonresidentsReportService.createNewReportsJob();
         assertTrue(payoutDao.getUnpaidPayoutsByAccountType(PayoutAccountType.international_payout_account).isEmpty());
+    }
+
+    private VersionedObject buildPaymentCalendarObject(CalendarRef calendarRef) throws IOException {
+        Calendar calendar = new Calendar("calendar", "Europe/Moscow", Collections.emptyMap());
+
+        return new VersionedObject(
+                1,
+                DomainObject.calendar(new CalendarObject(
+                        calendarRef,
+                        buildTestCalendar()
+                ))
+        );
     }
 }
