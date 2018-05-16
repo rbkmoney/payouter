@@ -20,7 +20,6 @@ import com.rbkmoney.generation.InvoicePaymentGenerator;
 import com.rbkmoney.generation.RefundGenerator;
 import com.rbkmoney.payouter.AbstractIntegrationTest;
 import com.rbkmoney.payouter.dao.PayoutDao;
-import com.rbkmoney.payouter.domain.enums.PayoutAccountType;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.meta.UserIdentityIdExtensionKit;
 import com.rbkmoney.payouter.meta.UserIdentityRealmExtensionKit;
@@ -45,11 +44,9 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 import static com.rbkmoney.payouter.domain.enums.PayoutStatus.*;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
@@ -119,8 +116,8 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
                 .willReturn(buildPaymentInstitutionObject(new PaymentInstitutionRef(1)));
         given(dominantClient.checkoutObject(any(), eq(Reference.calendar(new CalendarRef(1)))))
                 .willReturn(buildPaymentCalendarObject(new CalendarRef(1)));
-        given(dominantClient.checkoutObject(any(), eq(Reference.payout_schedule(new PayoutScheduleRef(1)))))
-                .willReturn(buildPayoutScheduleObject(new PayoutScheduleRef(1)));
+        given(dominantClient.checkoutObject(any(), eq(Reference.business_schedule(new BusinessScheduleRef(1)))))
+                .willReturn(buildPayoutScheduleObject(new BusinessScheduleRef(1)));
         given(dominantClient.checkoutObject(any(), eq(Reference.category(new CategoryRef(1)))))
                 .willReturn(buildCategoryObject(new CategoryRef(1)));
     }
@@ -397,10 +394,10 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
     }
 
     private Event buildScheduleEvent(String partyId, String shopId) {
-        return buildScheduleEvent(partyId, shopId, new PayoutScheduleRef(1));
+        return buildScheduleEvent(partyId, shopId, new BusinessScheduleRef(1));
     }
 
-    private Event buildScheduleEvent(String partyId, String shopId, PayoutScheduleRef payoutScheduleRef) {
+    private Event buildScheduleEvent(String partyId, String shopId, BusinessScheduleRef payoutScheduleRef) {
         ClaimStatusChanged claimStatusChanged = new ClaimStatusChanged();
         ClaimAccepted claimAccepted = new ClaimAccepted();
         ClaimEffect claimEffect = new ClaimEffect();
@@ -436,11 +433,11 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         return party;
     }
 
-    private VersionedObject buildPayoutScheduleObject(PayoutScheduleRef payoutScheduleRef) {
+    private VersionedObject buildPayoutScheduleObject(BusinessScheduleRef payoutScheduleRef) {
         ScheduleEvery nth5 = new ScheduleEvery();
         nth5.setNth((byte) 5);
 
-        PayoutSchedule payoutSchedule = new PayoutSchedule();
+        BusinessSchedule payoutSchedule = new BusinessSchedule();
         payoutSchedule.setName("schedule");
         payoutSchedule.setSchedule(new Schedule(
                 ScheduleYear.every(new ScheduleEvery()),
@@ -455,7 +452,7 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
 
         return new VersionedObject(
                 1,
-                DomainObject.payout_schedule(new PayoutScheduleObject(
+                DomainObject.business_schedule(new BusinessScheduleObject(
                         payoutScheduleRef,
                         payoutSchedule
                 ))
