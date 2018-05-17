@@ -26,10 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -145,25 +142,31 @@ public class SchedulerServiceImpl implements SchedulerService {
                     .usingJobData(GeneratePayoutJob.SHOP_ID, shopId)
                     .build();
 
-            TimeSpan timeSpan = schedule.getPolicy().getAssetsFreezeFor();
             Set<Trigger> triggers = new HashSet<>();
-            List<String> cronList = SchedulerUtil.buildCron(schedule.getSchedule());
+            List<String> cronList = SchedulerUtil.buildCron(schedule.getSchedule(), Optional.ofNullable(calendar.getFirstDayOfWeek()));
             for (int triggerId = 0; triggerId < cronList.size(); triggerId++) {
                 String cron = cronList.get(triggerId);
+
+                FreezeTimeCronScheduleBuilder freezeTimeCronScheduleBuilder = FreezeTimeCronScheduleBuilder.cronSchedule(cron)
+                        .inTimeZone(TimeZone.getTimeZone(calendar.getTimezone()));
+
+                if (schedule.isSetDelay() || schedule.isSetPolicy()) {
+                    TimeSpan timeSpan = Optional.ofNullable(schedule.getDelay())
+                            .orElse(schedule.getPolicy().getAssetsFreezeFor());
+
+                    freezeTimeCronScheduleBuilder.withYears(timeSpan.getYears())
+                            .withMonths(timeSpan.getMonths())
+                            .withDays(timeSpan.getDays())
+                            .withHours(timeSpan.getHours())
+                            .withMinutes(timeSpan.getMinutes())
+                            .withSeconds(timeSpan.getSeconds());
+                }
+
                 Trigger trigger = TriggerBuilder.newTrigger()
                         .withIdentity(buildTriggerKey(partyId, shopId, calendarRef.getId(), scheduleRef.getId(), triggerId))
                         .withDescription(schedule.getDescription())
                         .forJob(jobDetail)
-                        .withSchedule(
-                                FreezeTimeCronScheduleBuilder.cronSchedule(cron)
-                                        .inTimeZone(TimeZone.getTimeZone(calendar.getTimezone()))
-                                        .withYears(timeSpan.getYears())
-                                        .withMonths(timeSpan.getMonths())
-                                        .withDays(timeSpan.getDays())
-                                        .withHours(timeSpan.getHours())
-                                        .withMinutes(timeSpan.getMinutes())
-                                        .withSeconds(timeSpan.getSeconds())
-                        )
+                        .withSchedule(freezeTimeCronScheduleBuilder)
                         .modifiedByCalendar(calendarId)
                         .build();
                 triggers.add(trigger);
