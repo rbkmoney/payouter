@@ -9,6 +9,7 @@ import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -16,8 +17,15 @@ public class DominantServiceImpl implements DominantService {
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
+    private final RepositoryClientSrv.Iface dominantClient;
+
+    private final RetryTemplate retryTemplate;
+
     @Autowired
-    private RepositoryClientSrv.Iface dominantClient;
+    public DominantServiceImpl(RepositoryClientSrv.Iface dominantClient, RetryTemplate retryTemplate) {
+        this.dominantClient = dominantClient;
+        this.retryTemplate = retryTemplate;
+    }
 
     @Override
     public BusinessSchedule getBusinessSchedule(BusinessScheduleRef scheduleRef) throws NotFoundException {
@@ -35,7 +43,7 @@ public class DominantServiceImpl implements DominantService {
         try {
             com.rbkmoney.damsel.domain.Reference reference = new com.rbkmoney.damsel.domain.Reference();
             reference.setBusinessSchedule(scheduleRef);
-            VersionedObject versionedObject = dominantClient.checkoutObject(revisionReference, reference);
+            VersionedObject versionedObject = checkoutObject(revisionReference, reference);
             BusinessSchedule schedule = versionedObject.getObject().getBusinessSchedule().getData();
             log.info("Schedule has been found, scheduleRef='{}', revisionReference='{}', schedule='{}'", scheduleRef, revisionReference, schedule);
             return schedule;
@@ -62,7 +70,7 @@ public class DominantServiceImpl implements DominantService {
         try {
             com.rbkmoney.damsel.domain.Reference reference = new com.rbkmoney.damsel.domain.Reference();
             reference.setPaymentInstitution(paymentInstitutionRef);
-            VersionedObject versionedObject = dominantClient.checkoutObject(revisionReference, reference);
+            VersionedObject versionedObject = checkoutObject(revisionReference, reference);
             PaymentInstitution paymentInstitution = versionedObject.getObject().getPaymentInstitution().getData();
             log.info("Payment institution has been found, PaymentInstitutionRef='{}', revisionReference='{}', paymentInstitution='{}'", paymentInstitutionRef, revisionReference, paymentInstitution);
             return paymentInstitution;
@@ -89,7 +97,7 @@ public class DominantServiceImpl implements DominantService {
         try {
             com.rbkmoney.damsel.domain.Reference reference = new com.rbkmoney.damsel.domain.Reference();
             reference.setCalendar(calendarRef);
-            VersionedObject versionedObject = dominantClient.checkoutObject(revisionReference, reference);
+            VersionedObject versionedObject = checkoutObject(revisionReference, reference);
             Calendar calendar = versionedObject.getObject().getCalendar().getData();
             log.info("Calendar has been found, calendarRef='{}', revisionReference='{}', calendar='{}'", calendarRef, revisionReference, calendar);
             return calendar;
@@ -116,7 +124,7 @@ public class DominantServiceImpl implements DominantService {
         try {
             com.rbkmoney.damsel.domain.Reference reference = new com.rbkmoney.damsel.domain.Reference();
             reference.setCategory(categoryRef);
-            VersionedObject versionedObject = dominantClient.checkoutObject(revisionReference, reference);
+            VersionedObject versionedObject = checkoutObject(revisionReference, reference);
             CategoryType categoryType = versionedObject.getObject().getCategory().getData().getType();
             log.info("Category type has been found, categoryRef='{}', revisionReference='{}', categoryType='{}'", categoryRef, revisionReference, categoryType);
             return categoryType;
@@ -125,5 +133,11 @@ public class DominantServiceImpl implements DominantService {
         } catch (TException ex) {
             throw new RuntimeException(String.format("Failed to get category type, categoryRef='%s', revisionReference='%s'", categoryRef, revisionReference), ex);
         }
+    }
+
+    private VersionedObject checkoutObject(Reference revisionReference, com.rbkmoney.damsel.domain.Reference reference) throws TException {
+        return retryTemplate.execute(
+                context -> dominantClient.checkoutObject(revisionReference, reference)
+        );
     }
 }

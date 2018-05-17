@@ -1,8 +1,8 @@
 package com.rbkmoney.payouter.service.impl;
 
 import com.rbkmoney.damsel.base.TimeSpan;
-import com.rbkmoney.damsel.domain.Calendar;
 import com.rbkmoney.damsel.domain.*;
+import com.rbkmoney.damsel.domain.Calendar;
 import com.rbkmoney.payouter.dao.ShopMetaDao;
 import com.rbkmoney.payouter.domain.tables.pojos.ShopMeta;
 import com.rbkmoney.payouter.exception.DaoException;
@@ -21,11 +21,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.DependsOn;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.PostConstruct;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -57,24 +57,44 @@ public class SchedulerServiceImpl implements SchedulerService {
         this.dominantService = dominantService;
     }
 
-    @PostConstruct
-    public void initJobs() {
-        log.info("Starting jobs...");
-        List<ShopMeta> activeShops = shopMetaDao.getAllActiveShops();
-        if (activeShops.isEmpty()) {
-            log.info("No shops found, nothing to do");
-            return;
-        }
+    @Scheduled(fixedDelay = 60 * 1000)
+    public void syncJobs() {
+        try {
+            log.info("Starting synchronization of jobs...");
+            List<ShopMeta> activeShops = shopMetaDao.getAllActiveShops();
+            if (activeShops.isEmpty()) {
+                log.info("No active shops found, nothing to do");
+                return;
+            }
 
-        for (ShopMeta shopMeta : activeShops) {
-            createJob(
-                    shopMeta.getPartyId(),
-                    shopMeta.getShopId(),
-                    new CalendarRef(shopMeta.getCalendarId()),
-                    new BusinessScheduleRef(shopMeta.getSchedulerId())
-            );
+            for (ShopMeta shopMeta : activeShops) {
+                JobKey jobKey = buildJobKey(shopMeta.getPartyId(), shopMeta.getShopId(), shopMeta.getCalendarId(), shopMeta.getSchedulerId());
+                List<? extends Trigger> triggers = scheduler.getTriggersOfJob(jobKey);
+                if (triggers.isEmpty() || !triggers.stream().allMatch(this::isTriggerOnNormalState)) {
+                    if (scheduler.checkExists(jobKey)) {
+                        log.warn("Inactive job found, please check it manually. Job will be restored, shopMeta='{}'", shopMeta);
+                    }
+                    createJob(
+                            shopMeta.getPartyId(),
+                            shopMeta.getShopId(),
+                            new CalendarRef(shopMeta.getCalendarId()),
+                            new BusinessScheduleRef(shopMeta.getSchedulerId())
+                    );
+                }
+            }
+        } catch (DaoException | SchedulerException ex) {
+            throw new ScheduleProcessingException("Failed to sync jobs", ex);
+        } finally {
+            log.info("End synchronization of jobs");
         }
-        log.info("Jobs have been successfully started, jobsCount='{}'", activeShops.size());
+    }
+
+    private boolean isTriggerOnNormalState(Trigger trigger) {
+        try {
+            return scheduler.getTriggerState(trigger.getKey()) == Trigger.TriggerState.NORMAL;
+        } catch (SchedulerException ex) {
+            throw new ScheduleProcessingException(String.format("Failed to get trigger state, triggerKey='%s'", trigger.getKey()), ex);
+        }
     }
 
     @Override
