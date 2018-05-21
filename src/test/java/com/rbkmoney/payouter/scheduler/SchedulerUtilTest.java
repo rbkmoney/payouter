@@ -434,7 +434,7 @@ public class SchedulerUtilTest {
                 ScheduleFragment.every(scheduleEvery)
         );
 
-        List<String> cronList = SchedulerUtil.buildCron(schedule);
+        List<String> cronList = SchedulerUtil.buildCron(schedule, Optional.empty());
         assertEquals(1, cronList.size());
         assertEquals("* * * * * ? *", cronList.get(0));
         assertTrue(cronList.stream().allMatch(cron -> CronExpression.isValidExpression(cron)));
@@ -453,7 +453,7 @@ public class SchedulerUtilTest {
                 ScheduleFragment.every(scheduleEvery)
         );
 
-        List<String> cronList = SchedulerUtil.buildCron(schedule);
+        List<String> cronList = SchedulerUtil.buildCron(schedule, Optional.empty());
         assertEquals(1, cronList.size());
         assertEquals("* * * ? * 1,2,7 *", cronList.get(0));
         assertTrue(CronExpression.isValidExpression(cronList.get(0)));
@@ -471,7 +471,7 @@ public class SchedulerUtilTest {
                 ScheduleFragment.every(scheduleEvery)
         );
 
-        cronList = SchedulerUtil.buildCron(schedule);
+        cronList = SchedulerUtil.buildCron(schedule, Optional.empty());
         assertEquals(1, cronList.size());
         assertEquals("* * * ? * */3 *", cronList.get(0));
         assertTrue(CronExpression.isValidExpression(cronList.get(0)));
@@ -490,7 +490,7 @@ public class SchedulerUtilTest {
                 ScheduleFragment.every(scheduleEvery)
         );
 
-        List<String> cronList = SchedulerUtil.buildCron(schedule);
+        List<String> cronList = SchedulerUtil.buildCron(schedule, Optional.empty());
         assertEquals(1, cronList.size());
         assertEquals("* * * 6,10,31 * ? *", cronList.get(0));
         assertTrue(CronExpression.isValidExpression(cronList.get(0)));
@@ -508,7 +508,7 @@ public class SchedulerUtilTest {
                 ScheduleFragment.every(scheduleEvery)
         );
 
-        cronList = SchedulerUtil.buildCron(schedule);
+        cronList = SchedulerUtil.buildCron(schedule, Optional.empty());
         assertEquals(1, cronList.size());
         assertEquals("* * * */3 * ? *", cronList.get(0));
         assertTrue(CronExpression.isValidExpression(cronList.get(0)));
@@ -529,7 +529,7 @@ public class SchedulerUtilTest {
                 ScheduleFragment.every(scheduleEvery)
         );
 
-        List<String> cronList = SchedulerUtil.buildCron(schedule);
+        List<String> cronList = SchedulerUtil.buildCron(schedule, Optional.empty());
         assertEquals(2, cronList.size());
         assertEquals("*/5 */5 1,3,4,5,12 */5 1,2,3,4,10,11 ? */5", cronList.get(0));
         assertEquals("*/5 */5 1,3,4,5,12 ? 1,2,3,4,10,11 2,3,6 */5", cronList.get(1));
@@ -548,7 +548,11 @@ public class SchedulerUtilTest {
                 ScheduleFragment.every(new ScheduleEvery())
         );
 
-        List<String> cronList = SchedulerUtil.buildCron(schedule);
+        List<String> cronList = SchedulerUtil.buildCron(schedule, Optional.ofNullable(DayOfWeek.Tue));
+        assertEquals(1, cronList.size());
+        assertEquals("* * * ? * 1,5,7 *", cronList.get(0));
+
+        cronList = SchedulerUtil.buildCron(schedule, Optional.ofNullable(DayOfWeek.Mon));
         assertEquals(1, cronList.size());
         assertEquals("* * * ? * 1,2,6 *", cronList.get(0));
     }

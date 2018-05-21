@@ -28,23 +28,23 @@ public class DominantServiceImpl implements DominantService {
     }
 
     @Override
-    public PayoutSchedule getPayoutSchedule(PayoutScheduleRef scheduleRef) throws NotFoundException {
-        return getPayoutSchedule(scheduleRef, Reference.head(new Head()));
+    public BusinessSchedule getBusinessSchedule(BusinessScheduleRef scheduleRef) throws NotFoundException {
+        return getBusinessSchedule(scheduleRef, Reference.head(new Head()));
     }
 
     @Override
-    public PayoutSchedule getPayoutSchedule(PayoutScheduleRef scheduleRef, long domainRevision) throws NotFoundException {
-        return getPayoutSchedule(scheduleRef, Reference.version(domainRevision));
+    public BusinessSchedule getBusinessSchedule(BusinessScheduleRef scheduleRef, long domainRevision) throws NotFoundException {
+        return getBusinessSchedule(scheduleRef, Reference.version(domainRevision));
     }
 
     @Override
-    public PayoutSchedule getPayoutSchedule(PayoutScheduleRef scheduleRef, Reference revisionReference) throws NotFoundException {
+    public BusinessSchedule getBusinessSchedule(BusinessScheduleRef scheduleRef, Reference revisionReference) throws NotFoundException {
         log.info("Trying to get schedule, scheduleRef='{}', revisionReference='{}'", scheduleRef, revisionReference);
         try {
             com.rbkmoney.damsel.domain.Reference reference = new com.rbkmoney.damsel.domain.Reference();
-            reference.setPayoutSchedule(scheduleRef);
+            reference.setBusinessSchedule(scheduleRef);
             VersionedObject versionedObject = checkoutObject(revisionReference, reference);
-            PayoutSchedule schedule = versionedObject.getObject().getPayoutSchedule().getData();
+            BusinessSchedule schedule = versionedObject.getObject().getBusinessSchedule().getData();
             log.info("Schedule has been found, scheduleRef='{}', revisionReference='{}', schedule='{}'", scheduleRef, revisionReference, schedule);
             return schedule;
         } catch (VersionNotFound | ObjectNotFound ex) {

@@ -4,10 +4,8 @@ import com.cronutils.builder.CronBuilder;
 import com.cronutils.mapper.ConstantsMapper;
 import com.cronutils.mapper.WeekDay;
 import com.cronutils.model.CronType;
-import com.cronutils.model.definition.CronDefinition;
 import com.cronutils.model.definition.CronDefinitionBuilder;
 import com.cronutils.model.field.CronFieldName;
-import com.cronutils.model.field.definition.DayOfWeekFieldDefinition;
 import com.cronutils.model.field.expression.And;
 import com.cronutils.model.field.expression.FieldExpression;
 import com.rbkmoney.damsel.base.*;
@@ -29,31 +27,35 @@ import static com.cronutils.model.field.expression.FieldExpressionFactory.on;
 
 public class SchedulerUtil {
 
-    public static List<String> buildCron(Schedule schedule) {
+    public static List<String> buildCron(Schedule schedule, Optional<DayOfWeek> firstDayOfWeek) {
+        WeekDay weekDay = firstDayOfWeek
+                .map(dayOfWeek -> new WeekDay(dayOfWeek.getValue(), false))
+                .orElse(ConstantsMapper.JAVA8);
+
         if (schedule.getDayOfMonth().isSetEvery() && !schedule.getDayOfMonth().getEvery().isSetNth()) {
             if (schedule.getDayOfWeek().isSetEvery() && !schedule.getDayOfWeek().getEvery().isSetNth()) {
-                return Arrays.asList(buildCron(schedule, DAY_OF_WEEK));
+                return Arrays.asList(buildCron(schedule, weekDay, DAY_OF_WEEK));
             } else {
-                return Arrays.asList(buildCron(schedule, DAY_OF_MONTH));
+                return Arrays.asList(buildCron(schedule, weekDay, DAY_OF_MONTH));
             }
         }
 
         if (schedule.getDayOfWeek().isSetEvery() && !schedule.getDayOfWeek().getEvery().isSetNth()) {
-            return Arrays.asList(buildCron(schedule, DAY_OF_WEEK));
+            return Arrays.asList(buildCron(schedule, weekDay, DAY_OF_WEEK));
         } else {
             return Arrays.asList(
-                    buildCron(schedule, DAY_OF_WEEK),
-                    buildCron(schedule, DAY_OF_MONTH));
+                    buildCron(schedule, weekDay, DAY_OF_WEEK),
+                    buildCron(schedule, weekDay, DAY_OF_MONTH));
         }
 
     }
 
-    public static String buildCron(Schedule schedule, CronFieldName questionField) {
+    public static String buildCron(Schedule schedule, WeekDay firstDayOfWeek, CronFieldName questionField) {
         CronBuilder cronBuilder = CronBuilder.cron(CronDefinitionBuilder.instanceDefinitionFor(CronType.QUARTZ))
                 .withYear(buildExpression(schedule.getYear()))
                 .withMonth(buildExpression(schedule.getMonth()))
                 .withDoM(buildExpression(schedule.getDayOfMonth()))
-                .withDoW(buildExpression(schedule.getDayOfWeek()))
+                .withDoW(buildExpression(schedule.getDayOfWeek(), firstDayOfWeek))
                 .withHour(buildExpression(schedule.getHour()))
                 .withMinute(buildExpression(schedule.getMinute()))
                 .withSecond(buildExpression(schedule.getSecond()));
@@ -81,9 +83,9 @@ public class SchedulerUtil {
         return fieldExpression;
     }
 
-    private static FieldExpression buildDaysOfWeekOnExpression(Set<DayOfWeek> days) {
+    private static FieldExpression buildDaysOfWeekOnExpression(Set<DayOfWeek> days, WeekDay firstDayOfWeek) {
         Set<Integer> dayValues = days.stream()
-                .map(dayValue -> ConstantsMapper.weekDayMapping(ConstantsMapper.JAVA8, ConstantsMapper.QUARTZ_WEEK_DAY, dayValue.getValue()))
+                .map(dayValue -> ConstantsMapper.weekDayMapping(firstDayOfWeek, ConstantsMapper.QUARTZ_WEEK_DAY, dayValue.getValue()))
                 .collect(Collectors.toSet());
         return buildOnExpression(dayValues);
     }
@@ -130,13 +132,13 @@ public class SchedulerUtil {
         }
     }
 
-    public static FieldExpression buildExpression(ScheduleDayOfWeek scheduleDayOfWeek) {
+    public static FieldExpression buildExpression(ScheduleDayOfWeek scheduleDayOfWeek, WeekDay firstDayOfWeek) {
         ScheduleDayOfWeek._Fields field = scheduleDayOfWeek.getSetField();
         switch (field) {
             case EVERY:
                 return buildScheduleEveryExpression(scheduleDayOfWeek.getEvery());
             case ON:
-                return buildDaysOfWeekOnExpression(scheduleDayOfWeek.getOn());
+                return buildDaysOfWeekOnExpression(scheduleDayOfWeek.getOn(), firstDayOfWeek);
             default:
                 throw new IllegalArgumentException(String.format("Unknown DayOfWeek field, field='%s'", field));
         }

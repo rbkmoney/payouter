@@ -1,8 +1,8 @@
 package com.rbkmoney.payouter.service.impl;
 
 import com.rbkmoney.damsel.base.TimeSpan;
-import com.rbkmoney.damsel.domain.Calendar;
 import com.rbkmoney.damsel.domain.*;
+import com.rbkmoney.damsel.domain.Calendar;
 import com.rbkmoney.payouter.dao.ShopMetaDao;
 import com.rbkmoney.payouter.domain.tables.pojos.ShopMeta;
 import com.rbkmoney.payouter.exception.DaoException;
@@ -26,11 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.PostConstruct;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -79,7 +75,7 @@ public class SchedulerServiceImpl implements SchedulerService {
                             shopMeta.getPartyId(),
                             shopMeta.getShopId(),
                             new CalendarRef(shopMeta.getCalendarId()),
-                            new PayoutScheduleRef(shopMeta.getSchedulerId())
+                            new BusinessScheduleRef(shopMeta.getSchedulerId())
                     );
                 }
             }
@@ -100,7 +96,7 @@ public class SchedulerServiceImpl implements SchedulerService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
-    public void registerJob(String partyId, String shopId, PayoutScheduleRef scheduleRef) throws NotFoundException, ScheduleProcessingException, StorageException {
+    public void registerJob(String partyId, String shopId, BusinessScheduleRef scheduleRef) throws NotFoundException, ScheduleProcessingException, StorageException {
         try {
             log.info("Trying to register job, partyId='{}', shopId='{}', scheduleRef='{}'",
                     partyId, shopId, scheduleRef);
@@ -128,10 +124,10 @@ public class SchedulerServiceImpl implements SchedulerService {
         }
     }
 
-    private void createJob(String partyId, String shopId, CalendarRef calendarRef, PayoutScheduleRef scheduleRef) throws NotFoundException, ScheduleProcessingException, StorageException {
+    private void createJob(String partyId, String shopId, CalendarRef calendarRef, BusinessScheduleRef scheduleRef) throws NotFoundException, ScheduleProcessingException, StorageException {
         log.info("Trying to create job, partyId='{}', shopId='{}', calendarRef='{}', scheduleRef='{}'", partyId, shopId, calendarRef, scheduleRef);
         try {
-            PayoutSchedule schedule = dominantService.getPayoutSchedule(scheduleRef);
+            BusinessSchedule schedule = dominantService.getBusinessSchedule(scheduleRef);
             Calendar calendar = dominantService.getCalendar(calendarRef);
 
             String calendarId = "calendar-" + calendarRef.getId();
@@ -146,25 +142,31 @@ public class SchedulerServiceImpl implements SchedulerService {
                     .usingJobData(GeneratePayoutJob.SHOP_ID, shopId)
                     .build();
 
-            TimeSpan timeSpan = schedule.getPolicy().getAssetsFreezeFor();
             Set<Trigger> triggers = new HashSet<>();
-            List<String> cronList = SchedulerUtil.buildCron(schedule.getSchedule());
+            List<String> cronList = SchedulerUtil.buildCron(schedule.getSchedule(), Optional.ofNullable(calendar.getFirstDayOfWeek()));
             for (int triggerId = 0; triggerId < cronList.size(); triggerId++) {
                 String cron = cronList.get(triggerId);
+
+                FreezeTimeCronScheduleBuilder freezeTimeCronScheduleBuilder = FreezeTimeCronScheduleBuilder.cronSchedule(cron)
+                        .inTimeZone(TimeZone.getTimeZone(calendar.getTimezone()));
+
+                if (schedule.isSetDelay() || schedule.isSetPolicy()) {
+                    TimeSpan timeSpan = Optional.ofNullable(schedule.getDelay())
+                            .orElse(schedule.getPolicy().getAssetsFreezeFor());
+
+                    freezeTimeCronScheduleBuilder.withYears(timeSpan.getYears())
+                            .withMonths(timeSpan.getMonths())
+                            .withDays(timeSpan.getDays())
+                            .withHours(timeSpan.getHours())
+                            .withMinutes(timeSpan.getMinutes())
+                            .withSeconds(timeSpan.getSeconds());
+                }
+
                 Trigger trigger = TriggerBuilder.newTrigger()
                         .withIdentity(buildTriggerKey(partyId, shopId, calendarRef.getId(), scheduleRef.getId(), triggerId))
                         .withDescription(schedule.getDescription())
                         .forJob(jobDetail)
-                        .withSchedule(
-                                FreezeTimeCronScheduleBuilder.cronSchedule(cron)
-                                        .inTimeZone(TimeZone.getTimeZone(calendar.getTimezone()))
-                                        .withYears(timeSpan.getYears())
-                                        .withMonths(timeSpan.getMonths())
-                                        .withDays(timeSpan.getDays())
-                                        .withHours(timeSpan.getHours())
-                                        .withMinutes(timeSpan.getMinutes())
-                                        .withSeconds(timeSpan.getSeconds())
-                        )
+                        .withSchedule(freezeTimeCronScheduleBuilder)
                         .modifiedByCalendar(calendarId)
                         .build();
                 triggers.add(trigger);
