@@ -8,6 +8,7 @@ import com.rbkmoney.payouter.domain.Keys;
 import com.rbkmoney.payouter.domain.Sht;
 import com.rbkmoney.payouter.domain.tables.records.InvoiceRecord;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
@@ -34,7 +35,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Invoice extends TableImpl<InvoiceRecord> {
 
-    private static final long serialVersionUID = 1526828934;
+    private static final long serialVersionUID = -94159747;
 
     /**
      * The reference instance of <code>sht.invoice</code>
@@ -63,6 +64,21 @@ public class Invoice extends TableImpl<InvoiceRecord> {
      * The column <code>sht.invoice.shop_id</code>.
      */
     public final TableField<InvoiceRecord, String> SHOP_ID = createField("shop_id", org.jooq.impl.SQLDataType.VARCHAR.nullable(false), this, "");
+
+    /**
+     * The column <code>sht.invoice.contract_id</code>.
+     */
+    public final TableField<InvoiceRecord, String> CONTRACT_ID = createField("contract_id", org.jooq.impl.SQLDataType.VARCHAR, this, "");
+
+    /**
+     * The column <code>sht.invoice.created_at</code>.
+     */
+    public final TableField<InvoiceRecord, LocalDateTime> CREATED_AT = createField("created_at", org.jooq.impl.SQLDataType.LOCALDATETIME, this, "");
+
+    /**
+     * The column <code>sht.invoice.party_revision</code>.
+     */
+    public final TableField<InvoiceRecord, Long> PARTY_REVISION = createField("party_revision", org.jooq.impl.SQLDataType.BIGINT, this, "");
 
     /**
      * Create a <code>sht.invoice</code> table reference

@@ -37,6 +37,20 @@ public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao {
     }
 
     @Override
+    public void updatePaymentMeta(String invoiceId, String paymentId, String contractId, Long partyRevision) throws DaoException {
+        Query query = getDslContext()
+                .update(PAYMENT)
+                .set(PAYMENT.CONTRACT_ID, contractId)
+                .set(PAYMENT.PARTY_REVISION, partyRevision)
+                .where(
+                        PAYMENT.INVOICE_ID.eq(invoiceId)
+                        .and(PAYMENT.PAYMENT_ID.eq(paymentId))
+                );
+
+        executeOne(query);
+    }
+
+    @Override
     public Payment get(String invoiceId, String paymentId) throws DaoException {
         Query query = getDslContext().selectFrom(PAYMENT)
                 .where(PAYMENT.INVOICE_ID.eq(invoiceId).and(PAYMENT.PAYMENT_ID.eq(paymentId)));

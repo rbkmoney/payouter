@@ -18,10 +18,13 @@ public class OnStart implements ApplicationListener<ApplicationReadyEvent> {
 
     private final EventPublisher eventPublisher;
 
+    private final EventPublisher temporalEventPublisher;
+
     private final EventStockService eventStockService;
 
-    public OnStart(EventPublisher eventPublisher, EventStockService eventStockService) {
+    public OnStart(EventPublisher eventPublisher, EventStockService eventStockService, EventPublisher temporalEventPublisher) {
         this.eventPublisher = eventPublisher;
+        this.temporalEventPublisher = temporalEventPublisher;
         this.eventStockService = eventStockService;
     }
 
@@ -40,5 +43,12 @@ public class OnStart implements ApplicationListener<ApplicationReadyEvent> {
         );
 
         eventPublisher.subscribe(subscriberConfig);
+
+        temporalEventPublisher.subscribe(new DefaultSubscriberConfig(
+                        new EventFlowFilter(
+                                new EventConstraint(new EventConstraint.EventIDRange())
+                        )
+                )
+        );
     }
 }

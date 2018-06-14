@@ -79,6 +79,7 @@ public class InvoicePaymentHandler implements Handler<InvoiceChange, Event> {
 
         payment.setPartyId(invoice.getPartyId());
         payment.setShopId(invoice.getShopId());
+        payment.setContractId(invoice.getContractId());
 
         PaymentRoute paymentRoute = invoicePaymentStarted.getRoute();
         int providerId = paymentRoute.getProvider().getId();
@@ -93,6 +94,10 @@ public class InvoicePaymentHandler implements Handler<InvoiceChange, Event> {
         Instant paymentCreatedAt = TypeUtil.stringToInstant(invoicePayment.getCreatedAt());
         payment.setCreatedAt(LocalDateTime.ofInstant(paymentCreatedAt, ZoneOffset.UTC));
         payment.setDomainRevision(invoicePayment.getDomainRevision());
+
+        if (invoicePayment.isSetPartyRevision()) {
+            payment.setPartyRevision(invoicePayment.getPartyRevision());
+        }
 
         List<FinalCashFlowPosting> finalCashFlow = invoicePaymentStarted.getCashFlow();
         Map<CashFlowType, Long> parsedCashFlow = DamselUtil.parseCashFlow(finalCashFlow);
