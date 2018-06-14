@@ -18,7 +18,7 @@ public class InvoiceDaoTest extends AbstractIntegrationTest {
     public void testSaveAndGet() throws DaoException {
         Invoice invoice = random(Invoice.class);
 
-        invoiceDao.save(invoice.getId(), invoice.getPartyId(), invoice.getShopId(), invoice.getContractId(), invoice.getPartyRevision(), invoice.getCreatedAt());
+        invoiceDao.save(invoice.getId(), invoice.getPartyId(), invoice.getShopId(), null, null, null);
         //save again
         invoiceDao.save(invoice.getId(), invoice.getPartyId(), invoice.getShopId(), invoice.getContractId(), invoice.getPartyRevision(), invoice.getCreatedAt());
 
