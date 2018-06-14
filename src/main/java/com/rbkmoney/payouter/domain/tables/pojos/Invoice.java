@@ -5,6 +5,7 @@ package com.rbkmoney.payouter.domain.tables.pojos;
 
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 import javax.annotation.Generated;
 
@@ -22,11 +23,14 @@ import javax.annotation.Generated;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Invoice implements Serializable {
 
-    private static final long serialVersionUID = -198888365;
+    private static final long serialVersionUID = 18831897;
 
-    private String id;
-    private String partyId;
-    private String shopId;
+    private String        id;
+    private String        partyId;
+    private String        shopId;
+    private String        contractId;
+    private LocalDateTime createdAt;
+    private Long          partyRevision;
 
     public Invoice() {}
 
@@ -34,16 +38,25 @@ public class Invoice implements Serializable {
         this.id = value.id;
         this.partyId = value.partyId;
         this.shopId = value.shopId;
+        this.contractId = value.contractId;
+        this.createdAt = value.createdAt;
+        this.partyRevision = value.partyRevision;
     }
 
     public Invoice(
-        String id,
-        String partyId,
-        String shopId
+        String        id,
+        String        partyId,
+        String        shopId,
+        String        contractId,
+        LocalDateTime createdAt,
+        Long          partyRevision
     ) {
         this.id = id;
         this.partyId = partyId;
         this.shopId = shopId;
+        this.contractId = contractId;
+        this.createdAt = createdAt;
+        this.partyRevision = partyRevision;
     }
 
     public String getId() {
@@ -68,6 +81,30 @@ public class Invoice implements Serializable {
 
     public void setShopId(String shopId) {
         this.shopId = shopId;
+    }
+
+    public String getContractId() {
+        return this.contractId;
+    }
+
+    public void setContractId(String contractId) {
+        this.contractId = contractId;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return this.createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Long getPartyRevision() {
+        return this.partyRevision;
+    }
+
+    public void setPartyRevision(Long partyRevision) {
+        this.partyRevision = partyRevision;
     }
 
     @Override
@@ -97,6 +134,24 @@ public class Invoice implements Serializable {
         }
         else if (!shopId.equals(other.shopId))
             return false;
+        if (contractId == null) {
+            if (other.contractId != null)
+                return false;
+        }
+        else if (!contractId.equals(other.contractId))
+            return false;
+        if (createdAt == null) {
+            if (other.createdAt != null)
+                return false;
+        }
+        else if (!createdAt.equals(other.createdAt))
+            return false;
+        if (partyRevision == null) {
+            if (other.partyRevision != null)
+                return false;
+        }
+        else if (!partyRevision.equals(other.partyRevision))
+            return false;
         return true;
     }
 
@@ -107,6 +162,9 @@ public class Invoice implements Serializable {
         result = prime * result + ((this.id == null) ? 0 : this.id.hashCode());
         result = prime * result + ((this.partyId == null) ? 0 : this.partyId.hashCode());
         result = prime * result + ((this.shopId == null) ? 0 : this.shopId.hashCode());
+        result = prime * result + ((this.contractId == null) ? 0 : this.contractId.hashCode());
+        result = prime * result + ((this.createdAt == null) ? 0 : this.createdAt.hashCode());
+        result = prime * result + ((this.partyRevision == null) ? 0 : this.partyRevision.hashCode());
         return result;
     }
 
@@ -117,6 +175,9 @@ public class Invoice implements Serializable {
         sb.append(id);
         sb.append(", ").append(partyId);
         sb.append(", ").append(shopId);
+        sb.append(", ").append(contractId);
+        sb.append(", ").append(createdAt);
+        sb.append(", ").append(partyRevision);
 
         sb.append(")");
         return sb.toString();

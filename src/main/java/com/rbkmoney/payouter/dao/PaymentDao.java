@@ -10,6 +10,8 @@ public interface PaymentDao extends GenericDao {
 
     void save(Payment payment) throws DaoException;
 
+    void updatePaymentMeta(String invoiceId, String paymentId, String contractId, Long partyRevision) throws DaoException;
+
     Payment get(String invoiceId, String paymentId) throws DaoException;
 
     List<Payment> getByPayoutId(long payoutId) throws DaoException;

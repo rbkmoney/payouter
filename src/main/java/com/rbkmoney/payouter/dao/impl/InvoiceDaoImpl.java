@@ -10,6 +10,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
+import java.time.LocalDateTime;
 
 import static com.rbkmoney.payouter.domain.tables.Invoice.INVOICE;
 
@@ -25,12 +26,19 @@ public class InvoiceDaoImpl extends AbstractGenericDao implements InvoiceDao {
     }
 
     @Override
-    public void save(String invoiceId, String partyId, String shopId) throws DaoException {
+    public void save(String invoiceId, String partyId, String shopId, String contractId, Long partyRevision, LocalDateTime createdAt) throws DaoException {
         Query query = getDslContext().insertInto(INVOICE)
                 .set(INVOICE.ID, invoiceId)
                 .set(INVOICE.PARTY_ID, partyId)
                 .set(INVOICE.SHOP_ID, shopId)
-                .onDuplicateKeyIgnore();
+                .set(INVOICE.CONTRACT_ID, contractId)
+                .set(INVOICE.PARTY_REVISION, partyRevision)
+                .set(INVOICE.CREATED_AT, createdAt)
+                .onDuplicateKeyUpdate()
+                .set(INVOICE.CONTRACT_ID, contractId)
+                .set(INVOICE.PARTY_REVISION, partyRevision)
+                .set(INVOICE.CREATED_AT, createdAt);
+
         execute(query);
     }
 

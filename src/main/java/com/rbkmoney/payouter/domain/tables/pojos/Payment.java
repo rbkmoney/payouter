@@ -25,7 +25,7 @@ import javax.annotation.Generated;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Payment implements Serializable {
 
-    private static final long serialVersionUID = -1523659690;
+    private static final long serialVersionUID = 1273537902;
 
     private Long          id;
     private Long          eventId;
@@ -47,6 +47,8 @@ public class Payment implements Serializable {
     private Long          guaranteeDeposit;
     private Integer       terminalId;
     private Long          domainRevision;
+    private String        contractId;
+    private Long          partyRevision;
 
     public Payment() {}
 
@@ -71,6 +73,8 @@ public class Payment implements Serializable {
         this.guaranteeDeposit = value.guaranteeDeposit;
         this.terminalId = value.terminalId;
         this.domainRevision = value.domainRevision;
+        this.contractId = value.contractId;
+        this.partyRevision = value.partyRevision;
     }
 
     public Payment(
@@ -93,7 +97,9 @@ public class Payment implements Serializable {
         LocalDateTime createdAt,
         Long          guaranteeDeposit,
         Integer       terminalId,
-        Long          domainRevision
+        Long          domainRevision,
+        String        contractId,
+        Long          partyRevision
     ) {
         this.id = id;
         this.eventId = eventId;
@@ -115,6 +121,8 @@ public class Payment implements Serializable {
         this.guaranteeDeposit = guaranteeDeposit;
         this.terminalId = terminalId;
         this.domainRevision = domainRevision;
+        this.contractId = contractId;
+        this.partyRevision = partyRevision;
     }
 
     public Long getId() {
@@ -277,6 +285,22 @@ public class Payment implements Serializable {
         this.domainRevision = domainRevision;
     }
 
+    public String getContractId() {
+        return this.contractId;
+    }
+
+    public void setContractId(String contractId) {
+        this.contractId = contractId;
+    }
+
+    public Long getPartyRevision() {
+        return this.partyRevision;
+    }
+
+    public void setPartyRevision(Long partyRevision) {
+        this.partyRevision = partyRevision;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj)
@@ -406,6 +430,18 @@ public class Payment implements Serializable {
         }
         else if (!domainRevision.equals(other.domainRevision))
             return false;
+        if (contractId == null) {
+            if (other.contractId != null)
+                return false;
+        }
+        else if (!contractId.equals(other.contractId))
+            return false;
+        if (partyRevision == null) {
+            if (other.partyRevision != null)
+                return false;
+        }
+        else if (!partyRevision.equals(other.partyRevision))
+            return false;
         return true;
     }
 
@@ -433,6 +469,8 @@ public class Payment implements Serializable {
         result = prime * result + ((this.guaranteeDeposit == null) ? 0 : this.guaranteeDeposit.hashCode());
         result = prime * result + ((this.terminalId == null) ? 0 : this.terminalId.hashCode());
         result = prime * result + ((this.domainRevision == null) ? 0 : this.domainRevision.hashCode());
+        result = prime * result + ((this.contractId == null) ? 0 : this.contractId.hashCode());
+        result = prime * result + ((this.partyRevision == null) ? 0 : this.partyRevision.hashCode());
         return result;
     }
 
@@ -460,6 +498,8 @@ public class Payment implements Serializable {
         sb.append(", ").append(guaranteeDeposit);
         sb.append(", ").append(terminalId);
         sb.append(", ").append(domainRevision);
+        sb.append(", ").append(contractId);
+        sb.append(", ").append(partyRevision);
 
         sb.append(")");
         return sb.toString();
