@@ -77,36 +77,6 @@ public class PayoutServiceImpl implements PayoutService {
         //over
     }
 
-    @Scheduled(fixedDelay = 5 * 1000)
-    public void rebuildPayouts() {
-        List<Payout> payouts = payoutDao.getPayoutsWithDifferentContracts();
-        if (payouts.isEmpty()) {
-            log.info("Payouts with more that one contracts was not found");
-            return;
-        }
-
-        log.info("Payout list for rebuild - {}", payouts.stream().map(payout -> payout.getId()).collect(Collectors.toList()));
-        List<Long> newPayoutIds = new ArrayList<>();
-        for (Payout payout : payouts) {
-            newPayoutIds.addAll(rebuildPayout(payout));
-        }
-        log.info("Payout list after rebuild - {}", newPayoutIds);
-    }
-
-    @Transactional(propagation = Propagation.REQUIRED)
-    public List<Long> rebuildPayout(Payout payout) {
-        log.info("Rebuild payout with more that one contracts, payout='{}'", payout);
-
-        cancel(payout.getId(), "???");
-        List<Long> payoutIds = createPayouts(payout.getPartyId(), payout.getShopId(), payout.getFromTime(), payout.getToTime(), payout.getType(), payout.getCreatedAt());
-
-        if (payoutIds.size() <= 1) {
-            throw new IllegalStateException(String.format("Failed to rebuild payout, payout='%s', newPayoutIds='%s'", payout, payoutIds));
-        }
-        log.info("Payout have been recreated, oldPayoutId='{}', newPayoutIds='{}'", payout.getId(), payoutIds);
-        return payoutIds;
-    }
-
     @Override
     public List<Long> createPayouts(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType) throws InvalidStateException, NotFoundException, StorageException {
         return createPayouts(partyId, shopId, fromTime, toTime, payoutType, LocalDateTime.now(ZoneOffset.UTC));
