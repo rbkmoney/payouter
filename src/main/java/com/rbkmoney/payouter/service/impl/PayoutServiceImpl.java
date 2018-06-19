@@ -77,7 +77,7 @@ public class PayoutServiceImpl implements PayoutService {
         //over
     }
 
-    @Scheduled(initialDelay = 5 * 1000)
+    @Scheduled(fixedDelay = 5 * 1000)
     public void rebuildPayouts() {
         List<Payout> payouts = payoutDao.getPayoutsWithDifferentContracts();
         if (payouts.isEmpty()) {
