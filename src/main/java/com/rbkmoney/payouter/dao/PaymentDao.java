@@ -5,12 +5,15 @@ import com.rbkmoney.payouter.exception.DaoException;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface PaymentDao extends GenericDao {
 
     void save(Payment payment) throws DaoException;
 
     void updatePaymentMeta(String invoiceId, String paymentId, String contractId, Long partyRevision) throws DaoException;
+
+    Optional<Long> getLastUpdatedEventId() throws DaoException;
 
     Payment get(String invoiceId, String paymentId) throws DaoException;
 
