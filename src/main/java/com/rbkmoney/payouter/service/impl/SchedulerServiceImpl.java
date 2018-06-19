@@ -151,8 +151,9 @@ public class SchedulerServiceImpl implements SchedulerService {
                         .inTimeZone(TimeZone.getTimeZone(calendar.getTimezone()));
 
                 if (schedule.isSetDelay() || schedule.isSetPolicy()) {
-                    TimeSpan timeSpan = Optional.ofNullable(schedule.getDelay())
-                            .orElse(schedule.getPolicy().getAssetsFreezeFor());
+                    TimeSpan timeSpan = Optional.ofNullable(schedule.getPolicy())
+                            .map(PayoutCompilationPolicy::getAssetsFreezeFor)
+                            .orElse(schedule.getDelay());
 
                     freezeTimeCronScheduleBuilder.withYears(timeSpan.getYears())
                             .withMonths(timeSpan.getMonths())
