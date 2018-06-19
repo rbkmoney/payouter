@@ -90,6 +90,7 @@ public class EventSinkServiceImpl implements EventSinkService{
         payoutEvent.setPayoutCreatedAt(payout.getCreatedAt());
         payoutEvent.setPayoutPartyId(payout.getPartyId());
         payoutEvent.setPayoutShopId(payout.getShopId());
+        payoutEvent.setContractId(payout.getContractId());
         payoutEvent.setPayoutType(payout.getType().getLiteral());
 
         payoutEvent.setPayoutAccountType(payout.getAccountType().getLiteral());

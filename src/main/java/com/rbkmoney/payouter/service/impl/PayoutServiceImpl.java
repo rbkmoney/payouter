@@ -108,38 +108,6 @@ public class PayoutServiceImpl implements PayoutService {
     }
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRED)
-    public List<Long> createPayouts(LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType) throws InvalidStateException, NotFoundException, StorageException {
-        log.info("Trying to create payouts, fromTime='{}', toTime='{}', payoutType='{}'", fromTime, toTime, payoutType);
-        try {
-            List<ShopParams> shops = payoutDao.getUnpaidShops(fromTime, toTime);
-
-            if (shops.isEmpty()) {
-                log.info("No shops found for creating payouts, fromTime='{}', toTime='{}', payoutType='{}'", fromTime, toTime, payoutType);
-                return Collections.emptyList();
-            }
-
-            List<Long> payoutIds = new ArrayList<>();
-            for (ShopParams shopParams : shops) {
-                try {
-                    List<Long> payouts = createPayouts(shopParams.getPartyId(), shopParams.getShopId(), fromTime, toTime, payoutType);
-                    payoutIds.addAll(payouts);
-                } catch (InvalidStateException ex) {
-                    log.warn("Failed to create payout for shop, shopParams='{}', fromTime='{}', toTime='{}', payoutType='{}'",
-                            shopParams, fromTime, toTime, payoutType, ex);
-                }
-            }
-            log.info("Payouts successfully created, payoutIds='{}', fromTime='{}', toTime='{}', payoutType='{}'",
-                    payoutIds, fromTime, toTime, payoutType);
-
-            return payoutIds;
-        } catch (DaoException ex) {
-            throw new StorageException(
-                    String.format("Failed to create payouts, fromTime='%s', toTime='%s', payoutType='%s'", fromTime, toTime, payoutType), ex);
-        }
-    }
-
-    @Override
     public List<Long> createPayouts(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType) throws InvalidStateException, NotFoundException, StorageException {
         return createPayouts(partyId, shopId, fromTime, toTime, payoutType, LocalDateTime.now(ZoneOffset.UTC));
     }

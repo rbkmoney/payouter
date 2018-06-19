@@ -61,13 +61,8 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
                 throw new InvalidRequest(Arrays.asList("fromTime must be less that toTime"));
             }
 
-            List<Long> payoutIds;
-            if (generatePayoutParams.isSetShop()) {
-                ShopParams shopParams = generatePayoutParams.getShop();
-                payoutIds = payoutService.createPayouts(shopParams.getPartyId(), shopParams.getShopId(), fromTime, toTime, PayoutType.bank_account);
-            } else {
-                payoutIds = payoutService.createPayouts(fromTime, toTime, PayoutType.bank_account);
-            }
+            ShopParams shopParams = generatePayoutParams.getShop();
+            List<Long> payoutIds = payoutService.createPayouts(shopParams.getPartyId(), shopParams.getShopId(), fromTime, toTime, PayoutType.bank_account);
 
             return payoutIds.stream()
                     .map(id -> String.valueOf(id))
@@ -198,6 +193,7 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
         payoutInfo.setId(String.valueOf(record.getId()));
         payoutInfo.setPartyId(record.getPartyId());
         payoutInfo.setShopId(record.getShopId());
+        payoutInfo.setContractId(record.getContractId());
         payoutInfo.setAmount(new Cash(record.getAmount(), new CurrencyRef(record.getCurrencyCode())));
         if (record.getType().equals(PayoutType.bank_account)) {
             payoutInfo.setType(com.rbkmoney.damsel.payout_processing.PayoutType.bank_account(toPayoutAccount(record)));
