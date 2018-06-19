@@ -14,7 +14,6 @@ import org.springframework.stereotype.Component;
 import javax.sql.DataSource;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -59,8 +58,8 @@ public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao {
         Query query = getDslContext().select(PAYMENT.CONTRACT_ID).from(PAYMENT)
                 .where(
                         PAYMENT.PARTY_ID.eq(partyId)
-                        .and(PAYMENT.SHOP_ID.eq(shopId))
-                        .and(PAYMENT.CAPTURED_AT.lt(to))
+                                .and(PAYMENT.SHOP_ID.eq(shopId))
+                                .and(PAYMENT.CAPTURED_AT.lt(to))
                 ).groupBy(PAYMENT.CONTRACT_ID);
         return fetch(query, new SingleColumnRowMapper<>(String.class));
     }

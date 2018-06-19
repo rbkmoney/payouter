@@ -35,6 +35,8 @@ public class InvoiceDaoImpl extends AbstractGenericDao implements InvoiceDao {
                 .set(INVOICE.PARTY_REVISION, partyRevision)
                 .set(INVOICE.CREATED_AT, createdAt)
                 .onDuplicateKeyUpdate()
+                .set(INVOICE.PARTY_ID, partyId)
+                .set(INVOICE.SHOP_ID, shopId)
                 .set(INVOICE.CONTRACT_ID, contractId)
                 .set(INVOICE.PARTY_REVISION, partyRevision)
                 .set(INVOICE.CREATED_AT, createdAt);

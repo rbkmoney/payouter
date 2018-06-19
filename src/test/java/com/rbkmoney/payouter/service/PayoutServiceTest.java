@@ -194,6 +194,7 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         ShopParams shopParams = new ShopParams();
         shopParams.setPartyId(partyId);
         shopParams.setShopId(shopId);
+        generatePayoutParams.setShop(shopParams);
         generatePayoutParams.setTimeRange(new TimeRange("2015-06-17T00:00:00Z", "2018-06-17T00:00:00Z"));
 
         List<String> payoutIds = callService(() -> client.generatePayouts(generatePayoutParams));
@@ -224,13 +225,14 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         callService(() -> client.generatePayouts(generatePayoutParams));
     }
 
-    @Test
+    @Test(expected = InvalidRequest.class)
     public void testCreatePayoutsWithInvalidStateException() throws Exception {
         given(partyManagementClient.getMetaData(any(), any(), any()))
                 .willReturn(Value.b(true));
         addCapturedPayment("payment-id");
 
         GeneratePayoutParams generatePayoutParams = new GeneratePayoutParams();
+        generatePayoutParams.setShop(new ShopParams(partyId, shopId));
         generatePayoutParams.setTimeRange(new TimeRange("2015-06-17T00:00:00Z", "2018-06-17T00:00:00Z"));
 
         List<String> payoutIds = callService(() -> client.generatePayouts(generatePayoutParams));

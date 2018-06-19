@@ -2,7 +2,6 @@ package com.rbkmoney.payouter.service.impl;
 
 import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.msgpack.Value;
-import com.rbkmoney.damsel.payout_processing.ShopParams;
 import com.rbkmoney.damsel.payout_processing.UserInfo;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.payouter.dao.*;
@@ -21,7 +20,6 @@ import com.rbkmoney.payouter.util.WoodyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,8 +27,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class PayoutServiceImpl implements PayoutService {
@@ -88,14 +88,18 @@ public class PayoutServiceImpl implements PayoutService {
         log.info("Trying to create payouts, partyId='{}', shopId='{}', fromTime='{}', toTime='{}', payoutType='{}'", partyId, shopId, fromTime, toTime, payoutType);
         List<Long> payoutIds = new ArrayList<>();
         try {
-            for (String contractId : paymentDao.getContracts(partyId, shopId, toTime)) {
+            List<String> contractIds = paymentDao.getContracts(partyId, shopId, toTime);
+            if (contractIds.isEmpty()) {
+                throw new NotFoundException(String.format("Contracts not found, payouts can't be created, partyId='%s', shopId='%s', fromTime='%s', toTime='%s', payoutType='%s'", partyId, shopId, fromTime, toTime, payoutType));
+            }
+
+            for (String contractId : contractIds) {
                 long payoutId = createPayout(partyId, shopId, contractId, fromTime, toTime, payoutType, createdAt);
                 payoutIds.add(payoutId);
             }
             log.info("Payouts have been created, payoutIds='{}', partyId='{}', shopId='{}', fromTime='{}', toTime='{}', payoutType='{}'", payoutIds, partyId, shopId, fromTime, toTime, payoutType);
             return payoutIds;
         } catch (RuntimeException ex) {
-            log.error("Failed to create payouts, partyId='{}', shopId='{}', fromTime='{}', toTime='{}', payoutType='{}'", partyId, shopId, fromTime, toTime, payoutType, ex);
             payoutIds.forEach(payoutId -> shumwayService.rollback(String.valueOf(payoutId)));
             throw ex;
         }

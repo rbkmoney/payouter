@@ -71,7 +71,7 @@ public class GeneratePayoutJob implements Job {
                 log.info("Payouts for shop have been successfully created, payoutIds='{}' partyId='{}', shopId='{}', trigger='{}', jobExecutionContext='{}'",
                         payoutIds, partyId, shopId, trigger, jobExecutionContext);
             } catch (NotFoundException | InvalidStateException ex) {
-                log.warn("Failed to create payouts for shop, partyId='{}', shopId='{}', trigger='{}', jobExecutionContext='{}'",
+                log.warn("Payouts cannot be created, partyId='{}', shopId='{}', trigger='{}', jobExecutionContext='{}'",
                         partyId, shopId, trigger, jobExecutionContext, ex);
             }
         } catch (StorageException | WRuntimeException ex) {
