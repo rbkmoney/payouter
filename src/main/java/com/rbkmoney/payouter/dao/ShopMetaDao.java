@@ -19,9 +19,9 @@ public interface ShopMetaDao extends GenericDao {
 
     ShopMeta getExclusive(String partyId, String shopId) throws DaoException;
 
-    List<ShopMeta> getByCalendarAndSchedulerId(int calendarId, int schedulerId);
+    List<ShopMeta> getByCalendarAndSchedulerId(int calendarId, int schedulerId) throws DaoException;
 
-    List<ShopMeta> getAllActiveShops();
+    List<ShopMeta> getAllActiveShops() throws DaoException;
 
     void disableShop(String partyId, String shopId) throws DaoException;
 

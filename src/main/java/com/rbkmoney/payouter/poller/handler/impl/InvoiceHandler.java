@@ -12,6 +12,7 @@ import com.rbkmoney.geck.filter.condition.IsNullCondition;
 import com.rbkmoney.geck.filter.rule.PathConditionRule;
 import com.rbkmoney.payouter.dao.InvoiceDao;
 import com.rbkmoney.payouter.dao.ShopMetaDao;
+import com.rbkmoney.payouter.exception.DaoException;
 import com.rbkmoney.payouter.poller.handler.Handler;
 import com.rbkmoney.payouter.service.PartyManagementService;
 import org.slf4j.Logger;
@@ -43,7 +44,7 @@ public class InvoiceHandler implements Handler<InvoiceChange, Event> {
     }
 
     @Override
-    public void handle(InvoiceChange invoiceChange, Event event) {
+    public void handle(InvoiceChange invoiceChange, Event event) throws DaoException {
         Invoice invoice = invoiceChange.getInvoiceCreated().getInvoice();
         long eventId = event.getId();
 

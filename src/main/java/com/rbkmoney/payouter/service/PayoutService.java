@@ -16,7 +16,11 @@ public interface PayoutService {
 
     List<Long> createPayouts(LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType) throws InvalidStateException, NotFoundException, StorageException;
 
-    long createPayout(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType) throws InvalidStateException, NotFoundException, StorageException;
+    List<Long> createPayouts(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType) throws InvalidStateException, NotFoundException, StorageException;
+
+    List<Long> createPayouts(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType, LocalDateTime createdAt) throws InvalidStateException, NotFoundException, StorageException;
+
+    long createPayout(String partyId, String shopId, String contractId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType, LocalDateTime createdAt) throws InvalidStateException, NotFoundException, StorageException;
 
     void pay(long payoutId) throws InvalidStateException, StorageException;
 

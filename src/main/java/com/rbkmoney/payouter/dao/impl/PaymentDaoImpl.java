@@ -8,6 +8,7 @@ import com.rbkmoney.payouter.exception.DaoException;
 import org.jooq.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.SingleColumnRowMapper;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
@@ -37,20 +38,6 @@ public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao {
     }
 
     @Override
-    public void updatePaymentMeta(String invoiceId, String paymentId, String contractId, Long partyRevision) throws DaoException {
-        Query query = getDslContext()
-                .update(PAYMENT)
-                .set(PAYMENT.CONTRACT_ID, contractId)
-                .set(PAYMENT.PARTY_REVISION, partyRevision)
-                .where(
-                        PAYMENT.INVOICE_ID.eq(invoiceId)
-                        .and(PAYMENT.PAYMENT_ID.eq(paymentId))
-                );
-
-        executeOne(query);
-    }
-
-    @Override
     public Payment get(String invoiceId, String paymentId) throws DaoException {
         Query query = getDslContext().selectFrom(PAYMENT)
                 .where(PAYMENT.INVOICE_ID.eq(invoiceId).and(PAYMENT.PAYMENT_ID.eq(paymentId)));
@@ -64,6 +51,17 @@ public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao {
                 .where(PAYMENT.PAYOUT_ID.eq(payoutId))
                 .orderBy(PAYMENT.CAPTURED_AT);
         return fetch(query, paymentRowMapper);
+    }
+
+    @Override
+    public List<String> getContracts(String partyId, String shopId, LocalDateTime to) throws DaoException {
+        Query query = getDslContext().select(PAYMENT.CONTRACT_ID).from(PAYMENT)
+                .where(
+                        PAYMENT.PARTY_ID.eq(partyId)
+                        .and(PAYMENT.SHOP_ID.eq(shopId))
+                        .and(PAYMENT.CAPTURED_AT.lt(to))
+                ).groupBy(PAYMENT.CONTRACT_ID);
+        return fetch(query, new SingleColumnRowMapper<>(String.class));
     }
 
     @Override
@@ -87,11 +85,12 @@ public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao {
     }
 
     @Override
-    public List<Payment> getUnpaid(String partyId, String shopId, LocalDateTime to) throws DaoException {
+    public List<Payment> getUnpaid(String partyId, String shopId, String contractId, LocalDateTime to) throws DaoException {
         Query query = getDslContext().select().from(PAYMENT)
                 .where(PAYMENT.STATUS.eq(PaymentStatus.CAPTURED)
                         .and(PAYMENT.PARTY_ID.eq(partyId))
                         .and(PAYMENT.SHOP_ID.eq(shopId))
+                        .and(PAYMENT.CONTRACT_ID.eq(contractId))
                         .and(PAYMENT.CAPTURED_AT.lessThan(to))
                         .and(PAYMENT.PAYOUT_ID.isNull()));
         return fetch(query, paymentRowMapper);
