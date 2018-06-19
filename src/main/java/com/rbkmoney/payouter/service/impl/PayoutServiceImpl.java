@@ -125,7 +125,7 @@ public class PayoutServiceImpl implements PayoutService {
                 throw new InvalidStateException("Available amount must be greater than 0");
             }
 
-            Payout payout = buildPayout(partyId, shopId, fromTime, toTime, payoutType, createdAt);
+            Payout payout = buildPayout(partyId, shopId, contractId, fromTime, toTime, payoutType, createdAt);
             List<FinalCashFlowPosting> cashFlowPostings = partyManagementService.computePayoutCashFlow(
                     partyId,
                     shopId,
@@ -301,10 +301,11 @@ public class PayoutServiceImpl implements PayoutService {
         }
     }
 
-    private Payout buildPayout(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType, LocalDateTime createdAt) {
+    private Payout buildPayout(String partyId, String shopId, String contractId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType, LocalDateTime createdAt) {
         Payout payout = new Payout();
         payout.setPartyId(partyId);
         payout.setShopId(shopId);
+        payout.setContractId(contractId);
         payout.setFromTime(fromTime);
         payout.setToTime(toTime);
         payout.setType(payoutType);
