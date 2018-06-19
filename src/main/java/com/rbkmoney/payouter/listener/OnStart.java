@@ -5,8 +5,10 @@ import com.rbkmoney.eventstock.client.EventConstraint;
 import com.rbkmoney.eventstock.client.EventPublisher;
 import com.rbkmoney.eventstock.client.SubscriberConfig;
 import com.rbkmoney.eventstock.client.poll.EventFlowFilter;
+import com.rbkmoney.payouter.dao.PaymentDao;
 import com.rbkmoney.payouter.domain.tables.pojos.EventStockMeta;
 import com.rbkmoney.payouter.service.EventStockService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
@@ -22,10 +24,14 @@ public class OnStart implements ApplicationListener<ApplicationReadyEvent> {
 
     private final EventStockService eventStockService;
 
-    public OnStart(EventPublisher eventPublisher, EventStockService eventStockService, EventPublisher temporalEventPublisher) {
+    private final PaymentDao paymentDao;
+
+    @Autowired
+    public OnStart(EventPublisher eventPublisher, EventStockService eventStockService, EventPublisher temporalEventPublisher, PaymentDao paymentDao) {
         this.eventPublisher = eventPublisher;
         this.temporalEventPublisher = temporalEventPublisher;
         this.eventStockService = eventStockService;
+        this.paymentDao = paymentDao;
     }
 
     @Override
@@ -44,9 +50,12 @@ public class OnStart implements ApplicationListener<ApplicationReadyEvent> {
 
         eventPublisher.subscribe(subscriberConfig);
 
+        EventConstraint.EventIDRange temporalIdRange = new EventConstraint.EventIDRange();
+        Optional<Long> eventIdOptional = paymentDao.getLastUpdatedEventId();
+        eventIdOptional.ifPresent(eventId -> temporalIdRange.setFromInclusive(eventId));
         temporalEventPublisher.subscribe(new DefaultSubscriberConfig(
                         new EventFlowFilter(
-                                new EventConstraint(new EventConstraint.EventIDRange())
+                                new EventConstraint(temporalIdRange)
                         )
                 )
         );

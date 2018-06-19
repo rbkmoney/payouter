@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import javax.sql.DataSource;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -48,6 +49,16 @@ public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao {
                 );
 
         executeOne(query);
+    }
+
+    @Override
+    public Optional<Long> getLastUpdatedEventId() throws DaoException {
+        Query query = getDslContext()
+                .select(PAYMENT.EVENT_ID.min())
+                .from(PAYMENT)
+                .where(PAYMENT.CONTRACT_ID.isNull());
+
+        return Optional.ofNullable(fetchOne(query, Long.class));
     }
 
     @Override
