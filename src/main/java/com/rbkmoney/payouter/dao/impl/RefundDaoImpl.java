@@ -8,6 +8,7 @@ import com.rbkmoney.payouter.exception.DaoException;
 import org.jooq.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.SingleColumnRowMapper;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
@@ -66,6 +67,21 @@ public class RefundDaoImpl extends AbstractGenericDao implements RefundDao {
                         .and(REFUND.PAYMENT_ID.eq(paymentId)
                                 .and(REFUND.REFUND_ID.eq(refundId))));
         executeOne(query);
+    }
+
+    @Override
+    public List<String> getContracts(String partyId, String shopId, LocalDateTime to) throws DaoException {
+        Query query = getDslContext().select(PAYMENT.CONTRACT_ID).from(PAYMENT)
+                .join(REFUND)
+                .on(REFUND.INVOICE_ID.eq(PAYMENT.INVOICE_ID)
+                        .and(REFUND.PAYMENT_ID.eq(PAYMENT.PAYMENT_ID))
+                        .and(PAYMENT.PARTY_ID.eq(partyId))
+                        .and(PAYMENT.SHOP_ID.eq(shopId))
+                        .and(PAYMENT.CAPTURED_AT.lt(to))
+                        .and(REFUND.PAYOUT_ID.isNull())
+                        .and(REFUND.STATUS.eq(RefundStatus.SUCCEEDED))
+                ).groupBy(PAYMENT.CONTRACT_ID);
+        return fetch(query, new SingleColumnRowMapper<>(String.class));
     }
 
     @Override

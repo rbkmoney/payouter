@@ -60,6 +60,7 @@ public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao {
                         PAYMENT.PARTY_ID.eq(partyId)
                                 .and(PAYMENT.SHOP_ID.eq(shopId))
                                 .and(PAYMENT.CAPTURED_AT.lt(to))
+                                .and(PAYMENT.PAYOUT_ID.isNull())
                 ).groupBy(PAYMENT.CONTRACT_ID);
         return fetch(query, new SingleColumnRowMapper<>(String.class));
     }
