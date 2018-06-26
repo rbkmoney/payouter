@@ -11,19 +11,17 @@ public interface PaymentDao extends GenericDao {
 
     void save(Payment payment) throws DaoException;
 
-    void updatePaymentMeta(String invoiceId, String paymentId, String contractId, Long partyRevision) throws DaoException;
-
-    Optional<Long> getLastUpdatedEventId() throws DaoException;
-
     Payment get(String invoiceId, String paymentId) throws DaoException;
 
     List<Payment> getByPayoutId(long payoutId) throws DaoException;
+
+    List<String> getContracts(String partyId, String shopId, LocalDateTime to) throws DaoException;
 
     void includeToPayout(long payoutId, List<Payment> payments) throws DaoException;
 
     int excludeFromPayout(long payoutId) throws DaoException;
 
-    List<Payment> getUnpaid(String partyId, String shopId, LocalDateTime to) throws DaoException;
+    List<Payment> getUnpaid(String partyId, String shopId, String contractId, LocalDateTime to) throws DaoException;
 
     void markAsCaptured(Long eventId, String invoiceId, String paymentId, LocalDateTime capturedAt) throws DaoException;
 

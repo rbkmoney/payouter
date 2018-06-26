@@ -35,7 +35,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Invoice extends TableImpl<InvoiceRecord> {
 
-    private static final long serialVersionUID = -94159747;
+    private static final long serialVersionUID = 868633629;
 
     /**
      * The reference instance of <code>sht.invoice</code>
@@ -68,12 +68,12 @@ public class Invoice extends TableImpl<InvoiceRecord> {
     /**
      * The column <code>sht.invoice.contract_id</code>.
      */
-    public final TableField<InvoiceRecord, String> CONTRACT_ID = createField("contract_id", org.jooq.impl.SQLDataType.VARCHAR, this, "");
+    public final TableField<InvoiceRecord, String> CONTRACT_ID = createField("contract_id", org.jooq.impl.SQLDataType.VARCHAR.nullable(false), this, "");
 
     /**
      * The column <code>sht.invoice.created_at</code>.
      */
-    public final TableField<InvoiceRecord, LocalDateTime> CREATED_AT = createField("created_at", org.jooq.impl.SQLDataType.LOCALDATETIME, this, "");
+    public final TableField<InvoiceRecord, LocalDateTime> CREATED_AT = createField("created_at", org.jooq.impl.SQLDataType.LOCALDATETIME.nullable(false), this, "");
 
     /**
      * The column <code>sht.invoice.party_revision</code>.

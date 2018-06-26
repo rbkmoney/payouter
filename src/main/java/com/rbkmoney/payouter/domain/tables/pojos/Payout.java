@@ -27,7 +27,7 @@ import javax.annotation.Generated;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Payout implements Serializable {
 
-    private static final long serialVersionUID = -1865958160;
+    private static final long serialVersionUID = 1760417565;
 
     private Long              id;
     private String            partyId;
@@ -61,6 +61,7 @@ public class Payout implements Serializable {
     private String            accountActualAddress;
     private String            accountRegisteredNumber;
     private String            shopUrl;
+    private String            contractId;
 
     public Payout() {}
 
@@ -97,6 +98,7 @@ public class Payout implements Serializable {
         this.accountActualAddress = value.accountActualAddress;
         this.accountRegisteredNumber = value.accountRegisteredNumber;
         this.shopUrl = value.shopUrl;
+        this.contractId = value.contractId;
     }
 
     public Payout(
@@ -131,7 +133,8 @@ public class Payout implements Serializable {
         String            accountRegisteredAddress,
         String            accountActualAddress,
         String            accountRegisteredNumber,
-        String            shopUrl
+        String            shopUrl,
+        String            contractId
     ) {
         this.id = id;
         this.partyId = partyId;
@@ -165,6 +168,7 @@ public class Payout implements Serializable {
         this.accountActualAddress = accountActualAddress;
         this.accountRegisteredNumber = accountRegisteredNumber;
         this.shopUrl = shopUrl;
+        this.contractId = contractId;
     }
 
     public Long getId() {
@@ -423,6 +427,14 @@ public class Payout implements Serializable {
         this.shopUrl = shopUrl;
     }
 
+    public String getContractId() {
+        return this.contractId;
+    }
+
+    public void setContractId(String contractId) {
+        this.contractId = contractId;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj)
@@ -624,6 +636,12 @@ public class Payout implements Serializable {
         }
         else if (!shopUrl.equals(other.shopUrl))
             return false;
+        if (contractId == null) {
+            if (other.contractId != null)
+                return false;
+        }
+        else if (!contractId.equals(other.contractId))
+            return false;
         return true;
     }
 
@@ -663,6 +681,7 @@ public class Payout implements Serializable {
         result = prime * result + ((this.accountActualAddress == null) ? 0 : this.accountActualAddress.hashCode());
         result = prime * result + ((this.accountRegisteredNumber == null) ? 0 : this.accountRegisteredNumber.hashCode());
         result = prime * result + ((this.shopUrl == null) ? 0 : this.shopUrl.hashCode());
+        result = prime * result + ((this.contractId == null) ? 0 : this.contractId.hashCode());
         return result;
     }
 
@@ -702,6 +721,7 @@ public class Payout implements Serializable {
         sb.append(", ").append(accountActualAddress);
         sb.append(", ").append(accountRegisteredNumber);
         sb.append(", ").append(shopUrl);
+        sb.append(", ").append(contractId);
 
         sb.append(")");
         return sb.toString();

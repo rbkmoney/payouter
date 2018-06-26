@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static com.rbkmoney.geck.common.util.TypeUtil.toLocalDateTime;
 
@@ -54,10 +55,10 @@ public class GeneratePayoutJob implements Job {
         try {
             try {
                 LocalDateTime toTime = toLocalDateTime(trigger.getCurrentCronTime().toInstant());
-                long payoutId = wFlow.createServiceFork(
+                List<Long> payoutIds = wFlow.createServiceFork(
                         () -> {
                             WoodyUtils.setUserInfo(userId, UserType.internal_user(new InternalUser()));
-                            return payoutService.createPayout(
+                            return payoutService.createPayouts(
                                     partyId,
                                     shopId,
                                     toTime.minusDays(1),
@@ -67,10 +68,10 @@ public class GeneratePayoutJob implements Job {
                         }
                 ).call();
 
-                log.info("Payout for shop have been successfully created, payoutId='{}' partyId='{}', shopId='{}', trigger='{}', jobExecutionContext='{}'",
-                        payoutId, partyId, shopId, trigger, jobExecutionContext);
+                log.info("Payouts for shop have been successfully created, payoutIds='{}' partyId='{}', shopId='{}', trigger='{}', jobExecutionContext='{}'",
+                        payoutIds, partyId, shopId, trigger, jobExecutionContext);
             } catch (NotFoundException | InvalidStateException ex) {
-                log.warn("Failed to create payout for shop, partyId='{}', shopId='{}', trigger='{}', jobExecutionContext='{}'",
+                log.warn("Failed to generate payouts, partyId='{}', shopId='{}', trigger='{}', jobExecutionContext='{}'",
                         partyId, shopId, trigger, jobExecutionContext, ex);
             }
         } catch (StorageException | WRuntimeException ex) {

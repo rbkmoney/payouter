@@ -8,6 +8,7 @@ import com.rbkmoney.payouter.exception.DaoException;
 import org.jooq.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.SingleColumnRowMapper;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
@@ -69,17 +70,34 @@ public class RefundDaoImpl extends AbstractGenericDao implements RefundDao {
     }
 
     @Override
-    public List<Refund> getUnpaid(String partyId, String shopId, LocalDateTime to) throws DaoException {
+    public List<String> getContracts(String partyId, String shopId, LocalDateTime to) throws DaoException {
+        Query query = getDslContext().select(PAYMENT.CONTRACT_ID).from(PAYMENT)
+                .join(REFUND)
+                .on(REFUND.INVOICE_ID.eq(PAYMENT.INVOICE_ID)
+                        .and(REFUND.PAYMENT_ID.eq(PAYMENT.PAYMENT_ID))
+                        .and(PAYMENT.PARTY_ID.eq(partyId))
+                        .and(PAYMENT.SHOP_ID.eq(shopId))
+                        .and(PAYMENT.CAPTURED_AT.lt(to))
+                        .and(REFUND.PAYOUT_ID.isNull())
+                        .and(REFUND.STATUS.eq(RefundStatus.SUCCEEDED))
+                ).groupBy(PAYMENT.CONTRACT_ID);
+        return fetch(query, new SingleColumnRowMapper<>(String.class));
+    }
+
+    @Override
+    public List<Refund> getUnpaid(String partyId, String shopId, String contractId, LocalDateTime to) throws DaoException {
         Query query = getDslContext()
                 .select(REFUND.fields())
                 .from(REFUND)
                 .join(PAYMENT)
                 .on(REFUND.INVOICE_ID.eq(PAYMENT.INVOICE_ID)
-                        .and(REFUND.PAYMENT_ID.eq(PAYMENT.PAYMENT_ID)).and(PAYMENT.CAPTURED_AT.lessThan(to)))
-                .where(REFUND.STATUS.eq(RefundStatus.SUCCEEDED)
-                        .and(REFUND.PARTY_ID.eq(partyId))
-                        .and(REFUND.SHOP_ID.eq(shopId))
-                        .and(REFUND.PAYOUT_ID.isNull()));
+                        .and(REFUND.PAYMENT_ID.eq(PAYMENT.PAYMENT_ID))
+                        .and(REFUND.PAYOUT_ID.isNull())
+                        .and(PAYMENT.PARTY_ID.eq(partyId))
+                        .and(PAYMENT.SHOP_ID.eq(shopId))
+                        .and(PAYMENT.CONTRACT_ID.eq(contractId))
+                        .and(PAYMENT.CAPTURED_AT.lessThan(to))
+                        .and(REFUND.STATUS.eq(RefundStatus.SUCCEEDED)));
         return fetch(query, refundRowMapper);
     }
 

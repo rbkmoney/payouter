@@ -35,6 +35,7 @@ public class PayoutDaoTest extends AbstractIntegrationTest {
         payout.setCreatedAt(LocalDateTime.now());
         payout.setPartyId("kek");
         payout.setShopId("kek");
+        payout.setContractId("kek");
         payout.setStatus(PayoutStatus.PAID);
         payout.setType(PayoutType.bank_account);
 

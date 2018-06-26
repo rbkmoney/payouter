@@ -11,12 +11,15 @@ import com.rbkmoney.payouter.exception.StorageException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface PayoutService {
 
-    List<Long> createPayouts(LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType) throws InvalidStateException, NotFoundException, StorageException;
+    List<Long> createPayouts(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType) throws InvalidStateException, NotFoundException, StorageException;
 
-    long createPayout(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType) throws InvalidStateException, NotFoundException, StorageException;
+    List<Long> createPayouts(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType, LocalDateTime createdAt) throws InvalidStateException, NotFoundException, StorageException;
+
+    long createPayout(String partyId, String shopId, String contractId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType, LocalDateTime createdAt) throws InvalidStateException, NotFoundException, StorageException;
 
     void pay(long payoutId) throws InvalidStateException, StorageException;
 
@@ -25,6 +28,8 @@ public interface PayoutService {
     void cancel(long payoutId, String details) throws InvalidStateException, StorageException;
 
     List<Payout> getUnpaidPayoutsByAccountType(PayoutAccountType accountType) throws StorageException;
+
+    Set<String> getContractsForPayouts(String partyId, String shopId, LocalDateTime toTime);
 
     List<Payout> search(Optional<PayoutStatus> payoutStatus, Optional<LocalDateTime> fromTime, Optional<LocalDateTime> toTime, Optional<List<Long>> payoutIds, Optional<Long> fromId, Optional<Integer> size);
 

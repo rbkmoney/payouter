@@ -20,18 +20,11 @@ public class OnStart implements ApplicationListener<ApplicationReadyEvent> {
 
     private final EventPublisher eventPublisher;
 
-    private final EventPublisher temporalEventPublisher;
-
     private final EventStockService eventStockService;
 
-    private final PaymentDao paymentDao;
-
-    @Autowired
-    public OnStart(EventPublisher eventPublisher, EventStockService eventStockService, EventPublisher temporalEventPublisher, PaymentDao paymentDao) {
+    public OnStart(EventPublisher eventPublisher, EventStockService eventStockService) {
         this.eventPublisher = eventPublisher;
-        this.temporalEventPublisher = temporalEventPublisher;
         this.eventStockService = eventStockService;
-        this.paymentDao = paymentDao;
     }
 
     @Override
@@ -49,15 +42,5 @@ public class OnStart implements ApplicationListener<ApplicationReadyEvent> {
         );
 
         eventPublisher.subscribe(subscriberConfig);
-
-        EventConstraint.EventIDRange temporalIdRange = new EventConstraint.EventIDRange();
-        Optional<Long> eventIdOptional = paymentDao.getLastUpdatedEventId();
-        eventIdOptional.ifPresent(eventId -> temporalIdRange.setFromInclusive(eventId));
-        temporalEventPublisher.subscribe(new DefaultSubscriberConfig(
-                        new EventFlowFilter(
-                                new EventConstraint(temporalIdRange)
-                        )
-                )
-        );
     }
 }

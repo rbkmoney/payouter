@@ -30,7 +30,7 @@ import org.jooq.impl.UpdatableRecordImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class PayoutRecord extends UpdatableRecordImpl<PayoutRecord> {
 
-    private static final long serialVersionUID = -248728459;
+    private static final long serialVersionUID = 648749651;
 
     /**
      * Setter for <code>sht.payout.id</code>.
@@ -480,6 +480,20 @@ public class PayoutRecord extends UpdatableRecordImpl<PayoutRecord> {
         return (String) get(31);
     }
 
+    /**
+     * Setter for <code>sht.payout.contract_id</code>.
+     */
+    public void setContractId(String value) {
+        set(32, value);
+    }
+
+    /**
+     * Getter for <code>sht.payout.contract_id</code>.
+     */
+    public String getContractId() {
+        return (String) get(32);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -506,7 +520,7 @@ public class PayoutRecord extends UpdatableRecordImpl<PayoutRecord> {
     /**
      * Create a detached, initialised PayoutRecord
      */
-    public PayoutRecord(Long id, String partyId, String shopId, LocalDateTime createdAt, LocalDateTime fromTime, LocalDateTime toTime, PayoutStatus status, PayoutType type, Long amount, Long shopAcc, Long shopPayoutAcc, String currencyCode, String bankAccount, String bankLocalCode, String bankName, String bankPostAccount, String inn, String purpose, String description, String accountLegalAgreementId, LocalDateTime accountLegalAgreementSignedAt, PayoutAccountType accountType, Long fee, String bankAddress, String bankBic, String bankIban, String accountLegalName, String accountTradingName, String accountRegisteredAddress, String accountActualAddress, String accountRegisteredNumber, String shopUrl) {
+    public PayoutRecord(Long id, String partyId, String shopId, LocalDateTime createdAt, LocalDateTime fromTime, LocalDateTime toTime, PayoutStatus status, PayoutType type, Long amount, Long shopAcc, Long shopPayoutAcc, String currencyCode, String bankAccount, String bankLocalCode, String bankName, String bankPostAccount, String inn, String purpose, String description, String accountLegalAgreementId, LocalDateTime accountLegalAgreementSignedAt, PayoutAccountType accountType, Long fee, String bankAddress, String bankBic, String bankIban, String accountLegalName, String accountTradingName, String accountRegisteredAddress, String accountActualAddress, String accountRegisteredNumber, String shopUrl, String contractId) {
         super(Payout.PAYOUT);
 
         set(0, id);
@@ -541,5 +555,6 @@ public class PayoutRecord extends UpdatableRecordImpl<PayoutRecord> {
         set(29, accountActualAddress);
         set(30, accountRegisteredNumber);
         set(31, shopUrl);
+        set(32, contractId);
     }
 }
