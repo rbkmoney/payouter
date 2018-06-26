@@ -6,8 +6,8 @@ import com.rbkmoney.damsel.payout_processing.*;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.payouter.domain.enums.PayoutAccountType;
 import com.rbkmoney.payouter.domain.enums.PayoutType;
-import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
+import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
 import com.rbkmoney.payouter.exception.InvalidStateException;
 import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.service.PayoutService;
@@ -61,13 +61,9 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
                 throw new InvalidRequest(Arrays.asList("fromTime must be less that toTime"));
             }
 
-            if (generatePayoutParams.isSetShop()) {
-                ShopParams shopParams = generatePayoutParams.getShop();
-                long payoutId = payoutService.createPayout(shopParams.getPartyId(), shopParams.getShopId(), fromTime, toTime, PayoutType.bank_account);
-                return Arrays.asList(String.valueOf(payoutId));
-            }
+            ShopParams shopParams = generatePayoutParams.getShop();
+            List<Long> payoutIds = payoutService.createPayouts(shopParams.getPartyId(), shopParams.getShopId(), fromTime, toTime, PayoutType.bank_account);
 
-            List<Long> payoutIds = payoutService.createPayouts(fromTime, toTime, PayoutType.bank_account);
             return payoutIds.stream()
                     .map(id -> String.valueOf(id))
                     .collect(Collectors.toList());
@@ -197,6 +193,7 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
         payoutInfo.setId(String.valueOf(record.getId()));
         payoutInfo.setPartyId(record.getPartyId());
         payoutInfo.setShopId(record.getShopId());
+        payoutInfo.setContractId(record.getContractId());
         payoutInfo.setAmount(new Cash(record.getAmount(), new CurrencyRef(record.getCurrencyCode())));
         if (record.getType().equals(PayoutType.bank_account)) {
             payoutInfo.setType(com.rbkmoney.damsel.payout_processing.PayoutType.bank_account(toPayoutAccount(record)));

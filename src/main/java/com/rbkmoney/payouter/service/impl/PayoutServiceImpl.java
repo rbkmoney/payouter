@@ -2,7 +2,6 @@ package com.rbkmoney.payouter.service.impl;
 
 import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.msgpack.Value;
-import com.rbkmoney.damsel.payout_processing.ShopParams;
 import com.rbkmoney.damsel.payout_processing.UserInfo;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.payouter.dao.*;
@@ -10,10 +9,7 @@ import com.rbkmoney.payouter.domain.enums.PayoutAccountType;
 import com.rbkmoney.payouter.domain.enums.PayoutStatus;
 import com.rbkmoney.payouter.domain.enums.PayoutType;
 import com.rbkmoney.payouter.domain.tables.pojos.*;
-import com.rbkmoney.payouter.exception.DaoException;
-import com.rbkmoney.payouter.exception.InvalidStateException;
-import com.rbkmoney.payouter.exception.NotFoundException;
-import com.rbkmoney.payouter.exception.StorageException;
+import com.rbkmoney.payouter.exception.*;
 import com.rbkmoney.payouter.service.*;
 import com.rbkmoney.payouter.util.CashFlowType;
 import com.rbkmoney.payouter.util.DamselUtil;
@@ -25,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -77,42 +72,58 @@ public class PayoutServiceImpl implements PayoutService {
     }
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRED)
-    public List<Long> createPayouts(LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType) throws InvalidStateException, NotFoundException, StorageException {
-        log.info("Trying to create payouts, fromTime={}, toTime={}, payoutType={}", fromTime, toTime, payoutType);
-        try {
-            List<ShopParams> shops = payoutDao.getUnpaidShops(fromTime, toTime);
+    public List<Long> createPayouts(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType) throws InvalidStateException, NotFoundException, StorageException {
+        return createPayouts(partyId, shopId, fromTime, toTime, payoutType, LocalDateTime.now(ZoneOffset.UTC));
+    }
 
-            if (shops.isEmpty()) {
-                log.info("No shops found for creating payouts, fromTime={}, toTime={}, payoutType={}", fromTime, toTime, payoutType);
-                return Collections.emptyList();
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED)
+    public List<Long> createPayouts(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType, LocalDateTime createdAt) throws InvalidStateException, NotFoundException, StorageException {
+        log.info("Trying to create payouts, partyId='{}', shopId='{}', fromTime='{}', toTime='{}', payoutType='{}'", partyId, shopId, fromTime, toTime, payoutType);
+        List<Long> payoutIds = new ArrayList<>();
+        try {
+            Set<String> contractIds = getContractsForPayouts(partyId, shopId, toTime);
+            if (contractIds.isEmpty()) {
+                throw new NotFoundException(String.format("Contracts not found, payouts can't be created, partyId='%s', shopId='%s', fromTime='%s', toTime='%s', payoutType='%s'", partyId, shopId, fromTime, toTime, payoutType));
             }
 
-            List<Long> payoutIds = new ArrayList<>();
-            for (ShopParams shopParams : shops) {
+            for (String contractId : contractIds) {
                 try {
-                    long payoutId = createPayout(shopParams.getPartyId(), shopParams.getShopId(), fromTime, toTime, payoutType);
+                    long payoutId = createPayout(partyId, shopId, contractId, fromTime, toTime, payoutType, createdAt);
                     payoutIds.add(payoutId);
-                } catch (InvalidStateException ex) {
-                    log.warn("Failed to create payout for shop, shopParams='{}', fromTime='{}', toTime='{}', payoutType='{}'",
-                            shopParams, fromTime, toTime, payoutType, ex);
+                } catch (InsufficientFundsException ex) {
+                    log.info("Payout can't be created, reason='{}', partyId='{}', shopId='{}', contractId='{}', fromTime='{}', toTime='{}', payoutType='{}'", ex.getMessage(), partyId, shopId, contractId, fromTime, toTime, payoutType);
                 }
             }
-            log.info("Payouts successfully created, payoutIds='{}', fromTime={}, toTime={}, payoutType={}",
-                    payoutIds, fromTime, toTime, payoutType);
-
+            log.info("Payouts have been created, payoutIds='{}', partyId='{}', shopId='{}', fromTime='{}', toTime='{}', payoutType='{}'", payoutIds, partyId, shopId, fromTime, toTime, payoutType);
             return payoutIds;
-        } catch (DaoException ex) {
-            throw new StorageException(
-                    String.format("Failed to create payouts, fromTime='%s', toTime='%s', payoutType='%s'", fromTime, toTime, payoutType), ex);
+        } catch (RuntimeException ex) {
+            payoutIds.forEach(payoutId -> shumwayService.rollback(String.valueOf(payoutId)));
+            throw ex;
         }
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
-    public long createPayout(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType) throws InvalidStateException, NotFoundException, StorageException {
-        log.info("Trying to create payout, partyId={}, shopId={}, fromTime={}, toTime={}, payoutType={}",
-                partyId, shopId, fromTime, toTime, payoutType);
+    public Set<String> getContractsForPayouts(String partyId, String shopId, LocalDateTime toTime) {
+        log.info("Trying to get contracts for payouts, partyId='{}', shopId='{}', toTime='{}'", partyId, shopId, toTime);
+        try {
+            Set<String> contractIds = new HashSet<>();
+            contractIds.addAll(paymentDao.getContracts(partyId, shopId, toTime));
+            contractIds.addAll(refundDao.getContracts(partyId, shopId, toTime));
+            contractIds.addAll(adjustmentDao.getContracts(partyId, shopId, toTime));
+            log.info("Contracts for payouts has been found, contractIds='{}', partyId='{}', shopId='{}', toTime='{}'", contractIds, partyId, shopId, toTime);
+            return contractIds;
+        } catch (DaoException ex) {
+            throw new StorageException(String.format("Failed to get contracts for payouts, partyId='%s', shopId='%s', toTime='%s'", partyId, shopId, toTime));
+        }
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED)
+    public long createPayout(String partyId, String shopId, String contractId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType, LocalDateTime createdAt) throws InvalidStateException, NotFoundException, StorageException {
+        log.info("Trying to create payout, partyId='{}', shopId='{}', contractId='{}', fromTime='{}', toTime='{}', payoutType='{}', createdAt='{}'",
+                partyId, shopId, contractId, fromTime, toTime, payoutType, createdAt);
         try {
             if (isBlockedForPayouts(partyId)) {
                 throw new InvalidStateException(
@@ -122,17 +133,17 @@ public class PayoutServiceImpl implements PayoutService {
 
             ShopMeta shopMeta = shopMetaDao.getExclusive(partyId, shopId);
 
-            List<Payment> payments = paymentDao.getUnpaid(partyId, shopId, toTime);
-            List<Refund> refunds = refundDao.getUnpaid(partyId, shopId, toTime);
-            List<Adjustment> adjustments = adjustmentDao.getUnpaid(partyId, shopId, toTime);
+            List<Payment> payments = paymentDao.getUnpaid(partyId, shopId, contractId, toTime);
+            List<Refund> refunds = refundDao.getUnpaid(partyId, shopId, contractId, toTime);
+            List<Adjustment> adjustments = adjustmentDao.getUnpaid(partyId, shopId, contractId, toTime);
 
             long availableAmount = calculateAvailableAmount(payments, refunds, adjustments);
 
             if (availableAmount <= 0) {
-                throw new InvalidStateException("Available amount must be greater than 0");
+                throw new InsufficientFundsException("Available amount must be greater than 0");
             }
 
-            Payout payout = buildPayout(partyId, shopId, fromTime, toTime, payoutType);
+            Payout payout = buildPayout(partyId, shopId, contractId, fromTime, toTime, payoutType, createdAt);
             List<FinalCashFlowPosting> cashFlowPostings = partyManagementService.computePayoutCashFlow(
                     partyId,
                     shopId,
@@ -144,8 +155,8 @@ public class PayoutServiceImpl implements PayoutService {
             payout.setAmount(cashFlow.getOrDefault(CashFlowType.PAYOUT_AMOUNT, 0L) - cashFlow.getOrDefault(CashFlowType.PAYOUT_FIXED_FEE, 0L));
             payout.setFee(cashFlow.getOrDefault(CashFlowType.FEE, 0L) + cashFlow.getOrDefault(CashFlowType.PAYOUT_FIXED_FEE, 0L));
             if (payout.getAmount() <= 0) {
-                throw new InvalidStateException(
-                        String.format("Invalid payout cash flow, amount='%d', fee='%d'", payout.getAmount(), payout.getFee())
+                throw new InsufficientFundsException(
+                        String.format("Negative amount in payout cash flow, amount='%d', fee='%d'", payout.getAmount(), payout.getFee())
                 );
             }
 
@@ -308,23 +319,22 @@ public class PayoutServiceImpl implements PayoutService {
         }
     }
 
-    private Payout buildPayout(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType) {
-        Instant timestamp = Instant.now();
-
+    private Payout buildPayout(String partyId, String shopId, String contractId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType, LocalDateTime createdAt) {
         Payout payout = new Payout();
         payout.setPartyId(partyId);
         payout.setShopId(shopId);
+        payout.setContractId(contractId);
         payout.setFromTime(fromTime);
         payout.setToTime(toTime);
         payout.setType(payoutType);
-        payout.setCreatedAt(LocalDateTime.ofInstant(timestamp, ZoneOffset.UTC));
+        payout.setCreatedAt(createdAt);
         payout.setStatus(PayoutStatus.UNPAID);
 
-        Party party = partyManagementService.getParty(partyId, timestamp);
+        Party party = partyManagementService.getParty(partyId, createdAt.toInstant(ZoneOffset.UTC));
 
         Shop shop = party.getShops().get(shopId);
         if (shop == null) {
-            throw new NotFoundException(String.format("Shop not found, partyId='%s', contractId='%s', timestamp='%s'", partyId, shopId, timestamp));
+            throw new NotFoundException(String.format("Shop not found, partyId='%s', contractId='%s', timestamp='%s'", partyId, shopId, createdAt));
         }
         if (shop.getLocation().isSetUrl()) {
             payout.setShopUrl(shop.getLocation().getUrl());
@@ -336,7 +346,7 @@ public class PayoutServiceImpl implements PayoutService {
 
         Contract contract = party.getContracts().get(shop.getContractId());
         if (contract == null) {
-            throw new NotFoundException(String.format("Contract not found, partyId='%s', contractId='%s', timestamp='%s'", partyId, shop.getId(), timestamp));
+            throw new NotFoundException(String.format("Contract not found, partyId='%s', contractId='%s', timestamp='%s'", partyId, shop.getId(), createdAt));
         }
 
         Optional<PayoutTool> payoutToolOptional = contract.getPayoutTools().stream()

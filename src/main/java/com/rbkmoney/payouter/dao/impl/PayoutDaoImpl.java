@@ -1,6 +1,5 @@
 package com.rbkmoney.payouter.dao.impl;
 
-import com.rbkmoney.damsel.payout_processing.ShopParams;
 import com.rbkmoney.payouter.dao.PayoutDao;
 import com.rbkmoney.payouter.dao.mapper.RecordRowMapper;
 import com.rbkmoney.payouter.domain.enums.PayoutAccountType;
@@ -20,7 +19,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-import static com.rbkmoney.payouter.domain.Tables.PAYMENT;
 import static com.rbkmoney.payouter.domain.Tables.PAYOUT;
 
 @Component
@@ -99,20 +97,6 @@ public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
                 .forUpdate();
 
         return fetch(query, payoutRowMapper);
-    }
-
-    @Override
-    public List<ShopParams> getUnpaidShops(LocalDateTime fromTime, LocalDateTime toTime) throws DaoException {
-        Query query = getDslContext()
-                .select(PAYMENT.PARTY_ID, PAYMENT.SHOP_ID)
-                .from(PAYMENT)
-                .where(PAYMENT.PAYOUT_ID.isNull())
-                .and(PAYMENT.TEST.eq(false))
-                .and(PAYMENT.CAPTURED_AT.ge(fromTime))
-                .and(PAYMENT.CAPTURED_AT.lt(toTime))
-                .groupBy(PAYMENT.PARTY_ID, PAYMENT.SHOP_ID);
-
-        return fetch(query, (rs, i) -> new ShopParams(rs.getString(PAYMENT.PARTY_ID.getName()), rs.getString(PAYMENT.SHOP_ID.getName())));
     }
 
     @Override

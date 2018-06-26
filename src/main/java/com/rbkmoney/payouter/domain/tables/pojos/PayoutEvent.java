@@ -23,7 +23,7 @@ import javax.annotation.Generated;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class PayoutEvent implements Serializable {
 
-    private static final long serialVersionUID = -656701824;
+    private static final long serialVersionUID = -1853862461;
 
     private Long          eventId;
     private LocalDateTime eventCreatedAt;
@@ -62,6 +62,7 @@ public class PayoutEvent implements Serializable {
     private String        payoutAccountRegisteredAddress;
     private String        payoutAccountActualAddress;
     private String        payoutAccountRegisteredNumber;
+    private String        contractId;
 
     public PayoutEvent() {}
 
@@ -103,6 +104,7 @@ public class PayoutEvent implements Serializable {
         this.payoutAccountRegisteredAddress = value.payoutAccountRegisteredAddress;
         this.payoutAccountActualAddress = value.payoutAccountActualAddress;
         this.payoutAccountRegisteredNumber = value.payoutAccountRegisteredNumber;
+        this.contractId = value.contractId;
     }
 
     public PayoutEvent(
@@ -142,7 +144,8 @@ public class PayoutEvent implements Serializable {
         String        payoutAccountTradingName,
         String        payoutAccountRegisteredAddress,
         String        payoutAccountActualAddress,
-        String        payoutAccountRegisteredNumber
+        String        payoutAccountRegisteredNumber,
+        String        contractId
     ) {
         this.eventId = eventId;
         this.eventCreatedAt = eventCreatedAt;
@@ -181,6 +184,7 @@ public class PayoutEvent implements Serializable {
         this.payoutAccountRegisteredAddress = payoutAccountRegisteredAddress;
         this.payoutAccountActualAddress = payoutAccountActualAddress;
         this.payoutAccountRegisteredNumber = payoutAccountRegisteredNumber;
+        this.contractId = contractId;
     }
 
     public Long getEventId() {
@@ -479,6 +483,14 @@ public class PayoutEvent implements Serializable {
         this.payoutAccountRegisteredNumber = payoutAccountRegisteredNumber;
     }
 
+    public String getContractId() {
+        return this.contractId;
+    }
+
+    public void setContractId(String contractId) {
+        this.contractId = contractId;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj)
@@ -710,6 +722,12 @@ public class PayoutEvent implements Serializable {
         }
         else if (!payoutAccountRegisteredNumber.equals(other.payoutAccountRegisteredNumber))
             return false;
+        if (contractId == null) {
+            if (other.contractId != null)
+                return false;
+        }
+        else if (!contractId.equals(other.contractId))
+            return false;
         return true;
     }
 
@@ -754,6 +772,7 @@ public class PayoutEvent implements Serializable {
         result = prime * result + ((this.payoutAccountRegisteredAddress == null) ? 0 : this.payoutAccountRegisteredAddress.hashCode());
         result = prime * result + ((this.payoutAccountActualAddress == null) ? 0 : this.payoutAccountActualAddress.hashCode());
         result = prime * result + ((this.payoutAccountRegisteredNumber == null) ? 0 : this.payoutAccountRegisteredNumber.hashCode());
+        result = prime * result + ((this.contractId == null) ? 0 : this.contractId.hashCode());
         return result;
     }
 
@@ -798,6 +817,7 @@ public class PayoutEvent implements Serializable {
         sb.append(", ").append(payoutAccountRegisteredAddress);
         sb.append(", ").append(payoutAccountActualAddress);
         sb.append(", ").append(payoutAccountRegisteredNumber);
+        sb.append(", ").append(contractId);
 
         sb.append(")");
         return sb.toString();

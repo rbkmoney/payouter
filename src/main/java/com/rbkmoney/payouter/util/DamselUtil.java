@@ -123,6 +123,7 @@ public class DamselUtil {
         payout.setId(payoutEvent.getPayoutId());
         payout.setPartyId(payoutEvent.getPayoutPartyId());
         payout.setShopId(payoutEvent.getPayoutShopId());
+        payout.setContractId(payoutEvent.getContractId());
         payout.setCreatedAt(TypeUtil.temporalToString(payoutEvent.getPayoutCreatedAt()));
         payout.setStatus(toDamselPayoutStatus(payoutEvent));
         payout.setType(toDamselPayoutType(payoutEvent));
