@@ -92,7 +92,7 @@ public class PayoutServiceImpl implements PayoutService {
                     long payoutId = createPayout(partyId, shopId, contractId, fromTime, toTime, payoutType, createdAt);
                     payoutIds.add(payoutId);
                 } catch (InsufficientFundsException ex) {
-                    log.info("Payout can't be created, reason='{}', partyId='{}', shopId='{}', fromTime='{}', toTime='{}', payoutType='{}'", ex.getMessage(), partyId, shopId, fromTime, toTime, payoutType);
+                    log.info("Payout can't be created, reason='{}', partyId='{}', shopId='{}', contractId='{}', fromTime='{}', toTime='{}', payoutType='{}'", ex.getMessage(), partyId, shopId, contractId, fromTime, toTime, payoutType);
                 }
             }
             log.info("Payouts have been created, payoutIds='{}', partyId='{}', shopId='{}', fromTime='{}', toTime='{}', payoutType='{}'", payoutIds, partyId, shopId, fromTime, toTime, payoutType);
