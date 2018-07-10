@@ -19,7 +19,9 @@ import com.rbkmoney.generation.GeneratorConfig;
 import com.rbkmoney.generation.InvoicePaymentGenerator;
 import com.rbkmoney.generation.RefundGenerator;
 import com.rbkmoney.payouter.AbstractIntegrationTest;
+import com.rbkmoney.payouter.dao.PaymentDao;
 import com.rbkmoney.payouter.dao.PayoutDao;
+import com.rbkmoney.payouter.domain.tables.pojos.Payment;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.meta.UserIdentityIdExtensionKit;
 import com.rbkmoney.payouter.meta.UserIdentityRealmExtensionKit;
@@ -62,6 +64,9 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
 
     @Autowired
     PayoutDao payoutDao;
+
+    @Autowired
+    PaymentDao paymentDao;
 
     @Autowired
     JdbcTemplate jdbcTemplate;
@@ -266,6 +271,90 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         assertEquals(uniquePayoutsIds, callService(() -> client.cancelPayouts(uniquePayoutsIds, "так вышло")));
         assertEquals(CANCELLED, payoutDao.get(payoutId).getStatus());
 
+    }
+
+    @Test
+    public void testRouteEvent() {
+        String invoiceId = "invoice_id";
+        String paymentId = "payment_id";
+
+        GeneratorConfig generatorConfig = new GeneratorConfig();
+        generatorConfig.setInvoiceId(invoiceId);
+        generatorConfig.setPaymentId(paymentId);
+
+        InvoicePaymentGenerator invoicePaymentGenerator = new InvoicePaymentGenerator(generatorConfig);
+
+        Event invoiceCreated = invoicePaymentGenerator.createInvoiceCreated();
+        eventStockService.processStockEvent(buildStockEvent(invoiceCreated));
+
+        Event paymentStarted = invoicePaymentGenerator.createInvoicePaymentStarted();
+        PaymentRoute paymentRoute = new PaymentRoute(new ProviderRef(42), new TerminalRef(24));
+
+        paymentStarted.getPayload().setInvoiceChanges(
+                Arrays.asList(
+                        paymentStarted.getPayload().getInvoiceChanges().get(0),
+                        InvoiceChange.invoice_payment_change(
+                                new InvoicePaymentChange(paymentId,
+                                        InvoicePaymentChangePayload.invoice_payment_route_changed(
+                                                new InvoicePaymentRouteChanged(
+                                                        paymentRoute
+                                                )
+                                        )
+                                )
+                        )
+                )
+        );
+        eventStockService.processStockEvent(buildStockEvent(paymentStarted));
+
+        Payment payment = paymentDao.get(invoiceId, paymentId);
+        assertEquals((Integer) paymentRoute.getProvider().getId(), payment.getProviderId());
+        assertEquals((Integer) paymentRoute.getTerminal().getId(), payment.getTerminalId());
+    }
+
+    @Test
+    public void testPaymentCashFlow() {
+        String invoiceId = "invoice_id";
+        String paymentId = "payment_id";
+
+        GeneratorConfig generatorConfig = new GeneratorConfig();
+        generatorConfig.setInvoiceId(invoiceId);
+        generatorConfig.setPaymentId(paymentId);
+
+        InvoicePaymentGenerator invoicePaymentGenerator = new InvoicePaymentGenerator(generatorConfig);
+
+        Event invoiceCreated = invoicePaymentGenerator.createInvoiceCreated();
+        eventStockService.processStockEvent(buildStockEvent(invoiceCreated));
+
+        Event paymentStarted = invoicePaymentGenerator.createInvoicePaymentStarted();
+        List<FinalCashFlowPosting> finalCashFlowPostings = new ArrayList<>();
+        FinalCashFlowPosting feePosting = new FinalCashFlowPosting(
+                new FinalCashFlowAccount(
+                        CashFlowAccount.merchant(MerchantCashFlowAccount.settlement), 2L
+                ),
+                new FinalCashFlowAccount(
+                        CashFlowAccount.system(SystemCashFlowAccount.settlement.settlement), 2L
+                ),
+                new Cash(20L, new CurrencyRef("RUB")));
+        finalCashFlowPostings.add(feePosting);
+
+
+        paymentStarted.getPayload().setInvoiceChanges(
+                Arrays.asList(
+                        paymentStarted.getPayload().getInvoiceChanges().get(0),
+                        InvoiceChange.invoice_payment_change(
+                                new InvoicePaymentChange(paymentId,
+                                        InvoicePaymentChangePayload.invoice_payment_cash_flow_changed(
+                                                new InvoicePaymentCashFlowChanged(
+                                                        finalCashFlowPostings
+                                                )
+                                        )
+                                )
+                        )
+                )
+        );
+        eventStockService.processStockEvent(buildStockEvent(paymentStarted));
+        Payment payment = paymentDao.get(invoiceId, paymentId);
+        assertEquals((Long) 20L, payment.getFee());
     }
 
     @Test
