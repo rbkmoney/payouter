@@ -1,5 +1,6 @@
 package com.rbkmoney.payouter.poller.handler.impl;
 
+import com.rbkmoney.damsel.domain.Cash;
 import com.rbkmoney.damsel.domain.FinalCashFlowPosting;
 import com.rbkmoney.damsel.domain.InvoicePayment;
 import com.rbkmoney.damsel.domain.PaymentRoute;
@@ -81,15 +82,12 @@ public class InvoicePaymentHandler implements Handler<InvoiceChange, Event> {
         payment.setShopId(invoice.getShopId());
         payment.setContractId(invoice.getContractId());
 
-        PaymentRoute paymentRoute = invoicePaymentStarted.getRoute();
-        int providerId = paymentRoute.getProvider().getId();
-        payment.setProviderId(providerId);
-        int terminalId = paymentRoute.getTerminal().getId();
-        payment.setTerminalId(terminalId);
-
         payment.setPaymentId(invoicePayment.getId());
-        payment.setCurrencyCode(invoicePayment.getCost().getCurrency().getSymbolicCode());
         payment.setStatus(PaymentStatus.PENDING);
+
+        Cash cash = invoicePayment.getCost();
+        payment.setAmount(cash.getAmount());
+        payment.setCurrencyCode(cash.getCurrency().getSymbolicCode());
 
         Instant paymentCreatedAt = TypeUtil.stringToInstant(invoicePayment.getCreatedAt());
         payment.setCreatedAt(LocalDateTime.ofInstant(paymentCreatedAt, ZoneOffset.UTC));
@@ -99,13 +97,22 @@ public class InvoicePaymentHandler implements Handler<InvoiceChange, Event> {
             payment.setPartyRevision(invoicePayment.getPartyRevision());
         }
 
-        List<FinalCashFlowPosting> finalCashFlow = invoicePaymentStarted.getCashFlow();
-        Map<CashFlowType, Long> parsedCashFlow = DamselUtil.parseCashFlow(finalCashFlow);
-        payment.setAmount(parsedCashFlow.getOrDefault(AMOUNT, 0L));
-        payment.setFee(parsedCashFlow.getOrDefault(FEE, 0L));
-        payment.setProviderFee(parsedCashFlow.getOrDefault(PROVIDER_FEE, 0L));
-        payment.setExternalFee(parsedCashFlow.getOrDefault(EXTERNAL_FEE, 0L));
-        payment.setGuaranteeDeposit(parsedCashFlow.getOrDefault(GUARANTEE_DEPOSIT, 0L));
+        if (invoicePaymentStarted.isSetRoute()) {
+            PaymentRoute paymentRoute = invoicePaymentStarted.getRoute();
+            int providerId = paymentRoute.getProvider().getId();
+            payment.setProviderId(providerId);
+            int terminalId = paymentRoute.getTerminal().getId();
+            payment.setTerminalId(terminalId);
+        }
+
+        if (invoicePaymentStarted.isSetCashFlow()) {
+            List<FinalCashFlowPosting> finalCashFlow = invoicePaymentStarted.getCashFlow();
+            Map<CashFlowType, Long> parsedCashFlow = DamselUtil.parseCashFlow(finalCashFlow);
+            payment.setFee(parsedCashFlow.getOrDefault(FEE, 0L));
+            payment.setProviderFee(parsedCashFlow.getOrDefault(PROVIDER_FEE, 0L));
+            payment.setExternalFee(parsedCashFlow.getOrDefault(EXTERNAL_FEE, 0L));
+            payment.setGuaranteeDeposit(parsedCashFlow.getOrDefault(GUARANTEE_DEPOSIT, 0L));
+        }
 
         payment.setTest(
                 partyManagementService.isTestCategoryType(
