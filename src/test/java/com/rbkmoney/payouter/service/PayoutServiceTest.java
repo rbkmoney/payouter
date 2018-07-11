@@ -49,6 +49,7 @@ import java.util.concurrent.Callable;
 
 import static com.rbkmoney.payouter.domain.enums.PayoutStatus.*;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
@@ -290,9 +291,12 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         Event paymentStarted = invoicePaymentGenerator.createInvoicePaymentStarted();
         PaymentRoute paymentRoute = new PaymentRoute(new ProviderRef(42), new TerminalRef(24));
 
+        InvoiceChange invoiceChange = paymentStarted.getPayload().getInvoiceChanges().get(0);
+        invoiceChange.getInvoicePaymentChange().getPayload().getInvoicePaymentStarted().setRoute(null);
+
         paymentStarted.getPayload().setInvoiceChanges(
                 Arrays.asList(
-                        paymentStarted.getPayload().getInvoiceChanges().get(0),
+                        invoiceChange,
                         InvoiceChange.invoice_payment_change(
                                 new InvoicePaymentChange(paymentId,
                                         InvoicePaymentChangePayload.invoice_payment_route_changed(
@@ -304,8 +308,8 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
                         )
                 )
         );
-        eventStockService.processStockEvent(buildStockEvent(paymentStarted));
 
+        eventStockService.processStockEvent(buildStockEvent(paymentStarted));
         Payment payment = paymentDao.get(invoiceId, paymentId);
         assertEquals((Integer) paymentRoute.getProvider().getId(), payment.getProviderId());
         assertEquals((Integer) paymentRoute.getTerminal().getId(), payment.getTerminalId());
@@ -338,9 +342,12 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         finalCashFlowPostings.add(feePosting);
 
 
+        InvoiceChange invoiceChange = paymentStarted.getPayload().getInvoiceChanges().get(0);
+        invoiceChange.getInvoicePaymentChange().getPayload().getInvoicePaymentStarted().setCashFlow(null);
+
         paymentStarted.getPayload().setInvoiceChanges(
                 Arrays.asList(
-                        paymentStarted.getPayload().getInvoiceChanges().get(0),
+                        invoiceChange,
                         InvoiceChange.invoice_payment_change(
                                 new InvoicePaymentChange(paymentId,
                                         InvoicePaymentChangePayload.invoice_payment_cash_flow_changed(
@@ -352,9 +359,13 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
                         )
                 )
         );
+
         eventStockService.processStockEvent(buildStockEvent(paymentStarted));
         Payment payment = paymentDao.get(invoiceId, paymentId);
         assertEquals((Long) 20L, payment.getFee());
+        assertEquals((Long) 0L, payment.getExternalFee());
+        assertEquals((Long) 0L, payment.getProviderFee());
+        assertEquals((Long) 0L, payment.getGuaranteeDeposit());
     }
 
     @Test
