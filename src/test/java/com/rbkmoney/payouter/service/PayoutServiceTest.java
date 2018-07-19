@@ -49,7 +49,6 @@ import java.util.concurrent.Callable;
 
 import static com.rbkmoney.payouter.domain.enums.PayoutStatus.*;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Matchers.any;
@@ -143,13 +142,36 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
 
         List<Payout> payouts;
         do {
-            payouts = payoutService.search(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(1));
+            payouts = payoutService.search(
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.of(1)
+            );
         } while (payouts.isEmpty());
 
         assertEquals(1, payouts.size());
         Payout payout = payouts.get(0);
         assertEquals(9500L, (long) payout.getAmount());
         assertEquals(UNPAID, payout.getStatus());
+        assertTrue(
+                !payoutService.search(
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.of(payout.getAmount() - 1),
+                        Optional.of(payout.getAmount() + 1),
+                        Optional.of(new CurrencyRef("RUB")),
+                        Optional.empty(),
+                        Optional.of(1)
+                ).isEmpty()
+        );
     }
 
     @Test
@@ -188,6 +210,8 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         assertEquals(Long.valueOf(9600L), payout.getAmount());
         assertEquals(PAID, payout.getStatus());
         assertEquals(partyId, payout.getPartyId());
+
+        assertEquals(payout, payoutService.getPayoutsByIds(Arrays.asList(payoutId)).get(0));
     }
 
     @Test
@@ -213,6 +237,8 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         assertEquals(Long.valueOf(9000L), payout.getAmount());
         assertEquals(PAID, payout.getStatus());
         assertEquals(partyId, payout.getPartyId());
+
+        assertEquals(payout, payoutService.getPayoutsByIds(Arrays.asList(payoutId)).get(0));
     }
 
     @Test(expected = InvalidRequest.class)
