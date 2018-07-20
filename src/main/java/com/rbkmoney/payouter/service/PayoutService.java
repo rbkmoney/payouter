@@ -1,5 +1,6 @@
 package com.rbkmoney.payouter.service;
 
+import com.rbkmoney.damsel.domain.CurrencyRef;
 import com.rbkmoney.payouter.domain.enums.PayoutAccountType;
 import com.rbkmoney.payouter.domain.enums.PayoutStatus;
 import com.rbkmoney.payouter.domain.enums.PayoutType;
@@ -9,6 +10,7 @@ import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.exception.StorageException;
 
 import java.time.LocalDateTime;
+import java.util.Currency;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -31,8 +33,18 @@ public interface PayoutService {
 
     Set<String> getContractsForPayouts(String partyId, String shopId, LocalDateTime toTime);
 
-    List<Payout> search(Optional<PayoutStatus> payoutStatus, Optional<LocalDateTime> fromTime, Optional<LocalDateTime> toTime, Optional<List<Long>> payoutIds, Optional<Long> fromId, Optional<Integer> size);
+    List<Payout> search(
+            Optional<PayoutStatus> payoutStatus,
+            Optional<LocalDateTime> fromTime,
+            Optional<LocalDateTime> toTime,
+            Optional<List<Long>> payoutIds,
+            Optional<Long> minAmount,
+            Optional<Long> maxAmount,
+            Optional<CurrencyRef> currencyRef,
+            Optional<Long> fromId,
+            Optional<Integer> size) throws StorageException;
 
     void excludeFromPayout(long payoutId) throws StorageException;
 
+    List<Payout> getPayoutsByIds(List<Long> payoutIds) throws StorageException;
 }

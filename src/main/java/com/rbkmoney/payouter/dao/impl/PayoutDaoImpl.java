@@ -1,5 +1,6 @@
 package com.rbkmoney.payouter.dao.impl;
 
+import com.rbkmoney.damsel.domain.CurrencyRef;
 import com.rbkmoney.payouter.dao.PayoutDao;
 import com.rbkmoney.payouter.dao.mapper.RecordRowMapper;
 import com.rbkmoney.payouter.domain.enums.PayoutAccountType;
@@ -100,15 +101,39 @@ public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
     }
 
     @Override
-    public List<Payout> search(Optional<PayoutStatus> payoutStatus, Optional<LocalDateTime> fromTime, Optional<LocalDateTime> toTime, Optional<List<Long>> payoutIds, Optional<Long> fromIdOptional, Optional<Integer> sizeOptional) throws DaoException {
+    public List<Payout> search(
+            Optional<PayoutStatus> payoutStatus,
+            Optional<LocalDateTime> fromTime,
+            Optional<LocalDateTime> toTime,
+            Optional<List<Long>> payoutIds,
+            Optional<Long> minAmountOptional,
+            Optional<Long> maxAmountOptional,
+            Optional<CurrencyRef> currencyOptional,
+            Optional<Long> fromIdOptional,
+            Optional<Integer> sizeOptional
+    ) throws DaoException {
         SelectQuery query = getDslContext().selectQuery();
         query.addFrom(PAYOUT);
         payoutStatus.ifPresent(ps -> query.addConditions(PAYOUT.STATUS.eq(ps)));
         fromTime.ifPresent(from -> query.addConditions(PAYOUT.CREATED_AT.ge(from)));
         toTime.ifPresent(to -> query.addConditions(PAYOUT.CREATED_AT.lt(to)));
         payoutIds.ifPresent(ids -> query.addConditions(PAYOUT.ID.in(ids)));
+        minAmountOptional.ifPresent(minAmount -> query.addConditions(PAYOUT.AMOUNT.ge(minAmount)));
+        maxAmountOptional.ifPresent(maxAmount -> query.addConditions(PAYOUT.AMOUNT.le(maxAmount)));
+        currencyOptional.ifPresent(currencyRef -> query.addConditions(PAYOUT.CURRENCY_CODE.eq(currencyRef.getSymbolicCode())));
         fromIdOptional.ifPresent(fromId -> query.addConditions(PAYOUT.ID.gt(fromId)));
         sizeOptional.ifPresent(size -> query.addLimit(size));
+        query.addOrderBy(PAYOUT.CREATED_AT.desc());
+        return fetch(query, payoutRowMapper);
+    }
+
+    @Override
+    public List<Payout> getByIds(List<Long> payoutIds) throws DaoException {
+        Query query = getDslContext()
+                .selectFrom(PAYOUT)
+                .where(PAYOUT.ID.in(payoutIds))
+                .orderBy(PAYOUT.ID);
+
         return fetch(query, payoutRowMapper);
     }
 }
