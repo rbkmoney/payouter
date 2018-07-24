@@ -34,6 +34,7 @@ public class ResidentsMailContentServiceImpl extends MailContentServiceImpl{
             Map<String, Object> payoutDescription = new HashMap<>();
             payoutDescription.put("name", payout.getDescription());
             payoutDescription.put("sum", FormatUtil.getFormattedAmount(payout.getAmount()));
+            payoutDescription.put("curr", payout.getCurrencyCode());
             payoutDescription.put("inn", payout.getInn());
             payoutDescription.put("to_date_description", getFormattedDateDescription(payout.getToTime(), zoneId));
             List<PayoutSummary> cashFlowDescriptions = payoutSummaryDao.get(String.valueOf(payout.getId()));
