@@ -50,7 +50,6 @@ public class ResidentsMailContentServiceImpl extends MailContentServiceImpl{
             return payoutDescription;
         }).collect(Collectors.toList());
         data.put("payoutDescriptions", payoutDescriptionAttributes);
-        data.put("total_amount", FormatUtil.getFormattedAmount(sortedPayouts.stream().mapToLong(Payout::getAmount).sum()));
         return data;
     }
 
