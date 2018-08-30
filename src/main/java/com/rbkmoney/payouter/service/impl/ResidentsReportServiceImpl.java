@@ -34,10 +34,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -95,7 +92,7 @@ public class ResidentsReportServiceImpl implements ReportService {
             HolidayCalendar holidayCalendar = SchedulerUtil.buildCalendar(dominantService.getCalendar(new CalendarRef(calendarId)));
             if (holidayCalendar.isTimeIncluded(Instant.now().toEpochMilli())) {
                 Map<Integer, List<Payout>> groupedPayoutsMap = payoutService.getUnpaidPayoutsByAccountType(PayoutAccountType.russian_payout_account)
-                        .stream().collect(Collectors.groupingBy(Payout::getPaymentInstitutionId));
+                        .stream().collect(Collectors.groupingBy(p -> Optional.ofNullable(p.getPaymentInstitutionId()).orElse(-1)));
 
                 groupedPayoutsMap.values().forEach(payouts -> {
                     if (!payouts.isEmpty()) {

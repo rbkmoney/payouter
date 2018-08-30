@@ -35,6 +35,7 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.opencsv.CSVWriter.*;
@@ -116,7 +117,7 @@ public class NonresidentsReportServiceImpl implements ReportService {
             HolidayCalendar holidayCalendar = SchedulerUtil.buildCalendar(dominantService.getCalendar(new CalendarRef(calendarId)));
             if (holidayCalendar.isTimeIncluded(Instant.now().toEpochMilli())) {
                 Map<Integer, List<Payout>> groupedPayoutsMap = payoutService.getUnpaidPayoutsByAccountType(PayoutAccountType.international_payout_account)
-                        .stream().collect(Collectors.groupingBy(Payout::getPaymentInstitutionId));
+                        .stream().collect(Collectors.groupingBy(p -> Optional.ofNullable(p.getPaymentInstitutionId()).orElse(-1)));
 
                 groupedPayoutsMap.values().forEach(payouts -> {
                     if (!payouts.isEmpty()) {
