@@ -116,8 +116,8 @@ public class NonresidentsReportServiceImpl implements ReportService {
         try {
             HolidayCalendar holidayCalendar = SchedulerUtil.buildCalendar(dominantService.getCalendar(new CalendarRef(calendarId)));
             if (holidayCalendar.isTimeIncluded(Instant.now().toEpochMilli())) {
-                Map<Integer, List<Payout>> groupedPayoutsMap = payoutService.getUnpaidPayoutsByAccountType(PayoutAccountType.international_payout_account)
-                        .stream().collect(Collectors.groupingBy(p -> Optional.ofNullable(p.getPaymentInstitutionId()).orElse(-1)));
+                Map<Optional<Integer>, List<Payout>> groupedPayoutsMap = payoutService.getUnpaidPayoutsByAccountType(PayoutAccountType.international_payout_account)
+                        .stream().collect(Collectors.groupingBy(p -> Optional.ofNullable(p.getPaymentInstitutionId())));
 
                 groupedPayoutsMap.values().forEach(payouts -> {
                     if (!payouts.isEmpty()) {
