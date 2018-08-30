@@ -94,12 +94,15 @@ public class ResidentsReportServiceImpl implements ReportService {
         try {
             HolidayCalendar holidayCalendar = SchedulerUtil.buildCalendar(dominantService.getCalendar(new CalendarRef(calendarId)));
             if (holidayCalendar.isTimeIncluded(Instant.now().toEpochMilli())) {
-                List<Payout> payouts = payoutService.getUnpaidPayoutsByAccountType(PayoutAccountType.russian_payout_account);
+                Map<Integer, List<Payout>> groupedPayoutsMap = payoutService.getUnpaidPayoutsByAccountType(PayoutAccountType.russian_payout_account)
+                        .stream().collect(Collectors.groupingBy(Payout::getPaymentInstitutionId));
 
-                if (!payouts.isEmpty()) {
-                    generateAndSave(payouts);
-                    payouts.forEach(payout -> payoutService.pay(payout.getId()));
-                }
+                groupedPayoutsMap.values().forEach(payouts -> {
+                    if (!payouts.isEmpty()) {
+                        generateAndSave(payouts);
+                        payouts.forEach(payout -> payoutService.pay(payout.getId()));
+                    }
+                });
             }
         } finally {
             log.info("Report job for residents ending");

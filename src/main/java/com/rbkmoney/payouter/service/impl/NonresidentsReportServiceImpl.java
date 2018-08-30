@@ -34,6 +34,7 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.opencsv.CSVWriter.*;
@@ -114,12 +115,15 @@ public class NonresidentsReportServiceImpl implements ReportService {
         try {
             HolidayCalendar holidayCalendar = SchedulerUtil.buildCalendar(dominantService.getCalendar(new CalendarRef(calendarId)));
             if (holidayCalendar.isTimeIncluded(Instant.now().toEpochMilli())) {
-                List<Payout> payouts = payoutService.getUnpaidPayoutsByAccountType(PayoutAccountType.international_payout_account);
+                Map<Integer, List<Payout>> groupedPayoutsMap = payoutService.getUnpaidPayoutsByAccountType(PayoutAccountType.international_payout_account)
+                        .stream().collect(Collectors.groupingBy(Payout::getPaymentInstitutionId));
 
-                if (!payouts.isEmpty()) {
-                    generateAndSave(payouts);
-                    payouts.forEach(payout -> payoutService.pay(payout.getId()));
-                }
+                groupedPayoutsMap.values().forEach(payouts -> {
+                    if (!payouts.isEmpty()) {
+                        generateAndSave(payouts);
+                        payouts.forEach(payout -> payoutService.pay(payout.getId()));
+                    }
+                });
             }
         } finally {
             log.info("Report job for nonresidents ending");
