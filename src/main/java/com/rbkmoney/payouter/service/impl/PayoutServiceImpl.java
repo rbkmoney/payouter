@@ -432,6 +432,9 @@ public class PayoutServiceImpl implements PayoutService {
         payout.setAccountLegalAgreementSignedAt(
                 TypeUtil.stringToLocalDateTime(contract.getLegalAgreement().getSignedAt())
         );
+        if (contract.isSetPaymentInstitution()) {
+            payout.setPaymentInstitutionId(contract.getPaymentInstitution().getId());
+        }
 
         return payout;
     }

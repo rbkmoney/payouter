@@ -34,6 +34,8 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.opencsv.CSVWriter.*;
@@ -114,12 +116,15 @@ public class NonresidentsReportServiceImpl implements ReportService {
         try {
             HolidayCalendar holidayCalendar = SchedulerUtil.buildCalendar(dominantService.getCalendar(new CalendarRef(calendarId)));
             if (holidayCalendar.isTimeIncluded(Instant.now().toEpochMilli())) {
-                List<Payout> payouts = payoutService.getUnpaidPayoutsByAccountType(PayoutAccountType.international_payout_account);
+                Map<Optional<Integer>, List<Payout>> groupedPayoutsMap = payoutService.getUnpaidPayoutsByAccountType(PayoutAccountType.international_payout_account)
+                        .stream().collect(Collectors.groupingBy(p -> Optional.ofNullable(p.getPaymentInstitutionId())));
 
-                if (!payouts.isEmpty()) {
-                    generateAndSave(payouts);
-                    payouts.forEach(payout -> payoutService.pay(payout.getId()));
-                }
+                groupedPayoutsMap.values().forEach(payouts -> {
+                    if (!payouts.isEmpty()) {
+                        generateAndSave(payouts);
+                        payouts.forEach(payout -> payoutService.pay(payout.getId()));
+                    }
+                });
             }
         } finally {
             log.info("Report job for nonresidents ending");
@@ -153,7 +158,7 @@ public class NonresidentsReportServiceImpl implements ReportService {
         List<String> payoutIds = payouts.stream().map(p -> String.valueOf(p.getId())).collect(Collectors.toList());
         Report report = new Report();
         report.setName(prefix + "_" + createdAtFormatted + extension);
-        report.setSubject("Выплаты для нерезидентов, сгенерированные " + createdAtFormatted);
+        report.setSubject(String.format("Выплаты для нерезидентов, сгенерированные %s (%d)", createdAtFormatted, payouts.get(0).getPaymentInstitutionId()));
         report.setDescription(nonResidentsMailContentService.generateContent(payouts));
         report.setPayoutIds(String.join(",", payoutIds));
         report.setStatus(ReportStatus.READY);

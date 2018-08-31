@@ -27,7 +27,7 @@ import javax.annotation.Generated;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Payout implements Serializable {
 
-    private static final long serialVersionUID = 1760417565;
+    private static final long serialVersionUID = -1494061870;
 
     private Long              id;
     private String            partyId;
@@ -62,6 +62,7 @@ public class Payout implements Serializable {
     private String            accountRegisteredNumber;
     private String            shopUrl;
     private String            contractId;
+    private Integer           paymentInstitutionId;
 
     public Payout() {}
 
@@ -99,6 +100,7 @@ public class Payout implements Serializable {
         this.accountRegisteredNumber = value.accountRegisteredNumber;
         this.shopUrl = value.shopUrl;
         this.contractId = value.contractId;
+        this.paymentInstitutionId = value.paymentInstitutionId;
     }
 
     public Payout(
@@ -134,7 +136,8 @@ public class Payout implements Serializable {
         String            accountActualAddress,
         String            accountRegisteredNumber,
         String            shopUrl,
-        String            contractId
+        String            contractId,
+        Integer           paymentInstitutionId
     ) {
         this.id = id;
         this.partyId = partyId;
@@ -169,6 +172,7 @@ public class Payout implements Serializable {
         this.accountRegisteredNumber = accountRegisteredNumber;
         this.shopUrl = shopUrl;
         this.contractId = contractId;
+        this.paymentInstitutionId = paymentInstitutionId;
     }
 
     public Long getId() {
@@ -435,6 +439,14 @@ public class Payout implements Serializable {
         this.contractId = contractId;
     }
 
+    public Integer getPaymentInstitutionId() {
+        return this.paymentInstitutionId;
+    }
+
+    public void setPaymentInstitutionId(Integer paymentInstitutionId) {
+        this.paymentInstitutionId = paymentInstitutionId;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj)
@@ -642,6 +654,12 @@ public class Payout implements Serializable {
         }
         else if (!contractId.equals(other.contractId))
             return false;
+        if (paymentInstitutionId == null) {
+            if (other.paymentInstitutionId != null)
+                return false;
+        }
+        else if (!paymentInstitutionId.equals(other.paymentInstitutionId))
+            return false;
         return true;
     }
 
@@ -682,6 +700,7 @@ public class Payout implements Serializable {
         result = prime * result + ((this.accountRegisteredNumber == null) ? 0 : this.accountRegisteredNumber.hashCode());
         result = prime * result + ((this.shopUrl == null) ? 0 : this.shopUrl.hashCode());
         result = prime * result + ((this.contractId == null) ? 0 : this.contractId.hashCode());
+        result = prime * result + ((this.paymentInstitutionId == null) ? 0 : this.paymentInstitutionId.hashCode());
         return result;
     }
 
@@ -722,6 +741,7 @@ public class Payout implements Serializable {
         sb.append(", ").append(accountRegisteredNumber);
         sb.append(", ").append(shopUrl);
         sb.append(", ").append(contractId);
+        sb.append(", ").append(paymentInstitutionId);
 
         sb.append(")");
         return sb.toString();

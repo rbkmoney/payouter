@@ -1,4 +1,4 @@
-package com.rbkmoney.payouter.dao.impl;
+package com.rbkmoney.payouter.service.impl;
 
 import com.rbkmoney.damsel.message_sender.*;
 import com.rbkmoney.payouter.dao.ReportDao;
