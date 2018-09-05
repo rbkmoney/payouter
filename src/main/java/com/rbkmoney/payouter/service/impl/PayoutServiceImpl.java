@@ -424,6 +424,28 @@ public class PayoutServiceImpl implements PayoutService {
                 );
             }
 
+            //OH SHI—
+            if (bankAccount.isSetCorrespondentAccount()) {
+                InternationalBankAccount correspondentAccount = bankAccount.getCorrespondentAccount();
+                payout.setIntCorrBankAccount(correspondentAccount.getAccountHolder());
+                payout.setIntCorrBankName(correspondentAccount.getBankName());
+                payout.setIntCorrBankAddress(correspondentAccount.getBankAddress());
+                payout.setIntCorrBankBic(correspondentAccount.getBic());
+                payout.setIntCorrBankIban(correspondentAccount.getIban());
+                if (correspondentAccount.isSetBank()) {
+                    InternationalBankDetails corrBankDetails = correspondentAccount.getBank();
+                    payout.setIntCorrBankName(corrBankDetails.getName());
+                    payout.setIntCorrBankAddress(corrBankDetails.getAddress());
+                    payout.setIntCorrBankBic(corrBankDetails.getBic());
+                    payout.setIntCorrBankAbaRtn(corrBankDetails.getAbaRtn());
+                    payout.setIntCorrBankCountryCode(
+                            Optional.ofNullable(corrBankDetails.getCountry())
+                                    .map(country -> country.toString())
+                                    .orElse(null)
+                    );
+                }
+            }
+
             if (contract.getContractor().getLegalEntity().isSetInternationalLegalEntity()) {
                 InternationalLegalEntity legalEntity = contract.getContractor().getLegalEntity().getInternationalLegalEntity();
                 payout.setAccountLegalName(legalEntity.getLegalName());
