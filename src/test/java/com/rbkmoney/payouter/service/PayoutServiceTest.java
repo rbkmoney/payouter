@@ -634,20 +634,13 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
                 "12/12")
         );
         contract.setPaymentInstitution(new PaymentInstitutionRef(1));
+        InternationalBankAccount internationalBankAccount = new InternationalBankAccount();
         contract.setPayoutTools(Arrays.asList(
                 new PayoutTool(
                         payoutToolId,
                         TypeUtil.temporalToString(Instant.now()),
                         new CurrencyRef("RUB"),
-                        PayoutToolInfo.international_bank_account(
-                                new InternationalBankAccount(
-                                        "123",
-                                        "123",
-                                        "123",
-                                        "123",
-                                        "123"
-                                )
-                        )
+                        PayoutToolInfo.international_bank_account(internationalBankAccount)
                 )
         ));
         contract.setContractor(

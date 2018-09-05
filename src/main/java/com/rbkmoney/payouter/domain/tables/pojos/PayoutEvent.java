@@ -23,7 +23,7 @@ import javax.annotation.Generated;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class PayoutEvent implements Serializable {
 
-    private static final long serialVersionUID = -1853862461;
+    private static final long serialVersionUID = 1689248218;
 
     private Long          eventId;
     private LocalDateTime eventCreatedAt;
@@ -63,6 +63,8 @@ public class PayoutEvent implements Serializable {
     private String        payoutAccountActualAddress;
     private String        payoutAccountRegisteredNumber;
     private String        contractId;
+    private String        payoutAccountBankAbaRtn;
+    private String        payoutAccountBankCountryCode;
 
     public PayoutEvent() {}
 
@@ -105,6 +107,8 @@ public class PayoutEvent implements Serializable {
         this.payoutAccountActualAddress = value.payoutAccountActualAddress;
         this.payoutAccountRegisteredNumber = value.payoutAccountRegisteredNumber;
         this.contractId = value.contractId;
+        this.payoutAccountBankAbaRtn = value.payoutAccountBankAbaRtn;
+        this.payoutAccountBankCountryCode = value.payoutAccountBankCountryCode;
     }
 
     public PayoutEvent(
@@ -145,7 +149,9 @@ public class PayoutEvent implements Serializable {
         String        payoutAccountRegisteredAddress,
         String        payoutAccountActualAddress,
         String        payoutAccountRegisteredNumber,
-        String        contractId
+        String        contractId,
+        String        payoutAccountBankAbaRtn,
+        String        payoutAccountBankCountryCode
     ) {
         this.eventId = eventId;
         this.eventCreatedAt = eventCreatedAt;
@@ -185,6 +191,8 @@ public class PayoutEvent implements Serializable {
         this.payoutAccountActualAddress = payoutAccountActualAddress;
         this.payoutAccountRegisteredNumber = payoutAccountRegisteredNumber;
         this.contractId = contractId;
+        this.payoutAccountBankAbaRtn = payoutAccountBankAbaRtn;
+        this.payoutAccountBankCountryCode = payoutAccountBankCountryCode;
     }
 
     public Long getEventId() {
@@ -491,6 +499,22 @@ public class PayoutEvent implements Serializable {
         this.contractId = contractId;
     }
 
+    public String getPayoutAccountBankAbaRtn() {
+        return this.payoutAccountBankAbaRtn;
+    }
+
+    public void setPayoutAccountBankAbaRtn(String payoutAccountBankAbaRtn) {
+        this.payoutAccountBankAbaRtn = payoutAccountBankAbaRtn;
+    }
+
+    public String getPayoutAccountBankCountryCode() {
+        return this.payoutAccountBankCountryCode;
+    }
+
+    public void setPayoutAccountBankCountryCode(String payoutAccountBankCountryCode) {
+        this.payoutAccountBankCountryCode = payoutAccountBankCountryCode;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj)
@@ -728,6 +752,18 @@ public class PayoutEvent implements Serializable {
         }
         else if (!contractId.equals(other.contractId))
             return false;
+        if (payoutAccountBankAbaRtn == null) {
+            if (other.payoutAccountBankAbaRtn != null)
+                return false;
+        }
+        else if (!payoutAccountBankAbaRtn.equals(other.payoutAccountBankAbaRtn))
+            return false;
+        if (payoutAccountBankCountryCode == null) {
+            if (other.payoutAccountBankCountryCode != null)
+                return false;
+        }
+        else if (!payoutAccountBankCountryCode.equals(other.payoutAccountBankCountryCode))
+            return false;
         return true;
     }
 
@@ -773,6 +809,8 @@ public class PayoutEvent implements Serializable {
         result = prime * result + ((this.payoutAccountActualAddress == null) ? 0 : this.payoutAccountActualAddress.hashCode());
         result = prime * result + ((this.payoutAccountRegisteredNumber == null) ? 0 : this.payoutAccountRegisteredNumber.hashCode());
         result = prime * result + ((this.contractId == null) ? 0 : this.contractId.hashCode());
+        result = prime * result + ((this.payoutAccountBankAbaRtn == null) ? 0 : this.payoutAccountBankAbaRtn.hashCode());
+        result = prime * result + ((this.payoutAccountBankCountryCode == null) ? 0 : this.payoutAccountBankCountryCode.hashCode());
         return result;
     }
 
@@ -818,6 +856,8 @@ public class PayoutEvent implements Serializable {
         sb.append(", ").append(payoutAccountActualAddress);
         sb.append(", ").append(payoutAccountRegisteredNumber);
         sb.append(", ").append(contractId);
+        sb.append(", ").append(payoutAccountBankAbaRtn);
+        sb.append(", ").append(payoutAccountBankCountryCode);
 
         sb.append(")");
         return sb.toString();

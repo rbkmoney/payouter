@@ -27,7 +27,7 @@ import org.jooq.impl.UpdatableRecordImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class PayoutEventRecord extends UpdatableRecordImpl<PayoutEventRecord> {
 
-    private static final long serialVersionUID = 1305222470;
+    private static final long serialVersionUID = -602672447;
 
     /**
      * Setter for <code>sht.payout_event.event_id</code>.
@@ -561,6 +561,34 @@ public class PayoutEventRecord extends UpdatableRecordImpl<PayoutEventRecord> {
         return (String) get(37);
     }
 
+    /**
+     * Setter for <code>sht.payout_event.payout_account_bank_aba_rtn</code>.
+     */
+    public void setPayoutAccountBankAbaRtn(String value) {
+        set(38, value);
+    }
+
+    /**
+     * Getter for <code>sht.payout_event.payout_account_bank_aba_rtn</code>.
+     */
+    public String getPayoutAccountBankAbaRtn() {
+        return (String) get(38);
+    }
+
+    /**
+     * Setter for <code>sht.payout_event.payout_account_bank_country_code</code>.
+     */
+    public void setPayoutAccountBankCountryCode(String value) {
+        set(39, value);
+    }
+
+    /**
+     * Getter for <code>sht.payout_event.payout_account_bank_country_code</code>.
+     */
+    public String getPayoutAccountBankCountryCode() {
+        return (String) get(39);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -587,7 +615,7 @@ public class PayoutEventRecord extends UpdatableRecordImpl<PayoutEventRecord> {
     /**
      * Create a detached, initialised PayoutEventRecord
      */
-    public PayoutEventRecord(Long eventId, LocalDateTime eventCreatedAt, String eventType, String payoutId, String payoutPartyId, String payoutShopId, LocalDateTime payoutCreatedAt, String payoutStatus, String payoutStatusCancelDetails, String payoutType, String payoutCashFlow, String payoutPaidDetailsType, String payoutCardToken, String payoutCardPaymentSystem, String payoutCardBin, String payoutCardMaskedPan, String payoutCardProviderName, String payoutCardProviderTransactionId, String payoutAccountId, String payoutAccountBankName, String payoutAccountBankPostId, String payoutAccountBankLocalCode, String payoutAccountInn, String payoutAccountPurpose, String payoutAccountLegalAgreementId, LocalDateTime payoutAccountLegalAgreementSignedAt, String userId, String userType, String payoutAccountType, String payoutAccountBankAddress, String payoutAccountBankBic, String payoutAccountBankIban, String payoutAccountLegalName, String payoutAccountTradingName, String payoutAccountRegisteredAddress, String payoutAccountActualAddress, String payoutAccountRegisteredNumber, String contractId) {
+    public PayoutEventRecord(Long eventId, LocalDateTime eventCreatedAt, String eventType, String payoutId, String payoutPartyId, String payoutShopId, LocalDateTime payoutCreatedAt, String payoutStatus, String payoutStatusCancelDetails, String payoutType, String payoutCashFlow, String payoutPaidDetailsType, String payoutCardToken, String payoutCardPaymentSystem, String payoutCardBin, String payoutCardMaskedPan, String payoutCardProviderName, String payoutCardProviderTransactionId, String payoutAccountId, String payoutAccountBankName, String payoutAccountBankPostId, String payoutAccountBankLocalCode, String payoutAccountInn, String payoutAccountPurpose, String payoutAccountLegalAgreementId, LocalDateTime payoutAccountLegalAgreementSignedAt, String userId, String userType, String payoutAccountType, String payoutAccountBankAddress, String payoutAccountBankBic, String payoutAccountBankIban, String payoutAccountLegalName, String payoutAccountTradingName, String payoutAccountRegisteredAddress, String payoutAccountActualAddress, String payoutAccountRegisteredNumber, String contractId, String payoutAccountBankAbaRtn, String payoutAccountBankCountryCode) {
         super(PayoutEvent.PAYOUT_EVENT);
 
         set(0, eventId);
@@ -628,5 +656,7 @@ public class PayoutEventRecord extends UpdatableRecordImpl<PayoutEventRecord> {
         set(35, payoutAccountActualAddress);
         set(36, payoutAccountRegisteredNumber);
         set(37, contractId);
+        set(38, payoutAccountBankAbaRtn);
+        set(39, payoutAccountBankCountryCode);
     }
 }

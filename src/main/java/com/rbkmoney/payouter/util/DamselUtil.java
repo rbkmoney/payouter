@@ -215,7 +215,15 @@ public class DamselUtil {
         bankAccount.setBankAddress(payoutEvent.getPayoutAccountBankAddress());
         bankAccount.setIban(payoutEvent.getPayoutAccountBankIban());
         bankAccount.setBic(payoutEvent.getPayoutAccountBankBic());
-        bankAccount.setLocalBankCode(payoutEvent.getPayoutAccountBankLocalCode());
+
+        InternationalBankDetails bankDetails = new InternationalBankDetails();
+        bankDetails.setName(payoutEvent.getPayoutAccountBankName());
+        bankDetails.setBic(payoutEvent.getPayoutAccountBankBic());
+        bankDetails.setAbaRtn(payoutEvent.getPayoutAccountBankAbaRtn());
+        bankDetails.setAddress(payoutEvent.getPayoutAccountBankAddress());
+        bankDetails.setCountry(TypeUtil.toEnumField(payoutEvent.getPayoutAccountBankCountryCode(), Residence.class));
+        bankAccount.setBank(bankDetails);
+
         return bankAccount;
     }
 

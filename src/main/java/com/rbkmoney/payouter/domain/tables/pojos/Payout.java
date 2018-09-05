@@ -27,7 +27,7 @@ import javax.annotation.Generated;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Payout implements Serializable {
 
-    private static final long serialVersionUID = -1494061870;
+    private static final long serialVersionUID = -1903823069;
 
     private Long              id;
     private String            partyId;
@@ -63,6 +63,8 @@ public class Payout implements Serializable {
     private String            shopUrl;
     private String            contractId;
     private Integer           paymentInstitutionId;
+    private String            bankAbaRtn;
+    private String            bankCountryCode;
 
     public Payout() {}
 
@@ -101,6 +103,8 @@ public class Payout implements Serializable {
         this.shopUrl = value.shopUrl;
         this.contractId = value.contractId;
         this.paymentInstitutionId = value.paymentInstitutionId;
+        this.bankAbaRtn = value.bankAbaRtn;
+        this.bankCountryCode = value.bankCountryCode;
     }
 
     public Payout(
@@ -137,7 +141,9 @@ public class Payout implements Serializable {
         String            accountRegisteredNumber,
         String            shopUrl,
         String            contractId,
-        Integer           paymentInstitutionId
+        Integer           paymentInstitutionId,
+        String            bankAbaRtn,
+        String            bankCountryCode
     ) {
         this.id = id;
         this.partyId = partyId;
@@ -173,6 +179,8 @@ public class Payout implements Serializable {
         this.shopUrl = shopUrl;
         this.contractId = contractId;
         this.paymentInstitutionId = paymentInstitutionId;
+        this.bankAbaRtn = bankAbaRtn;
+        this.bankCountryCode = bankCountryCode;
     }
 
     public Long getId() {
@@ -447,6 +455,22 @@ public class Payout implements Serializable {
         this.paymentInstitutionId = paymentInstitutionId;
     }
 
+    public String getBankAbaRtn() {
+        return this.bankAbaRtn;
+    }
+
+    public void setBankAbaRtn(String bankAbaRtn) {
+        this.bankAbaRtn = bankAbaRtn;
+    }
+
+    public String getBankCountryCode() {
+        return this.bankCountryCode;
+    }
+
+    public void setBankCountryCode(String bankCountryCode) {
+        this.bankCountryCode = bankCountryCode;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj)
@@ -660,6 +684,18 @@ public class Payout implements Serializable {
         }
         else if (!paymentInstitutionId.equals(other.paymentInstitutionId))
             return false;
+        if (bankAbaRtn == null) {
+            if (other.bankAbaRtn != null)
+                return false;
+        }
+        else if (!bankAbaRtn.equals(other.bankAbaRtn))
+            return false;
+        if (bankCountryCode == null) {
+            if (other.bankCountryCode != null)
+                return false;
+        }
+        else if (!bankCountryCode.equals(other.bankCountryCode))
+            return false;
         return true;
     }
 
@@ -701,6 +737,8 @@ public class Payout implements Serializable {
         result = prime * result + ((this.shopUrl == null) ? 0 : this.shopUrl.hashCode());
         result = prime * result + ((this.contractId == null) ? 0 : this.contractId.hashCode());
         result = prime * result + ((this.paymentInstitutionId == null) ? 0 : this.paymentInstitutionId.hashCode());
+        result = prime * result + ((this.bankAbaRtn == null) ? 0 : this.bankAbaRtn.hashCode());
+        result = prime * result + ((this.bankCountryCode == null) ? 0 : this.bankCountryCode.hashCode());
         return result;
     }
 
@@ -742,6 +780,8 @@ public class Payout implements Serializable {
         sb.append(", ").append(shopUrl);
         sb.append(", ").append(contractId);
         sb.append(", ").append(paymentInstitutionId);
+        sb.append(", ").append(bankAbaRtn);
+        sb.append(", ").append(bankCountryCode);
 
         sb.append(")");
         return sb.toString();

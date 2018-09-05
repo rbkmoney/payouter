@@ -106,6 +106,8 @@ public class EventSinkServiceImpl implements EventSinkService{
         payoutEvent.setPayoutAccountBankBic(payout.getBankBic());
         payoutEvent.setPayoutAccountBankIban(payout.getBankIban());
         payoutEvent.setPayoutAccountBankLocalCode(payout.getBankLocalCode());
+        payoutEvent.setPayoutAccountBankAbaRtn(payout.getBankAbaRtn());
+        payoutEvent.setPayoutAccountBankCountryCode(payout.getBankCountryCode());
         payoutEvent.setPayoutAccountInn(payout.getInn());
         payoutEvent.setPayoutAccountPurpose(purpose);
 

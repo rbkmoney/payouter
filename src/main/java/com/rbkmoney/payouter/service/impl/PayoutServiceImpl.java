@@ -411,7 +411,19 @@ public class PayoutServiceImpl implements PayoutService {
             payout.setBankAddress(bankAccount.getBankAddress());
             payout.setBankBic(bankAccount.getBic());
             payout.setBankIban(bankAccount.getIban());
-            payout.setBankLocalCode(bankAccount.getLocalBankCode());
+            if (bankAccount.isSetBank()) {
+                InternationalBankDetails bankDetails = bankAccount.getBank();
+                payout.setBankName(bankDetails.getName());
+                payout.setBankAddress(bankDetails.getAddress());
+                payout.setBankBic(bankDetails.getBic());
+                payout.setBankAbaRtn(bankDetails.getAbaRtn());
+                payout.setBankCountryCode(
+                        Optional.ofNullable(bankDetails.getCountry())
+                        .map(country -> country.toString())
+                        .orElse(null)
+                );
+            }
+
             if (contract.getContractor().getLegalEntity().isSetInternationalLegalEntity()) {
                 InternationalLegalEntity legalEntity = contract.getContractor().getLegalEntity().getInternationalLegalEntity();
                 payout.setAccountLegalName(legalEntity.getLegalName());
