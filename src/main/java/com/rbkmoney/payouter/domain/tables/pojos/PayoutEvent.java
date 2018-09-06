@@ -23,7 +23,7 @@ import javax.annotation.Generated;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class PayoutEvent implements Serializable {
 
-    private static final long serialVersionUID = 790449234;
+    private static final long serialVersionUID = 1876315238;
 
     private Long          eventId;
     private LocalDateTime eventCreatedAt;
@@ -65,6 +65,7 @@ public class PayoutEvent implements Serializable {
     private String        contractId;
     private String        payoutAccountBankAbaRtn;
     private String        payoutAccountBankCountryCode;
+    private String        payoutInternationalCorrespondentAccountBankAccount;
     private String        payoutInternationalCorrespondentAccountBankName;
     private String        payoutInternationalCorrespondentAccountBankAddress;
     private String        payoutInternationalCorrespondentAccountBankBic;
@@ -115,6 +116,7 @@ public class PayoutEvent implements Serializable {
         this.contractId = value.contractId;
         this.payoutAccountBankAbaRtn = value.payoutAccountBankAbaRtn;
         this.payoutAccountBankCountryCode = value.payoutAccountBankCountryCode;
+        this.payoutInternationalCorrespondentAccountBankAccount = value.payoutInternationalCorrespondentAccountBankAccount;
         this.payoutInternationalCorrespondentAccountBankName = value.payoutInternationalCorrespondentAccountBankName;
         this.payoutInternationalCorrespondentAccountBankAddress = value.payoutInternationalCorrespondentAccountBankAddress;
         this.payoutInternationalCorrespondentAccountBankBic = value.payoutInternationalCorrespondentAccountBankBic;
@@ -164,6 +166,7 @@ public class PayoutEvent implements Serializable {
         String        contractId,
         String        payoutAccountBankAbaRtn,
         String        payoutAccountBankCountryCode,
+        String        payoutInternationalCorrespondentAccountBankAccount,
         String        payoutInternationalCorrespondentAccountBankName,
         String        payoutInternationalCorrespondentAccountBankAddress,
         String        payoutInternationalCorrespondentAccountBankBic,
@@ -211,6 +214,7 @@ public class PayoutEvent implements Serializable {
         this.contractId = contractId;
         this.payoutAccountBankAbaRtn = payoutAccountBankAbaRtn;
         this.payoutAccountBankCountryCode = payoutAccountBankCountryCode;
+        this.payoutInternationalCorrespondentAccountBankAccount = payoutInternationalCorrespondentAccountBankAccount;
         this.payoutInternationalCorrespondentAccountBankName = payoutInternationalCorrespondentAccountBankName;
         this.payoutInternationalCorrespondentAccountBankAddress = payoutInternationalCorrespondentAccountBankAddress;
         this.payoutInternationalCorrespondentAccountBankBic = payoutInternationalCorrespondentAccountBankBic;
@@ -539,6 +543,14 @@ public class PayoutEvent implements Serializable {
         this.payoutAccountBankCountryCode = payoutAccountBankCountryCode;
     }
 
+    public String getPayoutInternationalCorrespondentAccountBankAccount() {
+        return this.payoutInternationalCorrespondentAccountBankAccount;
+    }
+
+    public void setPayoutInternationalCorrespondentAccountBankAccount(String payoutInternationalCorrespondentAccountBankAccount) {
+        this.payoutInternationalCorrespondentAccountBankAccount = payoutInternationalCorrespondentAccountBankAccount;
+    }
+
     public String getPayoutInternationalCorrespondentAccountBankName() {
         return this.payoutInternationalCorrespondentAccountBankName;
     }
@@ -836,6 +848,12 @@ public class PayoutEvent implements Serializable {
         }
         else if (!payoutAccountBankCountryCode.equals(other.payoutAccountBankCountryCode))
             return false;
+        if (payoutInternationalCorrespondentAccountBankAccount == null) {
+            if (other.payoutInternationalCorrespondentAccountBankAccount != null)
+                return false;
+        }
+        else if (!payoutInternationalCorrespondentAccountBankAccount.equals(other.payoutInternationalCorrespondentAccountBankAccount))
+            return false;
         if (payoutInternationalCorrespondentAccountBankName == null) {
             if (other.payoutInternationalCorrespondentAccountBankName != null)
                 return false;
@@ -919,6 +937,7 @@ public class PayoutEvent implements Serializable {
         result = prime * result + ((this.contractId == null) ? 0 : this.contractId.hashCode());
         result = prime * result + ((this.payoutAccountBankAbaRtn == null) ? 0 : this.payoutAccountBankAbaRtn.hashCode());
         result = prime * result + ((this.payoutAccountBankCountryCode == null) ? 0 : this.payoutAccountBankCountryCode.hashCode());
+        result = prime * result + ((this.payoutInternationalCorrespondentAccountBankAccount == null) ? 0 : this.payoutInternationalCorrespondentAccountBankAccount.hashCode());
         result = prime * result + ((this.payoutInternationalCorrespondentAccountBankName == null) ? 0 : this.payoutInternationalCorrespondentAccountBankName.hashCode());
         result = prime * result + ((this.payoutInternationalCorrespondentAccountBankAddress == null) ? 0 : this.payoutInternationalCorrespondentAccountBankAddress.hashCode());
         result = prime * result + ((this.payoutInternationalCorrespondentAccountBankBic == null) ? 0 : this.payoutInternationalCorrespondentAccountBankBic.hashCode());
@@ -972,6 +991,7 @@ public class PayoutEvent implements Serializable {
         sb.append(", ").append(contractId);
         sb.append(", ").append(payoutAccountBankAbaRtn);
         sb.append(", ").append(payoutAccountBankCountryCode);
+        sb.append(", ").append(payoutInternationalCorrespondentAccountBankAccount);
         sb.append(", ").append(payoutInternationalCorrespondentAccountBankName);
         sb.append(", ").append(payoutInternationalCorrespondentAccountBankAddress);
         sb.append(", ").append(payoutInternationalCorrespondentAccountBankBic);

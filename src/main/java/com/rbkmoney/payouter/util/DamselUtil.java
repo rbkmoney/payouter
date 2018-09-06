@@ -224,6 +224,23 @@ public class DamselUtil {
         bankDetails.setCountry(TypeUtil.toEnumField(payoutEvent.getPayoutAccountBankCountryCode(), Residence.class));
         bankAccount.setBank(bankDetails);
 
+        //OH SHI—
+        InternationalBankAccount correspondentBankAccount = new InternationalBankAccount();
+        correspondentBankAccount.setAccountHolder(payoutEvent.getPayoutInternationalCorrespondentAccountBankAccount());
+        correspondentBankAccount.setBankAddress(payoutEvent.getPayoutInternationalCorrespondentAccountBankAddress());
+        correspondentBankAccount.setBankName(payoutEvent.getPayoutInternationalCorrespondentAccountBankName());
+        correspondentBankAccount.setBic(payoutEvent.getPayoutInternationalCorrespondentAccountBankBic());
+        correspondentBankAccount.setIban(payoutEvent.getPayoutInternationalCorrespondentAccountBankIban());
+
+        InternationalBankDetails correspondentBankDetails = new InternationalBankDetails();
+        correspondentBankDetails.setName(payoutEvent.getPayoutInternationalCorrespondentAccountBankName());
+        correspondentBankDetails.setBic(payoutEvent.getPayoutInternationalCorrespondentAccountBankBic());
+        correspondentBankDetails.setAddress(payoutEvent.getPayoutInternationalCorrespondentAccountBankAddress());
+        correspondentBankDetails.setAbaRtn(payoutEvent.getPayoutInternationalCorrespondentAccountBankAbaRtn());
+        correspondentBankDetails.setCountry(TypeUtil.toEnumField(payoutEvent.getPayoutInternationalCorrespondentAccountBankCountryCode(), Residence.class));
+        correspondentBankAccount.setBank(correspondentBankDetails);
+        bankAccount.setCorrespondentAccount(correspondentBankAccount);
+
         return bankAccount;
     }
 

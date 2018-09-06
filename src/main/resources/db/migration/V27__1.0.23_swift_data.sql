@@ -24,6 +24,8 @@ ALTER TABLE sht.payout_event
   ADD COLUMN payout_account_bank_country_code CHARACTER VARYING;
 
 ALTER TABLE sht.payout_event
+  ADD COLUMN payout_international_correspondent_account_bank_account CHARACTER VARYING;
+ALTER TABLE sht.payout_event
   ADD COLUMN payout_international_correspondent_account_bank_name CHARACTER VARYING;
 ALTER TABLE sht.payout_event
   ADD COLUMN payout_international_correspondent_account_bank_address CHARACTER VARYING;

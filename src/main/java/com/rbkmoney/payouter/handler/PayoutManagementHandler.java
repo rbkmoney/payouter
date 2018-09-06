@@ -271,6 +271,23 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
         bankDetails.setCountry(TypeUtil.toEnumField(payout.getBankCountryCode(), Residence.class));
         bankAccount.setBank(bankDetails);
 
+        //OH SHI—
+        InternationalBankAccount correspondentBankAccount = new InternationalBankAccount();
+        correspondentBankAccount.setAccountHolder(payout.getIntCorrBankAccount());
+        correspondentBankAccount.setBankAddress(payout.getIntCorrBankAddress());
+        correspondentBankAccount.setBankName(payout.getIntCorrBankName());
+        correspondentBankAccount.setBic(payout.getIntCorrBankBic());
+        correspondentBankAccount.setIban(payout.getIntCorrBankIban());
+
+        InternationalBankDetails correspondentBankDetails = new InternationalBankDetails();
+        correspondentBankDetails.setName(payout.getIntCorrBankName());
+        correspondentBankDetails.setBic(payout.getIntCorrBankBic());
+        correspondentBankDetails.setAddress(payout.getIntCorrBankAddress());
+        correspondentBankDetails.setAbaRtn(payout.getIntCorrBankAbaRtn());
+        correspondentBankDetails.setCountry(TypeUtil.toEnumField(payout.getIntCorrBankCountryCode(), Residence.class));
+        correspondentBankAccount.setBank(correspondentBankDetails);
+        bankAccount.setCorrespondentAccount(correspondentBankAccount);
+
         return bankAccount;
     }
 
