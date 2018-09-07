@@ -25,8 +25,9 @@ public class ApplicationConfig {
     }
 
     @Bean
-    public PartyManagementSrv.Iface partyManagementClient(@Value("${service.partyManagement.url}") Resource resource) throws IOException {
+    public PartyManagementSrv.Iface partyManagementClient(@Value("${service.partyManagement.url}") Resource resource, @Value("${service.partyManagement.networkTimeout}") int networkTimeout) throws IOException {
         return new THSpawnClientBuilder()
+                .withNetworkTimeout(networkTimeout)
                 .withAddress(resource.getURI()).build(PartyManagementSrv.Iface.class);
     }
 
@@ -39,8 +40,9 @@ public class ApplicationConfig {
     }
 
     @Bean
-    public MessageSenderSrv.Iface dudoser(@Value("${service.dudoser.url}") Resource resource) throws IOException {
+    public MessageSenderSrv.Iface dudoser(@Value("${service.dudoser.url}") Resource resource, @Value("${service.dudoser.networkTimeout}") int networkTimeout) throws IOException {
         return new THSpawnClientBuilder()
+                .withNetworkTimeout(networkTimeout)
                 .withAddress(resource.getURI()).build(MessageSenderSrv.Iface.class);
     }
 
