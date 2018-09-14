@@ -29,6 +29,7 @@ service:
       delay: 10000
       retryDelay: 1000
       maxPoolSize: 1
+      housekeeperTimeout: 5000
   dudoser:
     url: http://dudoser:8022/dudos
     mail:
