@@ -18,10 +18,12 @@ public class EventStockConfig {
             EventStockHandler eventStockHandler,
             @Value("${service.bustermaze.url}") Resource resource,
             @Value("${service.bustermaze.polling.delay}") int pollDelay,
-            @Value("${service.bustermaze.polling.maxPoolSize}") int maxPoolSize
+            @Value("${service.bustermaze.polling.maxPoolSize}") int maxPoolSize,
+            @Value("${service.bustermaze.polling.housekeeperTimeout}") int housekeeperTimeout
     ) throws IOException {
         return new PollingEventPublisherBuilder()
                 .withURI(resource.getURI())
+                .withHousekeeperTimeout(housekeeperTimeout)
                 .withEventHandler(eventStockHandler)
                 .withMaxPoolSize(maxPoolSize)
                 .withEventRetryDelay(pollDelay)
