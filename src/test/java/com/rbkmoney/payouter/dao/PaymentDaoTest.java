@@ -24,14 +24,6 @@ public class PaymentDaoTest extends AbstractIntegrationTest {
 
         paymentDao.save(payment);
 
-        //save again
-        try {
-            paymentDao.save(payment);
-            fail();
-        } catch (DaoException ex) {
-            assertTrue(DuplicateKeyException.class.isAssignableFrom(ex.getCause().getClass()));
-        }
-
         assertEquals(payment, paymentDao.get(payment.getInvoiceId(), payment.getPaymentId()));
     }
 

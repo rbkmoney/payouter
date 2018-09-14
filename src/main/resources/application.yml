@@ -20,6 +20,7 @@ service:
     networkTimeout: 5000
   partyManagement:
     url: http://hellgate:8022/v1/processing/partymgmt
+    networkTimeout: 5000
   dominant:
     url: http://dominant:8022/v1/domain/repository_client
     networkTimeout: 5000
@@ -32,6 +33,7 @@ service:
       housekeeperTimeout: 5000
   dudoser:
     url: http://dudoser:8022/dudos
+    networkTimeout: 5000
     mail:
       from: no-reply@rbkmoney.com
       to: trash@rbkmoney.com

@@ -4,6 +4,7 @@ import com.rbkmoney.payouter.dao.PaymentDao;
 import com.rbkmoney.payouter.dao.mapper.RecordRowMapper;
 import com.rbkmoney.payouter.domain.enums.PaymentStatus;
 import com.rbkmoney.payouter.domain.tables.pojos.Payment;
+import com.rbkmoney.payouter.domain.tables.records.PaymentRecord;
 import com.rbkmoney.payouter.exception.DaoException;
 import org.jooq.Query;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,8 +33,12 @@ public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao {
 
     @Override
     public void save(Payment payment) throws DaoException {
+        PaymentRecord paymentRecord = getDslContext().newRecord(PAYMENT, payment);
         Query query = getDslContext()
-                .insertInto(PAYMENT).set(getDslContext().newRecord(PAYMENT, payment));
+                .insertInto(PAYMENT)
+                .set(paymentRecord)
+                .onDuplicateKeyUpdate()
+                .set(paymentRecord);
         executeOne(query);
     }
 

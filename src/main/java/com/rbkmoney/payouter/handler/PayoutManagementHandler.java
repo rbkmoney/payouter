@@ -121,13 +121,18 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
         Optional<Long> fromId = payoutSearchRequest.isSetFromId() ? Optional.ofNullable(payoutSearchRequest.getFromId()) : Optional.empty();
         Optional<Integer> size = payoutSearchRequest.isSetSize() ? Optional.ofNullable(payoutSearchRequest.getSize()) : Optional.empty();
         Optional<com.rbkmoney.payouter.domain.enums.PayoutStatus> payoutStatus = Optional.ofNullable(payoutSearchCriteria.getStatus()).map(ps -> com.rbkmoney.payouter.domain.enums.PayoutStatus.valueOf(ps.name().toUpperCase()));
-        Optional<LocalDateTime> fromTime = Optional.ofNullable(payoutSearchCriteria.getTimeRange()).map(tr -> TypeUtil.stringToLocalDateTime(tr.getFromTime()));
-        Optional<LocalDateTime> toTime = Optional.ofNullable(payoutSearchCriteria.getTimeRange()).map(tr -> TypeUtil.stringToLocalDateTime(tr.getToTime()));
+        Optional<TimeRange> timeRangeOptional = Optional.ofNullable(payoutSearchCriteria.getTimeRange());
+        Optional<LocalDateTime> fromTime = timeRangeOptional.map(tr -> TypeUtil.stringToLocalDateTime(tr.getFromTime()));
+        Optional<LocalDateTime> toTime = timeRangeOptional.map(tr -> TypeUtil.stringToLocalDateTime(tr.getToTime()));
+        Optional<AmountRange> amountRangeOptional = Optional.ofNullable(payoutSearchCriteria.getAmountRange());
+        Optional<Long> minAmount = amountRangeOptional.map(amountRange -> amountRange.getMin());
+        Optional<Long> maxAmount = amountRangeOptional.map(amountRange -> amountRange.getMax());
+        Optional<CurrencyRef> currencyCode = Optional.ofNullable(payoutSearchCriteria.getCurrency());
         Optional<List<Long>> payoutIds = Optional.ofNullable(payoutSearchCriteria.getPayoutIds()).map(pids -> pids.stream().map(Long::valueOf).collect(Collectors.toList()));
 
         validateRequest(size, fromTime, toTime);
 
-        List<Payout> payoutList = payoutService.search(payoutStatus, fromTime, toTime, payoutIds, fromId, size);
+        List<Payout> payoutList = payoutService.search(payoutStatus, fromTime, toTime, payoutIds, minAmount, maxAmount, currencyCode, fromId, size);
         List<PayoutInfo> payoutInfoList = payoutList.stream()
                 .map(payout -> buildPayoutInfo(payout, payoutSummaryService.get(String.valueOf(payout.getId()))))
                 .collect(Collectors.toList());
@@ -150,7 +155,7 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
         } catch (NumberFormatException e) {
             throw new InvalidRequest(Collections.singletonList("Couldn't convert to long value. " + e.getMessage()));
         }
-        List<Payout> payouts = payoutService.search(Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(payoutIds), Optional.empty(), Optional.empty());
+        List<Payout> payouts = payoutService.getPayoutsByIds(payoutIds);
         if (payoutIds.size() != payouts.size()) {
             List<Long> foundedIds = payouts.stream().map(Payout::getId).collect(Collectors.toList());
             List<Long> diff = payoutIds.stream().filter(id -> !foundedIds.contains(id)).collect(Collectors.toList());

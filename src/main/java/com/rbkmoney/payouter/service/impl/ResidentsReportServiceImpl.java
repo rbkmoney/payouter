@@ -34,10 +34,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -94,12 +91,15 @@ public class ResidentsReportServiceImpl implements ReportService {
         try {
             HolidayCalendar holidayCalendar = SchedulerUtil.buildCalendar(dominantService.getCalendar(new CalendarRef(calendarId)));
             if (holidayCalendar.isTimeIncluded(Instant.now().toEpochMilli())) {
-                List<Payout> payouts = payoutService.getUnpaidPayoutsByAccountType(PayoutAccountType.russian_payout_account);
+                Map<Optional<Integer>, List<Payout>> groupedPayoutsMap = payoutService.getUnpaidPayoutsByAccountType(PayoutAccountType.russian_payout_account)
+                        .stream().collect(Collectors.groupingBy(p -> Optional.ofNullable(p.getPaymentInstitutionId())));
 
-                if (!payouts.isEmpty()) {
-                    generateAndSave(payouts);
-                    payouts.forEach(payout -> payoutService.pay(payout.getId()));
-                }
+                groupedPayoutsMap.values().forEach(payouts -> {
+                    if (!payouts.isEmpty()) {
+                        generateAndSave(payouts);
+                        payouts.forEach(payout -> payoutService.pay(payout.getId()));
+                    }
+                });
             }
         } finally {
             log.info("Report job for residents ending");
@@ -136,7 +136,7 @@ public class ResidentsReportServiceImpl implements ReportService {
         List<String> payoutIds = payouts.stream().map(p -> p.getId().toString()).collect(Collectors.toList());
         Report report = new Report();
         report.setName(prefix + "_" + createdAtFormatted + extension);
-        report.setSubject("Выплаты для резидентов, сгенерированные " + createdAtFormatted);
+        report.setSubject(String.format("Выплаты для резидентов, сгенерированные %s (%d)", createdAtFormatted, payouts.get(0).getPaymentInstitutionId()));
         report.setDescription(reportMailContent);
         report.setStatus(ReportStatus.READY);
         report.setContent(reportContent);

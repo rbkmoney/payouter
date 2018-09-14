@@ -37,7 +37,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Payment extends TableImpl<PaymentRecord> {
 
-    private static final long serialVersionUID = -1975960575;
+    private static final long serialVersionUID = 749480612;
 
     /**
      * The reference instance of <code>sht.payment</code>
@@ -85,7 +85,7 @@ public class Payment extends TableImpl<PaymentRecord> {
     /**
      * The column <code>sht.payment.provider_id</code>.
      */
-    public final TableField<PaymentRecord, Integer> PROVIDER_ID = createField("provider_id", org.jooq.impl.SQLDataType.INTEGER.nullable(false), this, "");
+    public final TableField<PaymentRecord, Integer> PROVIDER_ID = createField("provider_id", org.jooq.impl.SQLDataType.INTEGER, this, "");
 
     /**
      * The column <code>sht.payment.status</code>.
@@ -105,12 +105,12 @@ public class Payment extends TableImpl<PaymentRecord> {
     /**
      * The column <code>sht.payment.provider_fee</code>.
      */
-    public final TableField<PaymentRecord, Long> PROVIDER_FEE = createField("provider_fee", org.jooq.impl.SQLDataType.BIGINT.nullable(false), this, "");
+    public final TableField<PaymentRecord, Long> PROVIDER_FEE = createField("provider_fee", org.jooq.impl.SQLDataType.BIGINT, this, "");
 
     /**
      * The column <code>sht.payment.fee</code>.
      */
-    public final TableField<PaymentRecord, Long> FEE = createField("fee", org.jooq.impl.SQLDataType.BIGINT.nullable(false), this, "");
+    public final TableField<PaymentRecord, Long> FEE = createField("fee", org.jooq.impl.SQLDataType.BIGINT, this, "");
 
     /**
      * The column <code>sht.payment.external_fee</code>.

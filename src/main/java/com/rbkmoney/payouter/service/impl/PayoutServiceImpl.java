@@ -301,8 +301,18 @@ public class PayoutServiceImpl implements PayoutService {
     }
 
     @Override
-    public List<Payout> search(Optional<PayoutStatus> payoutStatus, Optional<LocalDateTime> fromTime, Optional<LocalDateTime> toTime, Optional<List<Long>> payoutIds, Optional<Long> fromId, Optional<Integer> size) {
-        return payoutDao.search(payoutStatus, fromTime, toTime, payoutIds, fromId, size);
+    public List<Payout> search(
+            Optional<PayoutStatus> payoutStatus,
+            Optional<LocalDateTime> fromTime,
+            Optional<LocalDateTime> toTime,
+            Optional<List<Long>> payoutIds,
+            Optional<Long> minAmount,
+            Optional<Long> maxAmount,
+            Optional<CurrencyRef> currency,
+            Optional<Long> fromId,
+            Optional<Integer> size
+    )  throws StorageException {
+        return payoutDao.search(payoutStatus, fromTime, toTime, payoutIds, minAmount, maxAmount, currency, fromId, size);
     }
 
     @Override
@@ -316,6 +326,18 @@ public class PayoutServiceImpl implements PayoutService {
             log.info("Operations have been excluded from payout, payoutId='{}' (paymentCount='{}', refundCount='{}', adjustmentCount='{}')", payoutId, paymentCount, refundCount, adjustmentCount);
         } catch (DaoException ex) {
             throw new StorageException(String.format("Failed to exclude operations from payout, payoutId='%d'", payoutId), ex);
+        }
+    }
+
+    @Override
+    public List<Payout> getPayoutsByIds(List<Long> payoutIds) throws StorageException {
+        log.info("Trying to get payouts by ids, ids='{}'", payoutIds);
+        try {
+            List<Payout> payouts = payoutDao.getByIds(payoutIds);
+            log.info("Payouts has been found, payouts='{}'", payouts);
+            return payouts;
+        } catch (DaoException ex) {
+            throw new StorageException(String.format("Failed to get payouts by ids, ids='%s'", payoutIds));
         }
     }
 
@@ -410,6 +432,9 @@ public class PayoutServiceImpl implements PayoutService {
         payout.setAccountLegalAgreementSignedAt(
                 TypeUtil.stringToLocalDateTime(contract.getLegalAgreement().getSignedAt())
         );
+        if (contract.isSetPaymentInstitution()) {
+            payout.setPaymentInstitutionId(contract.getPaymentInstitution().getId());
+        }
 
         return payout;
     }
