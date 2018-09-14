@@ -430,8 +430,7 @@ public class PayoutServiceImpl implements PayoutService {
 
         long availableAmount = paymentAmount + adjustmentAmount - refundAmount;
 
-        log.info("Available amount have been calculated, availableAmount={}, payments='{}', refunds='{}', adjustments='{}'",
-                availableAmount, payments, refunds, adjustments);
+        log.info("Available amount have been calculated, availableAmount={}", availableAmount);
         return availableAmount;
     }
 

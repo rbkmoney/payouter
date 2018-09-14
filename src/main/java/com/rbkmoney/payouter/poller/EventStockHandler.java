@@ -31,12 +31,9 @@ public class EventStockHandler implements EventHandler<StockEvent> {
         try {
             eventStockService.processStockEvent(stockEvent);
             return EventAction.CONTINUE;
-        } catch (NestedRuntimeException | StorageException | WRuntimeException ex) {
+        } catch (Exception ex) {
             log.warn("Failed to handle event, retry", ex);
             return EventAction.DELAYED_RETRY;
-        } catch(Exception ex) {
-            log.error("Failed to handle event, interrupted", ex);
-            return EventAction.INTERRUPT;
         }
     }
 
