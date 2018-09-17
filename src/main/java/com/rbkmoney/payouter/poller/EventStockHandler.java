@@ -11,6 +11,7 @@ import com.rbkmoney.woody.api.flow.error.WRuntimeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.NestedRuntimeException;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -30,12 +31,9 @@ public class EventStockHandler implements EventHandler<StockEvent> {
         try {
             eventStockService.processStockEvent(stockEvent);
             return EventAction.CONTINUE;
-        } catch (StorageException | WRuntimeException ex) {
+        } catch (Exception ex) {
             log.warn("Failed to handle event, retry", ex);
             return EventAction.DELAYED_RETRY;
-        } catch(Exception ex) {
-            log.error("Failed to handle event, interrupted", ex);
-            return EventAction.INTERRUPT;
         }
     }
 
