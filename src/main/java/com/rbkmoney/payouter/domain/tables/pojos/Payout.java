@@ -27,7 +27,7 @@ import javax.annotation.Generated;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Payout implements Serializable {
 
-    private static final long serialVersionUID = 184874899;
+    private static final long serialVersionUID = 1073937758;
 
     private Long              id;
     private String            partyId;
@@ -63,6 +63,7 @@ public class Payout implements Serializable {
     private String            shopUrl;
     private String            contractId;
     private Integer           paymentInstitutionId;
+    private String            bankNumber;
     private String            bankAbaRtn;
     private String            bankCountryCode;
     private String            intCorrBankAccount;
@@ -70,6 +71,7 @@ public class Payout implements Serializable {
     private String            intCorrBankAddress;
     private String            intCorrBankBic;
     private String            intCorrBankIban;
+    private String            intCorrBankNumber;
     private String            intCorrBankAbaRtn;
     private String            intCorrBankCountryCode;
 
@@ -110,6 +112,7 @@ public class Payout implements Serializable {
         this.shopUrl = value.shopUrl;
         this.contractId = value.contractId;
         this.paymentInstitutionId = value.paymentInstitutionId;
+        this.bankNumber = value.bankNumber;
         this.bankAbaRtn = value.bankAbaRtn;
         this.bankCountryCode = value.bankCountryCode;
         this.intCorrBankAccount = value.intCorrBankAccount;
@@ -117,6 +120,7 @@ public class Payout implements Serializable {
         this.intCorrBankAddress = value.intCorrBankAddress;
         this.intCorrBankBic = value.intCorrBankBic;
         this.intCorrBankIban = value.intCorrBankIban;
+        this.intCorrBankNumber = value.intCorrBankNumber;
         this.intCorrBankAbaRtn = value.intCorrBankAbaRtn;
         this.intCorrBankCountryCode = value.intCorrBankCountryCode;
     }
@@ -156,6 +160,7 @@ public class Payout implements Serializable {
         String            shopUrl,
         String            contractId,
         Integer           paymentInstitutionId,
+        String            bankNumber,
         String            bankAbaRtn,
         String            bankCountryCode,
         String            intCorrBankAccount,
@@ -163,6 +168,7 @@ public class Payout implements Serializable {
         String            intCorrBankAddress,
         String            intCorrBankBic,
         String            intCorrBankIban,
+        String            intCorrBankNumber,
         String            intCorrBankAbaRtn,
         String            intCorrBankCountryCode
     ) {
@@ -200,6 +206,7 @@ public class Payout implements Serializable {
         this.shopUrl = shopUrl;
         this.contractId = contractId;
         this.paymentInstitutionId = paymentInstitutionId;
+        this.bankNumber = bankNumber;
         this.bankAbaRtn = bankAbaRtn;
         this.bankCountryCode = bankCountryCode;
         this.intCorrBankAccount = intCorrBankAccount;
@@ -207,6 +214,7 @@ public class Payout implements Serializable {
         this.intCorrBankAddress = intCorrBankAddress;
         this.intCorrBankBic = intCorrBankBic;
         this.intCorrBankIban = intCorrBankIban;
+        this.intCorrBankNumber = intCorrBankNumber;
         this.intCorrBankAbaRtn = intCorrBankAbaRtn;
         this.intCorrBankCountryCode = intCorrBankCountryCode;
     }
@@ -483,6 +491,14 @@ public class Payout implements Serializable {
         this.paymentInstitutionId = paymentInstitutionId;
     }
 
+    public String getBankNumber() {
+        return this.bankNumber;
+    }
+
+    public void setBankNumber(String bankNumber) {
+        this.bankNumber = bankNumber;
+    }
+
     public String getBankAbaRtn() {
         return this.bankAbaRtn;
     }
@@ -537,6 +553,14 @@ public class Payout implements Serializable {
 
     public void setIntCorrBankIban(String intCorrBankIban) {
         this.intCorrBankIban = intCorrBankIban;
+    }
+
+    public String getIntCorrBankNumber() {
+        return this.intCorrBankNumber;
+    }
+
+    public void setIntCorrBankNumber(String intCorrBankNumber) {
+        this.intCorrBankNumber = intCorrBankNumber;
     }
 
     public String getIntCorrBankAbaRtn() {
@@ -768,6 +792,12 @@ public class Payout implements Serializable {
         }
         else if (!paymentInstitutionId.equals(other.paymentInstitutionId))
             return false;
+        if (bankNumber == null) {
+            if (other.bankNumber != null)
+                return false;
+        }
+        else if (!bankNumber.equals(other.bankNumber))
+            return false;
         if (bankAbaRtn == null) {
             if (other.bankAbaRtn != null)
                 return false;
@@ -809,6 +839,12 @@ public class Payout implements Serializable {
                 return false;
         }
         else if (!intCorrBankIban.equals(other.intCorrBankIban))
+            return false;
+        if (intCorrBankNumber == null) {
+            if (other.intCorrBankNumber != null)
+                return false;
+        }
+        else if (!intCorrBankNumber.equals(other.intCorrBankNumber))
             return false;
         if (intCorrBankAbaRtn == null) {
             if (other.intCorrBankAbaRtn != null)
@@ -863,6 +899,7 @@ public class Payout implements Serializable {
         result = prime * result + ((this.shopUrl == null) ? 0 : this.shopUrl.hashCode());
         result = prime * result + ((this.contractId == null) ? 0 : this.contractId.hashCode());
         result = prime * result + ((this.paymentInstitutionId == null) ? 0 : this.paymentInstitutionId.hashCode());
+        result = prime * result + ((this.bankNumber == null) ? 0 : this.bankNumber.hashCode());
         result = prime * result + ((this.bankAbaRtn == null) ? 0 : this.bankAbaRtn.hashCode());
         result = prime * result + ((this.bankCountryCode == null) ? 0 : this.bankCountryCode.hashCode());
         result = prime * result + ((this.intCorrBankAccount == null) ? 0 : this.intCorrBankAccount.hashCode());
@@ -870,6 +907,7 @@ public class Payout implements Serializable {
         result = prime * result + ((this.intCorrBankAddress == null) ? 0 : this.intCorrBankAddress.hashCode());
         result = prime * result + ((this.intCorrBankBic == null) ? 0 : this.intCorrBankBic.hashCode());
         result = prime * result + ((this.intCorrBankIban == null) ? 0 : this.intCorrBankIban.hashCode());
+        result = prime * result + ((this.intCorrBankNumber == null) ? 0 : this.intCorrBankNumber.hashCode());
         result = prime * result + ((this.intCorrBankAbaRtn == null) ? 0 : this.intCorrBankAbaRtn.hashCode());
         result = prime * result + ((this.intCorrBankCountryCode == null) ? 0 : this.intCorrBankCountryCode.hashCode());
         return result;
@@ -913,6 +951,7 @@ public class Payout implements Serializable {
         sb.append(", ").append(shopUrl);
         sb.append(", ").append(contractId);
         sb.append(", ").append(paymentInstitutionId);
+        sb.append(", ").append(bankNumber);
         sb.append(", ").append(bankAbaRtn);
         sb.append(", ").append(bankCountryCode);
         sb.append(", ").append(intCorrBankAccount);
@@ -920,6 +959,7 @@ public class Payout implements Serializable {
         sb.append(", ").append(intCorrBankAddress);
         sb.append(", ").append(intCorrBankBic);
         sb.append(", ").append(intCorrBankIban);
+        sb.append(", ").append(intCorrBankNumber);
         sb.append(", ").append(intCorrBankAbaRtn);
         sb.append(", ").append(intCorrBankCountryCode);
 

@@ -211,10 +211,8 @@ public class DamselUtil {
     private static InternationalBankAccount toInternationalBankAccount(PayoutEvent payoutEvent) {
         InternationalBankAccount bankAccount = new InternationalBankAccount();
         bankAccount.setAccountHolder(payoutEvent.getPayoutAccountId());
-        bankAccount.setBankName(payoutEvent.getPayoutAccountBankName());
-        bankAccount.setBankAddress(payoutEvent.getPayoutAccountBankAddress());
+        bankAccount.setNumber(payoutEvent.getPayoutAccountBankNumber());
         bankAccount.setIban(payoutEvent.getPayoutAccountBankIban());
-        bankAccount.setBic(payoutEvent.getPayoutAccountBankBic());
 
         InternationalBankDetails bankDetails = new InternationalBankDetails();
         bankDetails.setName(payoutEvent.getPayoutAccountBankName());
@@ -227,9 +225,7 @@ public class DamselUtil {
         //OH SHI—
         InternationalBankAccount correspondentBankAccount = new InternationalBankAccount();
         correspondentBankAccount.setAccountHolder(payoutEvent.getPayoutInternationalCorrespondentAccountBankAccount());
-        correspondentBankAccount.setBankAddress(payoutEvent.getPayoutInternationalCorrespondentAccountBankAddress());
-        correspondentBankAccount.setBankName(payoutEvent.getPayoutInternationalCorrespondentAccountBankName());
-        correspondentBankAccount.setBic(payoutEvent.getPayoutInternationalCorrespondentAccountBankBic());
+        correspondentBankAccount.setNumber(payoutEvent.getPayoutInternationalCorrespondentAccountBankNumber());
         correspondentBankAccount.setIban(payoutEvent.getPayoutInternationalCorrespondentAccountBankIban());
 
         InternationalBankDetails correspondentBankDetails = new InternationalBankDetails();

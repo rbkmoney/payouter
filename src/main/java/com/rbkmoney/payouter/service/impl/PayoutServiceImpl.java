@@ -407,9 +407,7 @@ public class PayoutServiceImpl implements PayoutService {
             InternationalBankAccount bankAccount = payoutTool.getPayoutToolInfo().getInternationalBankAccount();
 
             payout.setBankAccount(bankAccount.getAccountHolder());
-            payout.setBankName(bankAccount.getBankName());
-            payout.setBankAddress(bankAccount.getBankAddress());
-            payout.setBankBic(bankAccount.getBic());
+            payout.setBankNumber(bankAccount.getNumber());
             payout.setBankIban(bankAccount.getIban());
             if (bankAccount.isSetBank()) {
                 InternationalBankDetails bankDetails = bankAccount.getBank();
@@ -428,9 +426,7 @@ public class PayoutServiceImpl implements PayoutService {
             if (bankAccount.isSetCorrespondentAccount()) {
                 InternationalBankAccount correspondentAccount = bankAccount.getCorrespondentAccount();
                 payout.setIntCorrBankAccount(correspondentAccount.getAccountHolder());
-                payout.setIntCorrBankName(correspondentAccount.getBankName());
-                payout.setIntCorrBankAddress(correspondentAccount.getBankAddress());
-                payout.setIntCorrBankBic(correspondentAccount.getBic());
+                payout.setIntCorrBankNumber(correspondentAccount.getNumber());
                 payout.setIntCorrBankIban(correspondentAccount.getIban());
                 if (correspondentAccount.isSetBank()) {
                     InternationalBankDetails corrBankDetails = correspondentAccount.getBank();

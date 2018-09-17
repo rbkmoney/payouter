@@ -258,10 +258,8 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
     private InternationalBankAccount toInternationalBankAccount(Payout payout) {
         InternationalBankAccount bankAccount = new InternationalBankAccount();
         bankAccount.setAccountHolder(payout.getBankAccount());
-        bankAccount.setBankName(payout.getBankName());
-        bankAccount.setBankAddress(payout.getBankAddress());
+        bankAccount.setNumber(payout.getBankNumber());
         bankAccount.setIban(payout.getBankIban());
-        bankAccount.setBic(payout.getBankBic());
 
         InternationalBankDetails bankDetails = new InternationalBankDetails();
         bankDetails.setName(payout.getBankName());
@@ -274,9 +272,7 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
         //OH SHI—
         InternationalBankAccount correspondentBankAccount = new InternationalBankAccount();
         correspondentBankAccount.setAccountHolder(payout.getIntCorrBankAccount());
-        correspondentBankAccount.setBankAddress(payout.getIntCorrBankAddress());
-        correspondentBankAccount.setBankName(payout.getIntCorrBankName());
-        correspondentBankAccount.setBic(payout.getIntCorrBankBic());
+        correspondentBankAccount.setNumber(payout.getIntCorrBankNumber());
         correspondentBankAccount.setIban(payout.getIntCorrBankIban());
 
         InternationalBankDetails correspondentBankDetails = new InternationalBankDetails();
