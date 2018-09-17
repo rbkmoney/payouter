@@ -27,7 +27,7 @@ import org.jooq.impl.UpdatableRecordImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class PayoutEventRecord extends UpdatableRecordImpl<PayoutEventRecord> {
 
-    private static final long serialVersionUID = 1305222470;
+    private static final long serialVersionUID = 1499570596;
 
     /**
      * Setter for <code>sht.payout_event.event_id</code>.
@@ -561,6 +561,160 @@ public class PayoutEventRecord extends UpdatableRecordImpl<PayoutEventRecord> {
         return (String) get(37);
     }
 
+    /**
+     * Setter for <code>sht.payout_event.payout_account_bank_number</code>.
+     */
+    public void setPayoutAccountBankNumber(String value) {
+        set(38, value);
+    }
+
+    /**
+     * Getter for <code>sht.payout_event.payout_account_bank_number</code>.
+     */
+    public String getPayoutAccountBankNumber() {
+        return (String) get(38);
+    }
+
+    /**
+     * Setter for <code>sht.payout_event.payout_account_bank_aba_rtn</code>.
+     */
+    public void setPayoutAccountBankAbaRtn(String value) {
+        set(39, value);
+    }
+
+    /**
+     * Getter for <code>sht.payout_event.payout_account_bank_aba_rtn</code>.
+     */
+    public String getPayoutAccountBankAbaRtn() {
+        return (String) get(39);
+    }
+
+    /**
+     * Setter for <code>sht.payout_event.payout_account_bank_country_code</code>.
+     */
+    public void setPayoutAccountBankCountryCode(String value) {
+        set(40, value);
+    }
+
+    /**
+     * Getter for <code>sht.payout_event.payout_account_bank_country_code</code>.
+     */
+    public String getPayoutAccountBankCountryCode() {
+        return (String) get(40);
+    }
+
+    /**
+     * Setter for <code>sht.payout_event.payout_international_correspondent_account_bank_number</code>.
+     */
+    public void setPayoutInternationalCorrespondentAccountBankNumber(String value) {
+        set(41, value);
+    }
+
+    /**
+     * Getter for <code>sht.payout_event.payout_international_correspondent_account_bank_number</code>.
+     */
+    public String getPayoutInternationalCorrespondentAccountBankNumber() {
+        return (String) get(41);
+    }
+
+    /**
+     * Setter for <code>sht.payout_event.payout_international_correspondent_account_bank_account</code>.
+     */
+    public void setPayoutInternationalCorrespondentAccountBankAccount(String value) {
+        set(42, value);
+    }
+
+    /**
+     * Getter for <code>sht.payout_event.payout_international_correspondent_account_bank_account</code>.
+     */
+    public String getPayoutInternationalCorrespondentAccountBankAccount() {
+        return (String) get(42);
+    }
+
+    /**
+     * Setter for <code>sht.payout_event.payout_international_correspondent_account_bank_name</code>.
+     */
+    public void setPayoutInternationalCorrespondentAccountBankName(String value) {
+        set(43, value);
+    }
+
+    /**
+     * Getter for <code>sht.payout_event.payout_international_correspondent_account_bank_name</code>.
+     */
+    public String getPayoutInternationalCorrespondentAccountBankName() {
+        return (String) get(43);
+    }
+
+    /**
+     * Setter for <code>sht.payout_event.payout_international_correspondent_account_bank_address</code>.
+     */
+    public void setPayoutInternationalCorrespondentAccountBankAddress(String value) {
+        set(44, value);
+    }
+
+    /**
+     * Getter for <code>sht.payout_event.payout_international_correspondent_account_bank_address</code>.
+     */
+    public String getPayoutInternationalCorrespondentAccountBankAddress() {
+        return (String) get(44);
+    }
+
+    /**
+     * Setter for <code>sht.payout_event.payout_international_correspondent_account_bank_bic</code>.
+     */
+    public void setPayoutInternationalCorrespondentAccountBankBic(String value) {
+        set(45, value);
+    }
+
+    /**
+     * Getter for <code>sht.payout_event.payout_international_correspondent_account_bank_bic</code>.
+     */
+    public String getPayoutInternationalCorrespondentAccountBankBic() {
+        return (String) get(45);
+    }
+
+    /**
+     * Setter for <code>sht.payout_event.payout_international_correspondent_account_bank_iban</code>.
+     */
+    public void setPayoutInternationalCorrespondentAccountBankIban(String value) {
+        set(46, value);
+    }
+
+    /**
+     * Getter for <code>sht.payout_event.payout_international_correspondent_account_bank_iban</code>.
+     */
+    public String getPayoutInternationalCorrespondentAccountBankIban() {
+        return (String) get(46);
+    }
+
+    /**
+     * Setter for <code>sht.payout_event.payout_international_correspondent_account_bank_aba_rtn</code>.
+     */
+    public void setPayoutInternationalCorrespondentAccountBankAbaRtn(String value) {
+        set(47, value);
+    }
+
+    /**
+     * Getter for <code>sht.payout_event.payout_international_correspondent_account_bank_aba_rtn</code>.
+     */
+    public String getPayoutInternationalCorrespondentAccountBankAbaRtn() {
+        return (String) get(47);
+    }
+
+    /**
+     * Setter for <code>sht.payout_event.payout_international_correspondent_account_bank_country_code</code>.
+     */
+    public void setPayoutInternationalCorrespondentAccountBankCountryCode(String value) {
+        set(48, value);
+    }
+
+    /**
+     * Getter for <code>sht.payout_event.payout_international_correspondent_account_bank_country_code</code>.
+     */
+    public String getPayoutInternationalCorrespondentAccountBankCountryCode() {
+        return (String) get(48);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -587,7 +741,7 @@ public class PayoutEventRecord extends UpdatableRecordImpl<PayoutEventRecord> {
     /**
      * Create a detached, initialised PayoutEventRecord
      */
-    public PayoutEventRecord(Long eventId, LocalDateTime eventCreatedAt, String eventType, String payoutId, String payoutPartyId, String payoutShopId, LocalDateTime payoutCreatedAt, String payoutStatus, String payoutStatusCancelDetails, String payoutType, String payoutCashFlow, String payoutPaidDetailsType, String payoutCardToken, String payoutCardPaymentSystem, String payoutCardBin, String payoutCardMaskedPan, String payoutCardProviderName, String payoutCardProviderTransactionId, String payoutAccountId, String payoutAccountBankName, String payoutAccountBankPostId, String payoutAccountBankLocalCode, String payoutAccountInn, String payoutAccountPurpose, String payoutAccountLegalAgreementId, LocalDateTime payoutAccountLegalAgreementSignedAt, String userId, String userType, String payoutAccountType, String payoutAccountBankAddress, String payoutAccountBankBic, String payoutAccountBankIban, String payoutAccountLegalName, String payoutAccountTradingName, String payoutAccountRegisteredAddress, String payoutAccountActualAddress, String payoutAccountRegisteredNumber, String contractId) {
+    public PayoutEventRecord(Long eventId, LocalDateTime eventCreatedAt, String eventType, String payoutId, String payoutPartyId, String payoutShopId, LocalDateTime payoutCreatedAt, String payoutStatus, String payoutStatusCancelDetails, String payoutType, String payoutCashFlow, String payoutPaidDetailsType, String payoutCardToken, String payoutCardPaymentSystem, String payoutCardBin, String payoutCardMaskedPan, String payoutCardProviderName, String payoutCardProviderTransactionId, String payoutAccountId, String payoutAccountBankName, String payoutAccountBankPostId, String payoutAccountBankLocalCode, String payoutAccountInn, String payoutAccountPurpose, String payoutAccountLegalAgreementId, LocalDateTime payoutAccountLegalAgreementSignedAt, String userId, String userType, String payoutAccountType, String payoutAccountBankAddress, String payoutAccountBankBic, String payoutAccountBankIban, String payoutAccountLegalName, String payoutAccountTradingName, String payoutAccountRegisteredAddress, String payoutAccountActualAddress, String payoutAccountRegisteredNumber, String contractId, String payoutAccountBankNumber, String payoutAccountBankAbaRtn, String payoutAccountBankCountryCode, String payoutInternationalCorrespondentAccountBankNumber, String payoutInternationalCorrespondentAccountBankAccount, String payoutInternationalCorrespondentAccountBankName, String payoutInternationalCorrespondentAccountBankAddress, String payoutInternationalCorrespondentAccountBankBic, String payoutInternationalCorrespondentAccountBankIban, String payoutInternationalCorrespondentAccountBankAbaRtn, String payoutInternationalCorrespondentAccountBankCountryCode) {
         super(PayoutEvent.PAYOUT_EVENT);
 
         set(0, eventId);
@@ -628,5 +782,16 @@ public class PayoutEventRecord extends UpdatableRecordImpl<PayoutEventRecord> {
         set(35, payoutAccountActualAddress);
         set(36, payoutAccountRegisteredNumber);
         set(37, contractId);
+        set(38, payoutAccountBankNumber);
+        set(39, payoutAccountBankAbaRtn);
+        set(40, payoutAccountBankCountryCode);
+        set(41, payoutInternationalCorrespondentAccountBankNumber);
+        set(42, payoutInternationalCorrespondentAccountBankAccount);
+        set(43, payoutInternationalCorrespondentAccountBankName);
+        set(44, payoutInternationalCorrespondentAccountBankAddress);
+        set(45, payoutInternationalCorrespondentAccountBankBic);
+        set(46, payoutInternationalCorrespondentAccountBankIban);
+        set(47, payoutInternationalCorrespondentAccountBankAbaRtn);
+        set(48, payoutInternationalCorrespondentAccountBankCountryCode);
     }
 }

@@ -258,11 +258,32 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
     private InternationalBankAccount toInternationalBankAccount(Payout payout) {
         InternationalBankAccount bankAccount = new InternationalBankAccount();
         bankAccount.setAccountHolder(payout.getBankAccount());
-        bankAccount.setBankName(payout.getBankName());
-        bankAccount.setBankAddress(payout.getBankAddress());
+        bankAccount.setNumber(payout.getBankNumber());
         bankAccount.setIban(payout.getBankIban());
-        bankAccount.setBic(payout.getBankBic());
-        bankAccount.setLocalBankCode(payout.getBankLocalCode());
+
+        InternationalBankDetails bankDetails = new InternationalBankDetails();
+        bankDetails.setName(payout.getBankName());
+        bankDetails.setBic(payout.getBankBic());
+        bankDetails.setAbaRtn(payout.getBankAbaRtn());
+        bankDetails.setAddress(payout.getBankAddress());
+        bankDetails.setCountry(TypeUtil.toEnumField(payout.getBankCountryCode(), Residence.class));
+        bankAccount.setBank(bankDetails);
+
+        //OH SHI—
+        InternationalBankAccount correspondentBankAccount = new InternationalBankAccount();
+        correspondentBankAccount.setAccountHolder(payout.getIntCorrBankAccount());
+        correspondentBankAccount.setNumber(payout.getIntCorrBankNumber());
+        correspondentBankAccount.setIban(payout.getIntCorrBankIban());
+
+        InternationalBankDetails correspondentBankDetails = new InternationalBankDetails();
+        correspondentBankDetails.setName(payout.getIntCorrBankName());
+        correspondentBankDetails.setBic(payout.getIntCorrBankBic());
+        correspondentBankDetails.setAddress(payout.getIntCorrBankAddress());
+        correspondentBankDetails.setAbaRtn(payout.getIntCorrBankAbaRtn());
+        correspondentBankDetails.setCountry(TypeUtil.toEnumField(payout.getIntCorrBankCountryCode(), Residence.class));
+        correspondentBankAccount.setBank(correspondentBankDetails);
+        bankAccount.setCorrespondentAccount(correspondentBankAccount);
+
         return bankAccount;
     }
 

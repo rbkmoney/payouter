@@ -39,7 +39,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Payout extends TableImpl<PayoutRecord> {
 
-    private static final long serialVersionUID = -760341276;
+    private static final long serialVersionUID = -144473756;
 
     /**
      * The reference instance of <code>sht.payout</code>
@@ -223,6 +223,61 @@ public class Payout extends TableImpl<PayoutRecord> {
      * The column <code>sht.payout.payment_institution_id</code>.
      */
     public final TableField<PayoutRecord, Integer> PAYMENT_INSTITUTION_ID = createField("payment_institution_id", org.jooq.impl.SQLDataType.INTEGER, this, "");
+
+    /**
+     * The column <code>sht.payout.bank_number</code>.
+     */
+    public final TableField<PayoutRecord, String> BANK_NUMBER = createField("bank_number", org.jooq.impl.SQLDataType.VARCHAR, this, "");
+
+    /**
+     * The column <code>sht.payout.bank_aba_rtn</code>.
+     */
+    public final TableField<PayoutRecord, String> BANK_ABA_RTN = createField("bank_aba_rtn", org.jooq.impl.SQLDataType.VARCHAR, this, "");
+
+    /**
+     * The column <code>sht.payout.bank_country_code</code>.
+     */
+    public final TableField<PayoutRecord, String> BANK_COUNTRY_CODE = createField("bank_country_code", org.jooq.impl.SQLDataType.VARCHAR, this, "");
+
+    /**
+     * The column <code>sht.payout.int_corr_bank_account</code>.
+     */
+    public final TableField<PayoutRecord, String> INT_CORR_BANK_ACCOUNT = createField("int_corr_bank_account", org.jooq.impl.SQLDataType.VARCHAR, this, "");
+
+    /**
+     * The column <code>sht.payout.int_corr_bank_name</code>.
+     */
+    public final TableField<PayoutRecord, String> INT_CORR_BANK_NAME = createField("int_corr_bank_name", org.jooq.impl.SQLDataType.VARCHAR, this, "");
+
+    /**
+     * The column <code>sht.payout.int_corr_bank_address</code>.
+     */
+    public final TableField<PayoutRecord, String> INT_CORR_BANK_ADDRESS = createField("int_corr_bank_address", org.jooq.impl.SQLDataType.VARCHAR, this, "");
+
+    /**
+     * The column <code>sht.payout.int_corr_bank_bic</code>.
+     */
+    public final TableField<PayoutRecord, String> INT_CORR_BANK_BIC = createField("int_corr_bank_bic", org.jooq.impl.SQLDataType.VARCHAR, this, "");
+
+    /**
+     * The column <code>sht.payout.int_corr_bank_iban</code>.
+     */
+    public final TableField<PayoutRecord, String> INT_CORR_BANK_IBAN = createField("int_corr_bank_iban", org.jooq.impl.SQLDataType.VARCHAR, this, "");
+
+    /**
+     * The column <code>sht.payout.int_corr_bank_number</code>.
+     */
+    public final TableField<PayoutRecord, String> INT_CORR_BANK_NUMBER = createField("int_corr_bank_number", org.jooq.impl.SQLDataType.VARCHAR, this, "");
+
+    /**
+     * The column <code>sht.payout.int_corr_bank_aba_rtn</code>.
+     */
+    public final TableField<PayoutRecord, String> INT_CORR_BANK_ABA_RTN = createField("int_corr_bank_aba_rtn", org.jooq.impl.SQLDataType.VARCHAR, this, "");
+
+    /**
+     * The column <code>sht.payout.int_corr_bank_country_code</code>.
+     */
+    public final TableField<PayoutRecord, String> INT_CORR_BANK_COUNTRY_CODE = createField("int_corr_bank_country_code", org.jooq.impl.SQLDataType.VARCHAR, this, "");
 
     /**
      * Create a <code>sht.payout</code> table reference

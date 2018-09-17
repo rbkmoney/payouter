@@ -102,10 +102,24 @@ public class EventSinkServiceImpl implements EventSinkService{
         payoutEvent.setPayoutAccountRegisteredNumber(payout.getAccountRegisteredNumber());
         payoutEvent.setPayoutAccountBankPostId(payout.getBankPostAccount());
         payoutEvent.setPayoutAccountBankName(payout.getBankName());
+        payoutEvent.setPayoutAccountBankNumber(payout.getBankNumber());
         payoutEvent.setPayoutAccountBankAddress(payout.getBankAddress());
         payoutEvent.setPayoutAccountBankBic(payout.getBankBic());
         payoutEvent.setPayoutAccountBankIban(payout.getBankIban());
         payoutEvent.setPayoutAccountBankLocalCode(payout.getBankLocalCode());
+        payoutEvent.setPayoutAccountBankAbaRtn(payout.getBankAbaRtn());
+        payoutEvent.setPayoutAccountBankCountryCode(payout.getBankCountryCode());
+
+        //OH SHI—
+        payoutEvent.setPayoutInternationalCorrespondentAccountBankAccount(payout.getIntCorrBankAccount());
+        payoutEvent.setPayoutInternationalCorrespondentAccountBankName(payout.getIntCorrBankName());
+        payoutEvent.setPayoutInternationalCorrespondentAccountBankNumber(payout.getIntCorrBankNumber());
+        payoutEvent.setPayoutInternationalCorrespondentAccountBankAddress(payout.getIntCorrBankAddress());
+        payoutEvent.setPayoutInternationalCorrespondentAccountBankBic(payout.getIntCorrBankBic());
+        payoutEvent.setPayoutInternationalCorrespondentAccountBankIban(payout.getIntCorrBankIban());
+        payoutEvent.setPayoutInternationalCorrespondentAccountBankAbaRtn(payout.getIntCorrBankAbaRtn());
+        payoutEvent.setPayoutInternationalCorrespondentAccountBankCountryCode(payout.getIntCorrBankCountryCode());
+
         payoutEvent.setPayoutAccountInn(payout.getInn());
         payoutEvent.setPayoutAccountPurpose(purpose);
 

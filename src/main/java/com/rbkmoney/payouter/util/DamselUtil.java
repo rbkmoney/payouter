@@ -211,11 +211,32 @@ public class DamselUtil {
     private static InternationalBankAccount toInternationalBankAccount(PayoutEvent payoutEvent) {
         InternationalBankAccount bankAccount = new InternationalBankAccount();
         bankAccount.setAccountHolder(payoutEvent.getPayoutAccountId());
-        bankAccount.setBankName(payoutEvent.getPayoutAccountBankName());
-        bankAccount.setBankAddress(payoutEvent.getPayoutAccountBankAddress());
+        bankAccount.setNumber(payoutEvent.getPayoutAccountBankNumber());
         bankAccount.setIban(payoutEvent.getPayoutAccountBankIban());
-        bankAccount.setBic(payoutEvent.getPayoutAccountBankBic());
-        bankAccount.setLocalBankCode(payoutEvent.getPayoutAccountBankLocalCode());
+
+        InternationalBankDetails bankDetails = new InternationalBankDetails();
+        bankDetails.setName(payoutEvent.getPayoutAccountBankName());
+        bankDetails.setBic(payoutEvent.getPayoutAccountBankBic());
+        bankDetails.setAbaRtn(payoutEvent.getPayoutAccountBankAbaRtn());
+        bankDetails.setAddress(payoutEvent.getPayoutAccountBankAddress());
+        bankDetails.setCountry(TypeUtil.toEnumField(payoutEvent.getPayoutAccountBankCountryCode(), Residence.class));
+        bankAccount.setBank(bankDetails);
+
+        //OH SHI—
+        InternationalBankAccount correspondentBankAccount = new InternationalBankAccount();
+        correspondentBankAccount.setAccountHolder(payoutEvent.getPayoutInternationalCorrespondentAccountBankAccount());
+        correspondentBankAccount.setNumber(payoutEvent.getPayoutInternationalCorrespondentAccountBankNumber());
+        correspondentBankAccount.setIban(payoutEvent.getPayoutInternationalCorrespondentAccountBankIban());
+
+        InternationalBankDetails correspondentBankDetails = new InternationalBankDetails();
+        correspondentBankDetails.setName(payoutEvent.getPayoutInternationalCorrespondentAccountBankName());
+        correspondentBankDetails.setBic(payoutEvent.getPayoutInternationalCorrespondentAccountBankBic());
+        correspondentBankDetails.setAddress(payoutEvent.getPayoutInternationalCorrespondentAccountBankAddress());
+        correspondentBankDetails.setAbaRtn(payoutEvent.getPayoutInternationalCorrespondentAccountBankAbaRtn());
+        correspondentBankDetails.setCountry(TypeUtil.toEnumField(payoutEvent.getPayoutInternationalCorrespondentAccountBankCountryCode(), Residence.class));
+        correspondentBankAccount.setBank(correspondentBankDetails);
+        bankAccount.setCorrespondentAccount(correspondentBankAccount);
+
         return bankAccount;
     }
 

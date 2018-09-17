@@ -407,11 +407,41 @@ public class PayoutServiceImpl implements PayoutService {
             InternationalBankAccount bankAccount = payoutTool.getPayoutToolInfo().getInternationalBankAccount();
 
             payout.setBankAccount(bankAccount.getAccountHolder());
-            payout.setBankName(bankAccount.getBankName());
-            payout.setBankAddress(bankAccount.getBankAddress());
-            payout.setBankBic(bankAccount.getBic());
+            payout.setBankNumber(bankAccount.getNumber());
             payout.setBankIban(bankAccount.getIban());
-            payout.setBankLocalCode(bankAccount.getLocalBankCode());
+            if (bankAccount.isSetBank()) {
+                InternationalBankDetails bankDetails = bankAccount.getBank();
+                payout.setBankName(bankDetails.getName());
+                payout.setBankAddress(bankDetails.getAddress());
+                payout.setBankBic(bankDetails.getBic());
+                payout.setBankAbaRtn(bankDetails.getAbaRtn());
+                payout.setBankCountryCode(
+                        Optional.ofNullable(bankDetails.getCountry())
+                        .map(country -> country.toString())
+                        .orElse(null)
+                );
+            }
+
+            //OH SHI—
+            if (bankAccount.isSetCorrespondentAccount()) {
+                InternationalBankAccount correspondentAccount = bankAccount.getCorrespondentAccount();
+                payout.setIntCorrBankAccount(correspondentAccount.getAccountHolder());
+                payout.setIntCorrBankNumber(correspondentAccount.getNumber());
+                payout.setIntCorrBankIban(correspondentAccount.getIban());
+                if (correspondentAccount.isSetBank()) {
+                    InternationalBankDetails corrBankDetails = correspondentAccount.getBank();
+                    payout.setIntCorrBankName(corrBankDetails.getName());
+                    payout.setIntCorrBankAddress(corrBankDetails.getAddress());
+                    payout.setIntCorrBankBic(corrBankDetails.getBic());
+                    payout.setIntCorrBankAbaRtn(corrBankDetails.getAbaRtn());
+                    payout.setIntCorrBankCountryCode(
+                            Optional.ofNullable(corrBankDetails.getCountry())
+                                    .map(country -> country.toString())
+                                    .orElse(null)
+                    );
+                }
+            }
+
             if (contract.getContractor().getLegalEntity().isSetInternationalLegalEntity()) {
                 InternationalLegalEntity legalEntity = contract.getContractor().getLegalEntity().getInternationalLegalEntity();
                 payout.setAccountLegalName(legalEntity.getLegalName());
