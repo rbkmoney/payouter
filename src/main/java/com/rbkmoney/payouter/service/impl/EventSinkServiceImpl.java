@@ -108,6 +108,7 @@ public class EventSinkServiceImpl implements EventSinkService{
         payoutEvent.setPayoutAccountBankIban(payout.getBankIban());
         payoutEvent.setPayoutAccountBankLocalCode(payout.getBankLocalCode());
         payoutEvent.setPayoutAccountBankAbaRtn(payout.getBankAbaRtn());
+        payoutEvent.setPayoutAccountBankCountryCode(payout.getBankCountryCode());
 
         //OH SHI—
         payoutEvent.setPayoutInternationalCorrespondentAccountBankAccount(payout.getIntCorrBankAccount());
@@ -117,8 +118,8 @@ public class EventSinkServiceImpl implements EventSinkService{
         payoutEvent.setPayoutInternationalCorrespondentAccountBankBic(payout.getIntCorrBankBic());
         payoutEvent.setPayoutInternationalCorrespondentAccountBankIban(payout.getIntCorrBankIban());
         payoutEvent.setPayoutInternationalCorrespondentAccountBankAbaRtn(payout.getIntCorrBankAbaRtn());
+        payoutEvent.setPayoutInternationalCorrespondentAccountBankCountryCode(payout.getIntCorrBankCountryCode());
 
-        payoutEvent.setPayoutAccountBankCountryCode(payout.getBankCountryCode());
         payoutEvent.setPayoutAccountInn(payout.getInn());
         payoutEvent.setPayoutAccountPurpose(purpose);
 
