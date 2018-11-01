@@ -1,0 +1,1 @@
+alter table sht.payment drop column test;

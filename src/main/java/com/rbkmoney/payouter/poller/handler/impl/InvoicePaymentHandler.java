@@ -114,15 +114,6 @@ public class InvoicePaymentHandler implements Handler<InvoiceChange, Event> {
             payment.setGuaranteeDeposit(parsedCashFlow.getOrDefault(GUARANTEE_DEPOSIT, 0L));
         }
 
-        payment.setTest(
-                partyManagementService.isTestCategoryType(
-                        payment.getPartyId(),
-                        payment.getShopId(),
-                        payment.getDomainRevision(),
-                        paymentCreatedAt
-                )
-        );
-
         paymentDao.save(payment);
         log.info("Payment have been saved, eventId={}, payment={}", event.getId(), payment);
     }

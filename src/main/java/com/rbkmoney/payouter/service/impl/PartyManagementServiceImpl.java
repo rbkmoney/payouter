@@ -29,18 +29,14 @@ public class PartyManagementServiceImpl implements PartyManagementService {
 
     private final PartyManagementSrv.Iface partyManagementClient;
 
-    private final DominantService dominantService;
-
     private final Cache<Map.Entry<String, PartyRevisionParam>, Party> partyCache;
 
     @Autowired
     public PartyManagementServiceImpl(
             PartyManagementSrv.Iface partyManagementClient,
-            DominantService dominantService,
             @Value("${cache.maxSize}") long cacheMaximumSize
     ) {
         this.partyManagementClient = partyManagementClient;
-        this.dominantService = dominantService;
         this.partyCache = Caffeine.newBuilder()
                 .maximumSize(cacheMaximumSize)
                 .build();
@@ -207,21 +203,6 @@ public class PartyManagementServiceImpl implements PartyManagementService {
         } catch (TException ex) {
             throw new RuntimeException(String.format("Failed to compute payout cash flow, partyId='%s', payoutParams='%s'", partyId, payoutParams), ex);
         }
-    }
-
-    @Override
-    public CategoryType getCategoryType(String partyId, String shopId, long domainRevision, Instant timestamp) throws NotFoundException {
-        log.info("Trying to get shop category type, partyId='{}', timestamp='{}'", partyId, timestamp);
-        Shop shop = getShop(partyId, shopId, timestamp);
-
-        CategoryType categoryType = dominantService.getCategoryType(shop.getCategory(), domainRevision);
-        log.info("Shop category type has been found, categoryType='{}', partyId='{}', timestamp='{}'", categoryType, partyId, timestamp);
-        return categoryType;
-    }
-
-    @Override
-    public boolean isTestCategoryType(String partyId, String shopId, long domainRevision, Instant timestamp) throws NotFoundException {
-        return getCategoryType(partyId, shopId, domainRevision, timestamp) == CategoryType.test;
     }
 
 }
