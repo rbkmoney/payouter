@@ -25,7 +25,7 @@ import javax.annotation.Generated;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Payment implements Serializable {
 
-    private static final long serialVersionUID = 1273537902;
+    private static final long serialVersionUID = 10601892;
 
     private Long          id;
     private Long          eventId;
@@ -42,7 +42,6 @@ public class Payment implements Serializable {
     private Long          externalFee;
     private String        currencyCode;
     private LocalDateTime capturedAt;
-    private Boolean       test;
     private LocalDateTime createdAt;
     private Long          guaranteeDeposit;
     private Integer       terminalId;
@@ -68,7 +67,6 @@ public class Payment implements Serializable {
         this.externalFee = value.externalFee;
         this.currencyCode = value.currencyCode;
         this.capturedAt = value.capturedAt;
-        this.test = value.test;
         this.createdAt = value.createdAt;
         this.guaranteeDeposit = value.guaranteeDeposit;
         this.terminalId = value.terminalId;
@@ -93,7 +91,6 @@ public class Payment implements Serializable {
         Long          externalFee,
         String        currencyCode,
         LocalDateTime capturedAt,
-        Boolean       test,
         LocalDateTime createdAt,
         Long          guaranteeDeposit,
         Integer       terminalId,
@@ -116,7 +113,6 @@ public class Payment implements Serializable {
         this.externalFee = externalFee;
         this.currencyCode = currencyCode;
         this.capturedAt = capturedAt;
-        this.test = test;
         this.createdAt = createdAt;
         this.guaranteeDeposit = guaranteeDeposit;
         this.terminalId = terminalId;
@@ -243,14 +239,6 @@ public class Payment implements Serializable {
 
     public void setCapturedAt(LocalDateTime capturedAt) {
         this.capturedAt = capturedAt;
-    }
-
-    public Boolean getTest() {
-        return this.test;
-    }
-
-    public void setTest(Boolean test) {
-        this.test = test;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -400,12 +388,6 @@ public class Payment implements Serializable {
         }
         else if (!capturedAt.equals(other.capturedAt))
             return false;
-        if (test == null) {
-            if (other.test != null)
-                return false;
-        }
-        else if (!test.equals(other.test))
-            return false;
         if (createdAt == null) {
             if (other.createdAt != null)
                 return false;
@@ -464,7 +446,6 @@ public class Payment implements Serializable {
         result = prime * result + ((this.externalFee == null) ? 0 : this.externalFee.hashCode());
         result = prime * result + ((this.currencyCode == null) ? 0 : this.currencyCode.hashCode());
         result = prime * result + ((this.capturedAt == null) ? 0 : this.capturedAt.hashCode());
-        result = prime * result + ((this.test == null) ? 0 : this.test.hashCode());
         result = prime * result + ((this.createdAt == null) ? 0 : this.createdAt.hashCode());
         result = prime * result + ((this.guaranteeDeposit == null) ? 0 : this.guaranteeDeposit.hashCode());
         result = prime * result + ((this.terminalId == null) ? 0 : this.terminalId.hashCode());
@@ -493,7 +474,6 @@ public class Payment implements Serializable {
         sb.append(", ").append(externalFee);
         sb.append(", ").append(currencyCode);
         sb.append(", ").append(capturedAt);
-        sb.append(", ").append(test);
         sb.append(", ").append(createdAt);
         sb.append(", ").append(guaranteeDeposit);
         sb.append(", ").append(terminalId);

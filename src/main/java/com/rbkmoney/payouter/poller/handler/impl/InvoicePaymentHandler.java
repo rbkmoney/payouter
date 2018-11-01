@@ -44,15 +44,12 @@ public class InvoicePaymentHandler implements Handler<InvoiceChange, Event> {
 
     private final PaymentDao paymentDao;
 
-    private final PartyManagementService partyManagementService;
-
     private final Filter filter;
 
     @Autowired
-    public InvoicePaymentHandler(InvoiceDao invoiceDao, PaymentDao paymentDao, PartyManagementService partyManagementService) {
+    public InvoicePaymentHandler(InvoiceDao invoiceDao, PaymentDao paymentDao) {
         this.invoiceDao = invoiceDao;
         this.paymentDao = paymentDao;
-        this.partyManagementService = partyManagementService;
         this.filter = new PathConditionFilter(new PathConditionRule(
                 "invoice_payment_change.payload.invoice_payment_started",
                 new IsNullCondition().not()));
@@ -113,15 +110,6 @@ public class InvoicePaymentHandler implements Handler<InvoiceChange, Event> {
             payment.setExternalFee(parsedCashFlow.getOrDefault(EXTERNAL_FEE, 0L));
             payment.setGuaranteeDeposit(parsedCashFlow.getOrDefault(GUARANTEE_DEPOSIT, 0L));
         }
-
-        payment.setTest(
-                partyManagementService.isTestCategoryType(
-                        payment.getPartyId(),
-                        payment.getShopId(),
-                        payment.getDomainRevision(),
-                        paymentCreatedAt
-                )
-        );
 
         paymentDao.save(payment);
         log.info("Payment have been saved, eventId={}, payment={}", event.getId(), payment);
