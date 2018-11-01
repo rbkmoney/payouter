@@ -44,15 +44,12 @@ public class InvoicePaymentHandler implements Handler<InvoiceChange, Event> {
 
     private final PaymentDao paymentDao;
 
-    private final PartyManagementService partyManagementService;
-
     private final Filter filter;
 
     @Autowired
-    public InvoicePaymentHandler(InvoiceDao invoiceDao, PaymentDao paymentDao, PartyManagementService partyManagementService) {
+    public InvoicePaymentHandler(InvoiceDao invoiceDao, PaymentDao paymentDao) {
         this.invoiceDao = invoiceDao;
         this.paymentDao = paymentDao;
-        this.partyManagementService = partyManagementService;
         this.filter = new PathConditionFilter(new PathConditionRule(
                 "invoice_payment_change.payload.invoice_payment_started",
                 new IsNullCondition().not()));
