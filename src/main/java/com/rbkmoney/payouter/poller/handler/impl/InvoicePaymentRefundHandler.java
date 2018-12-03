@@ -93,7 +93,6 @@ public class InvoicePaymentRefundHandler implements Handler<InvoiceChange, Event
         }
 
         Map<CashFlowType, Long> cashFlow = DamselUtil.parseCashFlow(invoicePaymentRefundCreated.getCashFlow());
-        refund.setAmount(refund.getAmount());
         refund.setFee(cashFlow.getOrDefault(FEE, 0L) - cashFlow.getOrDefault(RETURN_FEE, 0L));
 
         refundDao.save(refund);
