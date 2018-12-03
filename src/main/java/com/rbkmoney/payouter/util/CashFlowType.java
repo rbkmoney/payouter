@@ -24,6 +24,10 @@ public enum CashFlowType {
             CashFlowAccount.system(SystemCashFlowAccount.settlement),
             CashFlowAccount.provider(ProviderCashFlowAccount.settlement)
     ),
+    RETURN_FEE(
+            CashFlowAccount.system(SystemCashFlowAccount.settlement),
+            CashFlowAccount.merchant(MerchantCashFlowAccount.settlement)
+    ),
     FEE(
             CashFlowAccount.merchant(MerchantCashFlowAccount.settlement),
             CashFlowAccount.system(SystemCashFlowAccount.settlement)

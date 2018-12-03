@@ -27,6 +27,7 @@ import java.util.Map;
 
 import static com.rbkmoney.payouter.util.CashFlowType.FEE;
 import static com.rbkmoney.payouter.util.CashFlowType.REFUND_AMOUNT;
+import static com.rbkmoney.payouter.util.CashFlowType.RETURN_FEE;
 
 @Component
 public class InvoicePaymentRefundHandler implements Handler<InvoiceChange, Event> {
@@ -94,6 +95,7 @@ public class InvoicePaymentRefundHandler implements Handler<InvoiceChange, Event
         }
 
         Map<CashFlowType, Long> cashFlow = DamselUtil.parseCashFlow(invoicePaymentRefundCreated.getCashFlow());
+        refund.setAmount(refund.getAmount() - cashFlow.getOrDefault(RETURN_FEE, 0L));
         refund.setFee(cashFlow.getOrDefault(FEE, 0L));
 
         refundDao.save(refund);
