@@ -15,7 +15,6 @@ import com.rbkmoney.payouter.domain.tables.pojos.Payment;
 import com.rbkmoney.payouter.domain.tables.pojos.Refund;
 import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.poller.handler.Handler;
-import com.rbkmoney.payouter.service.PartyManagementService;
 import com.rbkmoney.payouter.util.CashFlowType;
 import com.rbkmoney.payouter.util.DamselUtil;
 import org.slf4j.Logger;
@@ -26,7 +25,6 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 
 import static com.rbkmoney.payouter.util.CashFlowType.FEE;
-import static com.rbkmoney.payouter.util.CashFlowType.REFUND_AMOUNT;
 import static com.rbkmoney.payouter.util.CashFlowType.RETURN_FEE;
 
 @Component
@@ -95,8 +93,8 @@ public class InvoicePaymentRefundHandler implements Handler<InvoiceChange, Event
         }
 
         Map<CashFlowType, Long> cashFlow = DamselUtil.parseCashFlow(invoicePaymentRefundCreated.getCashFlow());
-        refund.setAmount(refund.getAmount() - cashFlow.getOrDefault(RETURN_FEE, 0L));
-        refund.setFee(cashFlow.getOrDefault(FEE, 0L));
+        refund.setAmount(refund.getAmount());
+        refund.setFee(cashFlow.getOrDefault(FEE, 0L) - cashFlow.getOrDefault(RETURN_FEE, 0L));
 
         refundDao.save(refund);
         log.info("Refund have been saved, eventId={}, refund={}", eventId, refund);
