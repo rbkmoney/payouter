@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
 import static com.rbkmoney.payouter.domain.Tables.PAYMENT;
@@ -82,16 +83,7 @@ public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao {
                         prepStmt.setLong(1, payoutId);
                         prepStmt.setLong(2, payment.getId());
                     });
-            boolean checked = false;
-            for (int i = 0; i < updateCounts.length; ++i) {
-                for (int j = 0; j < updateCounts[i].length; ++j) {
-                    checked = true;
-                    if (updateCounts[i][j] != 1) {
-                        throw new JdbcUpdateAffectedIncorrectNumberOfRowsException(batchSql, 1, updateCounts[i][j]);
-                    }
-                }
-            }
-            if (!checked) {
+            if (Arrays.stream(updateCounts).flatMapToInt(Arrays::stream).anyMatch(x -> x != 1)) {
                 throw new JdbcUpdateAffectedIncorrectNumberOfRowsException(batchSql, 1, 0);
             }
         } catch (NestedRuntimeException ex) {
