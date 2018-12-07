@@ -72,6 +72,7 @@ public class PayoutServiceImpl implements PayoutService {
     }
 
     @Override
+    @Transactional(propagation = Propagation.REQUIRED)
     public List<Long> createPayouts(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType) throws InvalidStateException, NotFoundException, StorageException {
         return createPayouts(partyId, shopId, fromTime, toTime, payoutType, LocalDateTime.now(ZoneOffset.UTC));
     }

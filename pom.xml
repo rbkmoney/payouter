@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>payouter</artifactId>
-    <version>1.0.30-SNAPSHOT</version>
+    <version>1.0.31-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>payouter</name>
@@ -22,7 +22,7 @@
         <shared.resources.version>0.2.1</shared.resources.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <postgresql.jdbc.version>42.2.5</postgresql.jdbc.version>
-        <dockerfile.base.service.tag>22c57470c4fc47161894f036b7cf9d70f42b75f5</dockerfile.base.service.tag>
+        <dockerfile.base.service.tag>2a8b44ac628c1bdb729abd04ed7a2a54676e574b</dockerfile.base.service.tag>
         <server.port>8022</server.port>
         <db.url>jdbc:postgresql://localhost:5432/payouter</db.url>
         <db.user>postgres</db.user>
@@ -152,6 +152,11 @@
             <groupId>com.rbkmoney.geck</groupId>
             <artifactId>serializer</artifactId>
             <version>0.6.4</version>
+        </dependency>
+        <dependency>
+            <groupId>com.rbkmoney</groupId>
+            <artifactId>spring-boot-starter-metrics-statsd</artifactId>
+            <version>1.0.1</version>
         </dependency>
 
         <!-- Test -->

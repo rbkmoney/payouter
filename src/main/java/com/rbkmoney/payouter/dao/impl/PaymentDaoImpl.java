@@ -8,15 +8,16 @@ import com.rbkmoney.payouter.domain.tables.records.PaymentRecord;
 import com.rbkmoney.payouter.exception.DaoException;
 import org.jooq.Query;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.NestedRuntimeException;
+import org.springframework.jdbc.JdbcUpdateAffectedIncorrectNumberOfRowsException;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.SingleColumnRowMapper;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import static com.rbkmoney.payouter.domain.Tables.PAYMENT;
 
@@ -72,14 +73,22 @@ public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao {
 
     @Override
     public void includeToPayout(long payoutId, List<Payment> payments) throws DaoException {
-        Set<Long> paymentsIds = payments.stream()
-                .map(payment -> payment.getId())
-                .collect(Collectors.toSet());
-
-        Query query = getDslContext().update(PAYMENT)
-                .set(PAYMENT.PAYOUT_ID, payoutId)
-                .where(PAYMENT.ID.in(paymentsIds));
-        execute(query, paymentsIds.size());
+        try {
+            String batchSql = "update sht.payment set payout_id = ? where id = ?";
+            int[][] updateCounts = getJdbcTemplate().batchUpdate(
+                    batchSql,
+                    payments,
+                    1000,
+                    (prepStmt, payment) -> {
+                        prepStmt.setLong(1, payoutId);
+                        prepStmt.setLong(2, payment.getId());
+                    });
+            if (Arrays.stream(updateCounts).flatMapToInt(Arrays::stream).anyMatch(x -> x != 1)) {
+                throw new JdbcUpdateAffectedIncorrectNumberOfRowsException(batchSql, 1, 0);
+            }
+        } catch (NestedRuntimeException ex) {
+            throw new DaoException(ex);
+        }
     }
 
     @Override
