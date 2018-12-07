@@ -78,9 +78,9 @@ public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao {
                     batchSql,
                     payments,
                     1000,
-                    (ps, payment) -> {
-                        ps.setLong(1, payoutId);
-                        ps.setLong(2, payment.getId());
+                    (prepStmt, payment) -> {
+                        prepStmt.setLong(1, payoutId);
+                        prepStmt.setLong(2, payment.getId());
                     });
             boolean checked = false;
             for (int i = 0; i < updateCounts.length; ++i) {
