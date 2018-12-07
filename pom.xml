@@ -153,6 +153,11 @@
             <artifactId>serializer</artifactId>
             <version>0.6.4</version>
         </dependency>
+        <dependency>
+            <groupId>com.rbkmoney</groupId>
+            <artifactId>spring-boot-starter-metrics-statsd</artifactId>
+            <version>1.0.1</version>
+        </dependency>
 
         <!-- Test -->
         <dependency>
