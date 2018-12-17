@@ -1,10 +1,13 @@
 package com.rbkmoney.payouter.config;
 
+import com.rbkmoney.payouter.factory.AutowiringSpringBeanJobFactory;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -29,6 +32,16 @@ public class SchedulerConfig {
             }
         });
         return taskScheduler;
+    }
+
+    @Bean
+    public SchedulerFactoryBean schedulerFactory(ApplicationContext applicationContext) {
+        SchedulerFactoryBean factoryBean = new SchedulerFactoryBean();
+        AutowiringSpringBeanJobFactory jobFactory = new AutowiringSpringBeanJobFactory();
+        jobFactory.setApplicationContext(applicationContext);
+        factoryBean.setJobFactory(jobFactory);
+        factoryBean.setApplicationContextSchedulerContextKey("applicationContext");
+        return factoryBean;
     }
 
 }
