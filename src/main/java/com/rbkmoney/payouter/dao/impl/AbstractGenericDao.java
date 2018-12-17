@@ -6,7 +6,6 @@ import org.jooq.*;
 import org.jooq.conf.ParamType;
 import org.jooq.impl.DSL;
 import org.jooq.impl.DefaultConfiguration;
-import org.springframework.context.annotation.DependsOn;
 import org.springframework.core.NestedRuntimeException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.JdbcUpdateAffectedIncorrectNumberOfRowsException;
@@ -21,7 +20,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
-@DependsOn("dbInitializer")
 public abstract class AbstractGenericDao extends NamedParameterJdbcDaoSupport implements GenericDao {
 
     private final DSLContext dslContext;

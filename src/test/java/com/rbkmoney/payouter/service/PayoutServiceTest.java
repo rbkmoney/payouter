@@ -50,9 +50,9 @@ import java.util.concurrent.Callable;
 import static com.rbkmoney.payouter.domain.enums.PayoutStatus.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 
 public class PayoutServiceTest extends AbstractIntegrationTest {
 
@@ -108,7 +108,7 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
                 .willReturn(null);
         given(partyManagementClient.computePayoutCashFlow(any(), any(), any()))
                 .willAnswer(answer -> {
-                    PayoutParams payoutParams = answer.getArgumentAt(2, PayoutParams.class);
+                    PayoutParams payoutParams = answer.getArgument(2);
                     return Arrays.asList(
                             new FinalCashFlowPosting(
                                     new FinalCashFlowAccount(CashFlowAccount.merchant(MerchantCashFlowAccount.settlement), 12),

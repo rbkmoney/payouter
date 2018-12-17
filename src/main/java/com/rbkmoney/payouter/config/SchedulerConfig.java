@@ -39,7 +39,6 @@ public class SchedulerConfig {
         SchedulerFactoryBean factoryBean = new SchedulerFactoryBean();
         AutowiringSpringBeanJobFactory jobFactory = new AutowiringSpringBeanJobFactory();
         jobFactory.setApplicationContext(applicationContext);
-
         factoryBean.setJobFactory(jobFactory);
         factoryBean.setApplicationContextSchedulerContextKey("applicationContext");
         return factoryBean;

@@ -3,7 +3,6 @@ package com.rbkmoney.payouter.service.impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
 import com.rbkmoney.damsel.domain.FinalCashFlowPosting;
-import com.rbkmoney.damsel.payout_processing.PaidDetails;
 import com.rbkmoney.damsel.payout_processing.PayoutChange;
 import com.rbkmoney.damsel.payout_processing.UserInfo;
 import com.rbkmoney.geck.serializer.kit.json.JsonHandler;
@@ -29,7 +28,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-public class EventSinkServiceImpl implements EventSinkService{
+public class EventSinkServiceImpl implements EventSinkService {
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -76,7 +75,7 @@ public class EventSinkServiceImpl implements EventSinkService{
             long eventId = payoutEventDao.saveEvent(payoutEvent);
             log.info("Payout event has been successfully saved, payoutId='{}', eventId='{}', eventType='{}'", payoutEvent.getPayoutId(), eventId, payoutEvent.getEventType());
         } catch (DaoException ex) {
-            throw new StorageException(String.format("Failed to save payout event, payoutId=%s", payoutEvent.getPayoutId()),  ex);
+            throw new StorageException(String.format("Failed to save payout event, payoutId=%s", payoutEvent.getPayoutId()), ex);
         }
     }
 
@@ -155,7 +154,6 @@ public class EventSinkServiceImpl implements EventSinkService{
         payoutEvent.setPayoutId(payoutId);
         payoutEvent.setEventType(PayoutChange._Fields.PAYOUT_STATUS_CHANGED.getFieldName());
         payoutEvent.setPayoutStatus(com.rbkmoney.damsel.payout_processing.PayoutStatus._Fields.PAID.getFieldName());
-        payoutEvent.setPayoutPaidDetailsType(PaidDetails._Fields.ACCOUNT_DETAILS.getFieldName());
 
         saveEvent(payoutEvent);
     }

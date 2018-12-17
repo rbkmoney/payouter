@@ -1,8 +1,8 @@
 package com.rbkmoney.payouter.service.impl;
 
 import com.rbkmoney.damsel.base.TimeSpan;
-import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.domain.Calendar;
+import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.payouter.dao.ShopMetaDao;
 import com.rbkmoney.payouter.domain.tables.pojos.ShopMeta;
 import com.rbkmoney.payouter.exception.DaoException;
@@ -20,7 +20,6 @@ import org.quartz.impl.calendar.HolidayCalendar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.DependsOn;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -30,7 +29,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-@DependsOn("dbInitializer")
 public class SchedulerServiceImpl implements SchedulerService {
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());

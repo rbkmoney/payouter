@@ -58,12 +58,6 @@ public class DamselUtil {
         throw new UnsupportedOperationException(String.format("Unsupported cash flow posting, cashFlowPosting='%s'", cashFlowPosting));
     }
 
-    public static boolean checkRoute(CashFlowAccount source, CashFlowAccount destination, FinalCashFlowPosting cashFlow) {
-        return source.equals(cashFlow.getSource().getAccountType()) &&
-                destination.equals(cashFlow.getDestination().getAccountType());
-
-    }
-
     public static <T extends TBase> T jsonToTBase(JsonNode jsonNode, Class<T> type) throws IOException {
         return jsonProcessor.process(jsonNode, new TBaseHandler<>(type));
     }
@@ -98,7 +92,7 @@ public class DamselUtil {
             case UNPAID:
                 return PayoutStatus.unpaid(new PayoutUnpaid());
             case PAID:
-                return PayoutStatus.paid(toDamselPayoutStatusPaid(payoutEvent));
+                return PayoutStatus.paid(new PayoutPaid(PaidDetails.account_details(new AccountPaidDetails())));
             case CONFIRMED:
                 return PayoutStatus.confirmed(new PayoutConfirmed(toDamselUserInfo(payoutEvent)));
             case CANCELLED:
@@ -147,15 +141,6 @@ public class DamselUtil {
     public static PayoutType toDamselPayoutType(PayoutEvent payoutEvent) {
         PayoutType._Fields payoutType = PayoutType._Fields.findByName(payoutEvent.getPayoutType());
         switch (payoutType) {
-            case BANK_CARD:
-                return PayoutType.bank_card(new PayoutCard(
-                        new BankCard(
-                                payoutEvent.getPayoutCardToken(),
-                                BankCardPaymentSystem.valueOf(payoutEvent.getPayoutCardPaymentSystem()),
-                                payoutEvent.getPayoutCardBin(),
-                                payoutEvent.getPayoutCardMaskedPan()
-                        )
-                ));
             case BANK_ACCOUNT:
                 return PayoutType.bank_account(toPayoutAccount(payoutEvent));
             default:
@@ -238,29 +223,6 @@ public class DamselUtil {
         bankAccount.setCorrespondentAccount(correspondentBankAccount);
 
         return bankAccount;
-    }
-
-    public static PayoutPaid toDamselPayoutStatusPaid(PayoutEvent payoutEvent) {
-        PayoutPaid payoutPaid = new PayoutPaid();
-        payoutPaid.setDetails(toDamselPayoutPaidDetails(payoutEvent));
-        return payoutPaid;
-    }
-
-    public static PaidDetails toDamselPayoutPaidDetails(PayoutEvent payoutEvent) {
-        PaidDetails._Fields paidDetails = PaidDetails._Fields.findByName(payoutEvent.getPayoutPaidDetailsType());
-        switch (paidDetails) {
-            case CARD_DETAILS:
-                return PaidDetails.card_details(new CardPaidDetails(
-                        new ProviderDetails(
-                                payoutEvent.getPayoutCardProviderName(),
-                                payoutEvent.getPayoutCardProviderTransactionId()
-                        )
-                ));
-            case ACCOUNT_DETAILS:
-                return PaidDetails.account_details(new AccountPaidDetails());
-            default:
-                throw new NotFoundException(String.format("Paid details type not found, detailsType = %s", paidDetails));
-        }
     }
 
     public static UserType toDamselUserType(PayoutEvent payoutEvent) {

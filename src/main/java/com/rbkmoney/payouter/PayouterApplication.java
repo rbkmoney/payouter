@@ -8,7 +8,7 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 @EnableScheduling
 @ServletComponentScan
-@SpringBootApplication(scanBasePackages = {"com.rbkmoney.payouter", "com.rbkmoney.dbinit"})
+@SpringBootApplication(scanBasePackages = "com.rbkmoney.payouter")
 public class PayouterApplication {
 
     public static void main(String[] args) {

@@ -12,8 +12,12 @@ spring:
     hikari:
       idle-timeout: 30000
       maximum-pool-size: 3
-flyway:
-  schemas: sht
+  flyway:
+    schemas: sht
+  quartz:
+    job-store-type: jdbc
+    jdbc:
+      initialize-schema: always
 retry-policy:
   maxAttempts: 10
 cache:
