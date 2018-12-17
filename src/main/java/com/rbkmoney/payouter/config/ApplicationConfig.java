@@ -4,9 +4,7 @@ import com.rbkmoney.damsel.accounter.AccounterSrv;
 import com.rbkmoney.damsel.domain_config.RepositoryClientSrv;
 import com.rbkmoney.damsel.message_sender.MessageSenderSrv;
 import com.rbkmoney.damsel.payment_processing.PartyManagementSrv;
-import com.rbkmoney.payouter.domain.Sht;
 import com.rbkmoney.woody.thrift.impl.http.THSpawnClientBuilder;
-import org.jooq.Schema;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -40,15 +38,10 @@ public class ApplicationConfig {
     }
 
     @Bean
-    public MessageSenderSrv.Iface dudoser(@Value("${service.dudoser.url}") Resource resource, @Value("${service.dudoser.networkTimeout}") int networkTimeout) throws IOException {
+    public MessageSenderSrv.Iface dudoserClient(@Value("${service.dudoser.url}") Resource resource, @Value("${service.dudoser.networkTimeout}") int networkTimeout) throws IOException {
         return new THSpawnClientBuilder()
                 .withNetworkTimeout(networkTimeout)
                 .withAddress(resource.getURI()).build(MessageSenderSrv.Iface.class);
-    }
-
-    @Bean
-    public Schema schema() {
-        return Sht.SHT;
     }
 
 }

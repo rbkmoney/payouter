@@ -98,7 +98,7 @@ public class ReportServiceTest extends AbstractIntegrationTest {
         CountDownLatch countDownLatch = new CountDownLatch(1);
         doAnswer(answer -> {
             countDownLatch.countDown();
-            Message message = answer.getArgumentAt(0, Message.class);
+            Message message = answer.getArgument(0);
             assertTrue(Arrays.equals(report.getContent().getBytes(report.getEncoding()), message.getMessageMail().getAttachments().get(0).getData()));
             return null;
         }).when(dudoser).send(any());

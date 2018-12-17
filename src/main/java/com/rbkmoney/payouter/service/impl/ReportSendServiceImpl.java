@@ -29,7 +29,7 @@ public class ReportSendServiceImpl implements ReportSendService {
 
     private final ReportDao reportDao;
 
-    private MessageSenderSrv.Iface dudoser;
+    private MessageSenderSrv.Iface dudoserClient;
 
     @Value("${service.dudoser.mail.from}")
     private String mailFrom;
@@ -37,9 +37,9 @@ public class ReportSendServiceImpl implements ReportSendService {
     @Value("#{'${service.dudoser.mail.to}'.split(',')}")
     private List<String> mailTo;
 
-    public ReportSendServiceImpl(ReportDao reportDao, MessageSenderSrv.Iface dudoser) {
+    public ReportSendServiceImpl(ReportDao reportDao, MessageSenderSrv.Iface dudoserClient) {
         this.reportDao = reportDao;
-        this.dudoser = dudoser;
+        this.dudoserClient = dudoserClient;
     }
 
     @Override
@@ -72,7 +72,7 @@ public class ReportSendServiceImpl implements ReportSendService {
 
         try {
             reportDao.changeStatus(report.getId(), ReportStatus.SENT, LocalDateTime.now(ZoneOffset.UTC));
-            dudoser.send(message);
+            dudoserClient.send(message);
             log.info("Report have been sent, reportId='{}', subject='{}', mailFrom='{}', mailTo='{}'", report.getId(), report.getSubject(), mailFrom, mailTo);
         } catch (DaoException ex) {
             throw new StorageException(String.format("Failed to change report status to 'READY', reportId='%d'", report.getId()));
