@@ -33,19 +33,5 @@ public class PaymentDaoTest extends AbstractIntegrationTest {
         paymentDao.save(payment);
         assertEquals(payment, paymentDao.get(payment.getInvoiceId(), payment.getPaymentId()));
     }
-
-    @Test
-    public void testIncludeAndExcludeFromPayout() throws DaoException {
-        List<Payment> payments = randomListOf(10, Payment.class, "payoutId");
-        long payoutId = 1;
-
-        payments.stream().forEach(payment -> paymentDao.save(payment));
-
-        assertTrue(paymentDao.getByPayoutId(payoutId).isEmpty());
-        paymentDao.includeToPayout(payoutId, payments);
-        assertEquals(payments.size(), paymentDao.getByPayoutId(payoutId).size());
-        assertEquals(payments.size(), paymentDao.excludeFromPayout(payoutId));
-        assertTrue(paymentDao.getByPayoutId(payoutId).isEmpty());
-    }
-
+    
 }

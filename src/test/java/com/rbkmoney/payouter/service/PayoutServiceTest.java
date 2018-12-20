@@ -197,12 +197,12 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         ShopParams shopParams = new ShopParams();
         shopParams.setPartyId(partyId);
         shopParams.setShopId(shopId);
-        generatePayoutParams.setShop(shopParams);
+        generatePayoutParams.setParams(shopParams);
         generatePayoutParams.setTimeRange(new TimeRange("2015-06-17T00:00:00Z", "2018-06-17T00:00:00Z"));
 
         List<String> payoutIds = callService(() -> client.generatePayouts(generatePayoutParams));
         assertEquals(1, payoutIds.size());
-        long payoutId = Long.valueOf(payoutIds.get(0));
+        String payoutId = payoutIds.get(0);
 
         payoutService.pay(payoutId);
 
@@ -211,7 +211,7 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         assertEquals(PAID, payout.getStatus());
         assertEquals(partyId, payout.getPartyId());
 
-        assertEquals(payout, payoutService.getPayoutsByIds(Arrays.asList(payoutId)).get(0));
+        assertEquals(payout, payoutService.getByIds(Collections.singleton(payoutId)).get(0));
     }
 
     @Test
@@ -224,12 +224,12 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         ShopParams shopParams = new ShopParams();
         shopParams.setPartyId(partyId);
         shopParams.setShopId(shopId);
-        generatePayoutParams.setShop(shopParams);
+        generatePayoutParams.setParams(shopParams);
         generatePayoutParams.setTimeRange(new TimeRange("2015-06-17T00:00:00Z", "2018-06-17T00:00:00Z"));
 
         List<String> payoutIds = callService(() -> client.generatePayouts(generatePayoutParams));
         assertEquals(1, payoutIds.size());
-        long payoutId = Long.valueOf(payoutIds.get(0));
+        String payoutId = payoutIds.get(0);
 
         payoutService.pay(payoutId);
 
@@ -238,7 +238,7 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         assertEquals(PAID, payout.getStatus());
         assertEquals(partyId, payout.getPartyId());
 
-        assertEquals(payout, payoutService.getPayoutsByIds(Arrays.asList(payoutId)).get(0));
+        assertEquals(payout, payoutService.getByIds(Collections.singleton(payoutId)).get(0));
     }
 
     @Test(expected = InvalidRequest.class)
@@ -247,7 +247,7 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         ShopParams shopParams = new ShopParams();
         shopParams.setPartyId(partyId);
         shopParams.setShopId(shopId);
-        generatePayoutParams.setShop(shopParams);
+        generatePayoutParams.setParams(shopParams);
 
         TimeRange timeRange = new TimeRange();
         timeRange.setFromTime(TypeUtil.temporalToString(LocalDateTime.now()));
@@ -264,7 +264,7 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         addCapturedPayment("payment-id");
 
         GeneratePayoutParams generatePayoutParams = new GeneratePayoutParams();
-        generatePayoutParams.setShop(new ShopParams(partyId, shopId));
+        generatePayoutParams.setParams(new ShopParams(partyId, shopId));
         generatePayoutParams.setTimeRange(new TimeRange("2015-06-17T00:00:00Z", "2018-06-17T00:00:00Z"));
 
         List<String> payoutIds = callService(() -> client.generatePayouts(generatePayoutParams));
@@ -279,23 +279,34 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         ShopParams shopParams = new ShopParams();
         shopParams.setPartyId(partyId);
         shopParams.setShopId(shopId);
-        generatePayoutParams.setShop(shopParams);
+        generatePayoutParams.setParams(shopParams);
         generatePayoutParams.setTimeRange(new TimeRange("2015-06-17T00:00:00Z", "2018-06-17T00:00:00Z"));
 
         List<String> payoutIds = callService(() -> client.generatePayouts(generatePayoutParams));
-        long payoutId = Long.valueOf(payoutIds.get(0));
+        String payoutId = payoutIds.get(0);
         Payout payout = payoutDao.get(payoutId);
         assertEquals(9500L, (long) payout.getAmount());
         assertEquals(UNPAID, payout.getStatus());
 
-        Set<String> uniquePayoutsIds = new HashSet<>(payoutIds);
         payoutService.pay(payoutId);
         assertEquals(PAID, payoutDao.get(payoutId).getStatus());
 
-        assertEquals(uniquePayoutsIds, callService(() -> client.confirmPayouts(uniquePayoutsIds)));
+        runService(() -> {
+            try {
+                client.confirmPayout(payoutId);
+            } catch (TException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
         assertEquals(CONFIRMED, payoutDao.get(payoutId).getStatus());
 
-        assertEquals(uniquePayoutsIds, callService(() -> client.cancelPayouts(uniquePayoutsIds, "так вышло")));
+        runService(() -> {
+            try {
+                client.cancelPayout(payoutId,  "так вышло");
+            } catch (TException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
         assertEquals(CANCELLED, payoutDao.get(payoutId).getStatus());
 
     }
@@ -402,7 +413,7 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         ShopParams shopParams = new ShopParams();
         shopParams.setPartyId(partyId);
         shopParams.setShopId(shopId);
-        generatePayoutParams.setShop(shopParams);
+        generatePayoutParams.setParams(shopParams);
         generatePayoutParams.setTimeRange(new TimeRange("2015-06-17T00:00:00Z", "2018-06-17T00:00:00Z"));
 
         List<String> payoutIds = callService(() -> client.generatePayouts(generatePayoutParams));
@@ -512,7 +523,7 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
                 }).call();
     }
 
-    private void runService(Runnable runnable) {
+    private void runService(Runnable runnable) throws Exception {
         wFlow.createServiceFork(
                 () -> {
                     ContextUtils.setCustomMetadataValue(UserIdentityIdExtensionKit.KEY, "test");
