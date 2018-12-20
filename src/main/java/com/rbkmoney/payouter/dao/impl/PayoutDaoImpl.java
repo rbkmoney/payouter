@@ -193,7 +193,7 @@ public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
         currencyOptional.ifPresent(currencyRef -> query.addConditions(PAYOUT.CURRENCY_CODE.eq(currencyRef.getSymbolicCode())));
         fromIdOptional.ifPresent(fromId -> query.addConditions(PAYOUT.ID.gt(fromId)));
         sizeOptional.ifPresent(size -> query.addLimit(size));
-        query.addOrderBy(PAYOUT.CREATED_AT.desc());
+        query.addOrderBy(PAYOUT.ID.desc());
         return fetch(query, payoutRowMapper);
     }
 

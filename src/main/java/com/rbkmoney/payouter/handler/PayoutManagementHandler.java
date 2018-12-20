@@ -1,13 +1,11 @@
 package com.rbkmoney.payouter.handler;
 
 import com.rbkmoney.damsel.base.InvalidRequest;
-import com.rbkmoney.damsel.domain.*;
+import com.rbkmoney.damsel.domain.CurrencyRef;
 import com.rbkmoney.damsel.payout_processing.*;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.payouter.domain.enums.PayoutAccountType;
-import com.rbkmoney.payouter.domain.enums.PayoutType;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
-import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
 import com.rbkmoney.payouter.exception.InsufficientFundsException;
 import com.rbkmoney.payouter.exception.InvalidStateException;
 import com.rbkmoney.payouter.exception.NotFoundException;
@@ -69,6 +67,17 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
     }
 
     @Override
+    public com.rbkmoney.damsel.payout_processing.Payout get(String payoutId) throws PayoutNotFound, TException {
+        Payout payout = payoutService.get(payoutId);
+
+        if (payout == null) {
+            throw new PayoutNotFound();
+        }
+
+        return DamselUtil.toDamselPayout(payout, Collections.emptyList());
+    }
+
+    @Override
     public List<String> generatePayouts(GeneratePayoutParams generatePayoutParams) throws InvalidRequest, TException {
         log.info("Start generate payouts, params: {}", generatePayoutParams);
         try {
@@ -80,7 +89,7 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
                 throw new InvalidRequest(Arrays.asList("fromTime must be less that toTime"));
             }
 
-            ShopParams shopParams = generatePayoutParams.getShop();
+            ShopParams shopParams = generatePayoutParams.getParams();
             String payoutId = payoutService.createPayoutByRange(shopParams.getPartyId(), shopParams.getShopId(), fromTime, toTime);
 
             return Collections.singletonList(payoutId);
@@ -94,40 +103,22 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
     }
 
     @Override
-    public Set<String> confirmPayouts(Set<String> payoutIds) throws InvalidRequest, TException {
-        log.info("Start confirm payouts, payoutIds: {}", payoutIds);
+    public void confirmPayout(String payoutId) throws InvalidRequest, TException {
+        log.info("Start confirm payout, payoutId: {}", payoutId);
         try {
-            Set<String> confirmedPayouts = new HashSet<>();
-            for (String payoutId : payoutIds) {
-                try {
-                    payoutService.confirm(payoutId);
-                    confirmedPayouts.add(payoutId);
-                } catch (Exception ex) {
-                    log.warn("Failed to confirm payout, payoutId={}", payoutId, ex);
-                }
-            }
-            return confirmedPayouts;
+            payoutService.confirm(payoutId);
         } finally {
-            log.info("End confirm payouts, payoutIds: {}", payoutIds);
+            log.info("End confirm payouts, payoutIds: {}", payoutId);
         }
     }
 
     @Override
-    public Set<String> cancelPayouts(Set<String> payoutIds, String details) throws InvalidRequest, TException {
-        log.info("Start cancel payouts, payoutIds: {}", payoutIds);
+    public void cancelPayout(String payoutId, String details) throws InvalidRequest, TException {
+        log.info("Start cancel payouts, payoutIds: {}", payoutId);
         try {
-            Set<String> cancelledPayouts = new HashSet<>();
-            for (String payoutId : payoutIds) {
-                try {
-                    payoutService.cancel(payoutId, details);
-                    cancelledPayouts.add(payoutId);
-                } catch (Exception ex) {
-                    log.warn("Failed to cancel payout, payoutId={}", payoutId, ex);
-                }
-            }
-            return cancelledPayouts;
+            payoutService.cancel(payoutId, details);
         } finally {
-            log.info("End cancel payouts, payoutIds: {}", payoutIds);
+            log.info("End cancel payouts, payoutIds: {}", payoutId);
         }
     }
 
@@ -149,13 +140,15 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
 
         validateRequest(size, fromTime, toTime);
 
-        List<Payout> payoutList = payoutService.search(payoutStatus, fromTime, toTime, payoutIds, minAmount, maxAmount, currencyCode, fromId, size);
-        List<PayoutInfo> payoutInfoList = payoutList.stream()
-                .map(payout -> buildPayoutInfo(payout, payoutSummaryService.get(String.valueOf(payout.getId()))))
-                .collect(Collectors.toList());
-        long lastId = payoutInfoList.isEmpty() ? 0 : Long.parseLong(payoutInfoList.get(payoutInfoList.size() - 1).getId());
-        PayoutSearchResponse payoutSearchResponse = new PayoutSearchResponse(payoutInfoList, lastId);
-        log.info("GetPayoutsInfo count: {}", payoutInfoList.size());
+        List<Payout> payouts = payoutService.search(payoutStatus, fromTime, toTime, payoutIds, minAmount, maxAmount, currencyCode, fromId, size);
+        long lastId = payouts.isEmpty() ? 0L : payouts.get(payouts.size() - 1).getId();
+        PayoutSearchResponse payoutSearchResponse = new PayoutSearchResponse(
+                payouts.stream()
+                        .map(payout -> DamselUtil.toDamselPayout(payout, Collections.emptyList()))
+                        .collect(Collectors.toList()),
+                lastId
+        );
+        log.info("GetPayoutsInfo count: {}", payouts.size());
         return payoutSearchResponse;
     }
 
@@ -204,100 +197,5 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
             throw new InvalidRequest(errorList);
         }
     }
-
-    private PayoutInfo buildPayoutInfo(Payout record, List<PayoutSummary> payoutSummaries) {
-        PayoutInfo payoutInfo = new PayoutInfo();
-        payoutInfo.setId(String.valueOf(record.getId()));
-        payoutInfo.setPartyId(record.getPartyId());
-        payoutInfo.setShopId(record.getShopId());
-        payoutInfo.setContractId(record.getContractId());
-        payoutInfo.setAmount(new Cash(record.getAmount(), new CurrencyRef(record.getCurrencyCode())));
-        if (record.getType().equals(PayoutType.bank_account)) {
-            payoutInfo.setType(com.rbkmoney.damsel.payout_processing.PayoutType.bank_account(toPayoutAccount(record)));
-        }
-        payoutInfo.setStatus(DamselUtil.toDamselPayoutSearchStatus(record));
-//        payoutInfo.setFromTime(TypeUtil.temporalToString(record.getFromTime()));
-//        payoutInfo.setToTime(TypeUtil.temporalToString(record.getToTime()));
-        payoutInfo.setCreatedAt(TypeUtil.temporalToString(record.getCreatedAt()));
-        payoutInfo.setSummary(DamselUtil.toDamselPayoutSummary(payoutSummaries));
-        return payoutInfo;
-    }
-
-    private PayoutAccount toPayoutAccount(Payout payout) {
-        LegalAgreement legalAgreement = new LegalAgreement(
-                payout.getAccountLegalAgreementId(),
-                TypeUtil.temporalToString(payout.getAccountLegalAgreementSignedAt())
-        );
-        switch (payout.getAccountType()) {
-            case russian_payout_account:
-                return PayoutAccount.russian_payout_account(
-                        new RussianPayoutAccount(
-                                new RussianBankAccount(
-                                        payout.getBankAccount(),
-                                        payout.getBankName(),
-                                        payout.getBankPostAccount(),
-                                        payout.getBankLocalCode()
-                                ),
-                                payout.getInn(),
-                                payout.getPurpose(),
-                                legalAgreement
-                        )
-                );
-            case international_payout_account:
-                return PayoutAccount.international_payout_account(
-                        new InternationalPayoutAccount(
-                                toInternationalBankAccount(payout),
-                                toInternationalLegalEntity(payout),
-                                payout.getPurpose(),
-                                legalAgreement
-                        )
-                );
-            default:
-                throw new NotFoundException(String.format("PayoutAccount type not found, accountType='%s'", payout.getAccountType()));
-        }
-    }
-
-    private static InternationalLegalEntity toInternationalLegalEntity(Payout payout) {
-        InternationalLegalEntity legalEntity = new InternationalLegalEntity();
-        legalEntity.setLegalName(payout.getAccountLegalName());
-        legalEntity.setTradingName(payout.getAccountTradingName());
-        legalEntity.setRegisteredAddress(payout.getAccountRegisteredAddress());
-        legalEntity.setActualAddress(payout.getAccountActualAddress());
-        legalEntity.setRegisteredNumber(payout.getAccountRegisteredNumber());
-        return legalEntity;
-    }
-
-    private InternationalBankAccount toInternationalBankAccount(Payout payout) {
-        InternationalBankAccount bankAccount = new InternationalBankAccount();
-        bankAccount.setAccountHolder(payout.getBankAccount());
-        bankAccount.setNumber(payout.getBankNumber());
-        bankAccount.setIban(payout.getBankIban());
-
-        InternationalBankDetails bankDetails = new InternationalBankDetails();
-        bankDetails.setName(payout.getBankName());
-        bankDetails.setBic(payout.getBankBic());
-        bankDetails.setAbaRtn(payout.getBankAbaRtn());
-        bankDetails.setAddress(payout.getBankAddress());
-        bankDetails.setCountry(TypeUtil.toEnumField(payout.getBankCountryCode(), Residence.class));
-        bankAccount.setBank(bankDetails);
-
-        //OH SHI—
-        InternationalBankAccount correspondentBankAccount = new InternationalBankAccount();
-        correspondentBankAccount.setAccountHolder(payout.getIntCorrBankAccount());
-        correspondentBankAccount.setNumber(payout.getIntCorrBankNumber());
-        correspondentBankAccount.setIban(payout.getIntCorrBankIban());
-
-        InternationalBankDetails correspondentBankDetails = new InternationalBankDetails();
-        correspondentBankDetails.setName(payout.getIntCorrBankName());
-        correspondentBankDetails.setBic(payout.getIntCorrBankBic());
-        correspondentBankDetails.setAddress(payout.getIntCorrBankAddress());
-        correspondentBankDetails.setAbaRtn(payout.getIntCorrBankAbaRtn());
-        correspondentBankDetails.setCountry(TypeUtil.toEnumField(payout.getIntCorrBankCountryCode(), Residence.class));
-        correspondentBankAccount.setBank(correspondentBankDetails);
-        bankAccount.setCorrespondentAccount(correspondentBankAccount);
-
-        return bankAccount;
-    }
-
 
 }
