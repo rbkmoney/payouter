@@ -2,8 +2,8 @@ package com.rbkmoney.payouter.service;
 
 import com.google.common.collect.ImmutableMap;
 import com.rbkmoney.damsel.base.Month;
-import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.domain.Calendar;
+import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.domain_config.RepositoryClientSrv;
 import com.rbkmoney.damsel.domain_config.VersionedObject;
 import com.rbkmoney.damsel.message_sender.Message;
@@ -27,7 +27,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.Year;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
@@ -36,9 +35,9 @@ import static io.github.benas.randombeans.api.EnhancedRandom.randomListOf;
 import static io.github.benas.randombeans.api.EnhancedRandom.randomStreamOf;
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertFalse;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doAnswer;
 
 public class ReportServiceTest extends AbstractIntegrationTest {
@@ -71,8 +70,8 @@ public class ReportServiceTest extends AbstractIntegrationTest {
                         new VersionedObject(
                                 1,
                                 DomainObject.calendar(new CalendarObject(
-                                        new CalendarRef(1),
-                                        new Calendar("calendar", "Europe/Moscow", Collections.emptyMap())
+                                                new CalendarRef(1),
+                                                new Calendar("calendar", "Europe/Moscow", Collections.emptyMap())
                                         )
                                 )
                         )
@@ -156,8 +155,8 @@ public class ReportServiceTest extends AbstractIntegrationTest {
                         new VersionedObject(
                                 1,
                                 DomainObject.calendar(new CalendarObject(
-                                        new CalendarRef(1),
-                                        new Calendar("calendar", "Europe/Moscow", Collections.emptyMap())
+                                                new CalendarRef(1),
+                                                new Calendar("calendar", "Europe/Moscow", Collections.emptyMap())
                                         )
                                 )
                         )

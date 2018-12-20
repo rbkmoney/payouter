@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
 import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.payout_processing.*;
+import com.rbkmoney.damsel.payout_processing.Wallet;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.geck.serializer.kit.json.JsonProcessor;
 import com.rbkmoney.geck.serializer.kit.tbase.TBaseHandler;
@@ -92,7 +93,7 @@ public class DamselUtil {
             case UNPAID:
                 return PayoutStatus.unpaid(new PayoutUnpaid());
             case PAID:
-                return PayoutStatus.paid(new PayoutPaid(PaidDetails.account_details(new AccountPaidDetails())));
+                return PayoutStatus.paid(new PayoutPaid());
             case CONFIRMED:
                 return PayoutStatus.confirmed(new PayoutConfirmed(toDamselUserInfo(payoutEvent)));
             case CANCELLED:
@@ -143,6 +144,8 @@ public class DamselUtil {
         switch (payoutType) {
             case BANK_ACCOUNT:
                 return PayoutType.bank_account(toPayoutAccount(payoutEvent));
+            case WALLET:
+                return PayoutType.wallet(new Wallet(payoutEvent.getWalletId()));
             default:
                 throw new NotFoundException(String.format("Payout type not found, type = %s", payoutType));
         }

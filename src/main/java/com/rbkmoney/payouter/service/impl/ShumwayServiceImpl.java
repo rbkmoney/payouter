@@ -40,12 +40,12 @@ public class ShumwayServiceImpl implements ShumwayService {
     }
 
     @Override
-    public void hold(String payoutId, List<FinalCashFlowPosting> finalCashFlowPostings) {
-        hold(payoutId, toPlanId(payoutId), 1L, toCashFlowPostings(payoutId, finalCashFlowPostings));
+    public PostingPlanLog hold(String payoutId, List<FinalCashFlowPosting> finalCashFlowPostings) {
+        return hold(payoutId, toPlanId(payoutId), 1L, toCashFlowPostings(payoutId, finalCashFlowPostings));
     }
 
     @Transactional(propagation = Propagation.REQUIRED)
-    public void hold(String payoutId, String planId, long batchId, List<CashFlowPosting> cashFlowPostings) {
+    public PostingPlanLog hold(String payoutId, String planId, long batchId, List<CashFlowPosting> cashFlowPostings) {
         log.debug("Trying to hold payout postings, payoutId='{}', cashFlowPostings='{}'", payoutId, cashFlowPostings);
         List<CashFlowPosting> newCashFlowPostings = cashFlowPostings.stream().map(cashFlowPosting -> {
             cashFlowPosting.setPayoutId(payoutId);
@@ -56,17 +56,18 @@ public class ShumwayServiceImpl implements ShumwayService {
 
         try {
             cashFlowPostingDao.save(cashFlowPostings);
-            hold(planId, toPostingBatch(batchId, newCashFlowPostings));
-            log.info("Payout has been held, payoutId='{}', cashFlowPostings='{}'", payoutId, newCashFlowPostings);
+            PostingPlanLog postingPlanLog = hold(planId, toPostingBatch(batchId, newCashFlowPostings));
+            log.info("Payout has been held, payoutId='{}', cashFlowPostings='{}', postingPlanLog='{}'", payoutId, newCashFlowPostings, postingPlanLog);
+            return postingPlanLog;
         } catch (Exception ex) {
             throw new AccounterException(String.format("Failed to hold payout, payoutId='%s'", payoutId), ex);
         }
     }
 
-    public void hold(String postingPlanId, PostingBatch postingBatch) throws TException {
+    public PostingPlanLog hold(String postingPlanId, PostingBatch postingBatch) throws TException {
         try {
             log.debug("Start hold operation, postingPlanId='{}', postingBatch='{}'", postingPlanId, postingBatch);
-            retryTemplate.execute(
+            return retryTemplate.execute(
                     context -> shumwayClient.hold(new PostingPlanChange(postingPlanId, postingBatch))
             );
         } finally {

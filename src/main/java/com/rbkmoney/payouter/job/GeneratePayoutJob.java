@@ -2,7 +2,7 @@ package com.rbkmoney.payouter.job;
 
 import com.rbkmoney.damsel.payout_processing.InternalUser;
 import com.rbkmoney.damsel.payout_processing.UserType;
-import com.rbkmoney.payouter.domain.enums.PayoutType;
+import com.rbkmoney.payouter.exception.InsufficientFundsException;
 import com.rbkmoney.payouter.exception.InvalidStateException;
 import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.exception.StorageException;
@@ -16,10 +16,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.NestedRuntimeException;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 import static com.rbkmoney.geck.common.util.TypeUtil.toLocalDateTime;
 
@@ -55,26 +55,27 @@ public class GeneratePayoutJob implements Job {
         try {
             try {
                 LocalDateTime toTime = toLocalDateTime(trigger.getCurrentCronTime().toInstant());
-                List<Long> payoutIds = wFlow.createServiceFork(
+                String payoutId = wFlow.createServiceFork(
                         () -> {
                             WoodyUtils.setUserInfo(userId, UserType.internal_user(new InternalUser()));
-                            return payoutService.createPayouts(
+                            return payoutService.createPayoutByRange(
                                     partyId,
                                     shopId,
                                     toTime.minusDays(1),
-                                    toTime,
-                                    PayoutType.bank_account
+                                    toTime
                             );
                         }
                 ).call();
 
-                log.info("Payouts for shop have been successfully created, payoutIds='{}' partyId='{}', shopId='{}', trigger='{}', jobExecutionContext='{}'",
-                        payoutIds, partyId, shopId, trigger, jobExecutionContext);
+                log.info("Payout for shop have been successfully created, payoutId='{}' partyId='{}', shopId='{}', trigger='{}', jobExecutionContext='{}'",
+                        payoutId, partyId, shopId, trigger, jobExecutionContext);
+            } catch (InsufficientFundsException ex) {
+                log.info("Payout can't be created, reason='{}', partyId='{}', shopId='{}', contractId='{}', fromTime='{}', toTime='{}', payoutType='{}'", ex.getMessage(), partyId, shopId);
             } catch (NotFoundException | InvalidStateException ex) {
-                log.warn("Failed to generate payouts, partyId='{}', shopId='{}', trigger='{}', jobExecutionContext='{}'",
+                log.warn("Failed to generate payout, partyId='{}', shopId='{}', trigger='{}', jobExecutionContext='{}'",
                         partyId, shopId, trigger, jobExecutionContext, ex);
             }
-        } catch (StorageException | WRuntimeException ex) {
+        } catch (StorageException | WRuntimeException | NestedRuntimeException ex) {
             throw new JobExecutionException(String.format("Job execution failed (partyId='%s', shopId='%s', trigger='%s', jobExecutionContext='%s'), retry",
                     partyId, shopId, trigger, jobExecutionContext), ex, true);
         } catch (Exception ex) {

@@ -13,6 +13,7 @@ import com.rbkmoney.payouter.domain.tables.pojos.PayoutEvent;
 import com.rbkmoney.payouter.exception.DaoException;
 import com.rbkmoney.payouter.exception.StorageException;
 import com.rbkmoney.payouter.service.EventSinkService;
+import com.rbkmoney.payouter.util.WoodyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -81,11 +82,11 @@ public class EventSinkServiceImpl implements EventSinkService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
-    public void savePayoutCreatedEvent(String payoutId, String purpose, Payout payout, List<FinalCashFlowPosting> cashFlowPostings, UserInfo userInfo) throws StorageException {
+    public void savePayoutCreatedEvent(Payout payout, List<FinalCashFlowPosting> cashFlowPostings) throws StorageException {
         PayoutEvent payoutEvent = new PayoutEvent();
-        payoutEvent.setPayoutId(payoutId);
         payoutEvent.setEventType(PayoutChange._Fields.PAYOUT_CREATED.getFieldName());
         payoutEvent.setPayoutStatus(com.rbkmoney.damsel.payout_processing.PayoutStatus._Fields.UNPAID.getFieldName());
+        payoutEvent.setPayoutId(payout.getPayoutId());
         payoutEvent.setPayoutCreatedAt(payout.getCreatedAt());
         payoutEvent.setPayoutPartyId(payout.getPartyId());
         payoutEvent.setPayoutShopId(payout.getShopId());
@@ -120,7 +121,9 @@ public class EventSinkServiceImpl implements EventSinkService {
         payoutEvent.setPayoutInternationalCorrespondentAccountBankCountryCode(payout.getIntCorrBankCountryCode());
 
         payoutEvent.setPayoutAccountInn(payout.getInn());
-        payoutEvent.setPayoutAccountPurpose(purpose);
+        payoutEvent.setPayoutAccountPurpose(payout.getPurpose());
+
+        payoutEvent.setWalletId(payout.getWalletId());
 
         try {
             payoutEvent.setPayoutCashFlow(
@@ -141,6 +144,7 @@ public class EventSinkServiceImpl implements EventSinkService {
         payoutEvent.setPayoutAccountLegalAgreementId(payout.getAccountLegalAgreementId());
         payoutEvent.setPayoutAccountLegalAgreementSignedAt(payout.getAccountLegalAgreementSignedAt());
 
+        UserInfo userInfo = WoodyUtils.getUserInfo();
         payoutEvent.setUserId(userInfo.getId());
         payoutEvent.setUserType(userInfo.getType().getSetField().getFieldName());
 
@@ -160,12 +164,14 @@ public class EventSinkServiceImpl implements EventSinkService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
-    public void savePayoutCancelledEvent(String payoutId, String details, UserInfo userInfo) throws StorageException {
+    public void savePayoutCancelledEvent(String payoutId, String details) throws StorageException {
         PayoutEvent payoutEvent = new PayoutEvent();
         payoutEvent.setPayoutId(payoutId);
         payoutEvent.setEventType(PayoutChange._Fields.PAYOUT_STATUS_CHANGED.getFieldName());
         payoutEvent.setPayoutStatus(com.rbkmoney.damsel.payout_processing.PayoutStatus._Fields.CANCELLED.getFieldName());
         payoutEvent.setPayoutStatusCancelDetails(details);
+
+        UserInfo userInfo = WoodyUtils.getUserInfo();
         payoutEvent.setUserId(userInfo.getId());
         payoutEvent.setUserType(userInfo.getType().getSetField().getFieldName());
 
@@ -174,11 +180,13 @@ public class EventSinkServiceImpl implements EventSinkService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
-    public void savePayoutConfirmedEvent(String payoutId, UserInfo userInfo) throws StorageException {
+    public void savePayoutConfirmedEvent(String payoutId) throws StorageException {
         PayoutEvent payoutEvent = new PayoutEvent();
         payoutEvent.setPayoutId(payoutId);
         payoutEvent.setEventType(PayoutChange._Fields.PAYOUT_STATUS_CHANGED.getFieldName());
         payoutEvent.setPayoutStatus(com.rbkmoney.damsel.payout_processing.PayoutStatus._Fields.CONFIRMED.getFieldName());
+
+        UserInfo userInfo = WoodyUtils.getUserInfo();
         payoutEvent.setUserId(userInfo.getId());
         payoutEvent.setUserType(userInfo.getType().getSetField().getFieldName());
 

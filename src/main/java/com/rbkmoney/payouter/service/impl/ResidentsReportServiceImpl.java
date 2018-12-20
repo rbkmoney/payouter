@@ -97,7 +97,7 @@ public class ResidentsReportServiceImpl implements ReportService {
                 groupedPayoutsMap.values().forEach(payouts -> {
                     if (!payouts.isEmpty()) {
                         generateAndSave(payouts);
-                        payouts.forEach(payout -> payoutService.pay(payout.getId()));
+                        payouts.forEach(payout -> payoutService.pay(payout.getPayoutId()));
                     }
                 });
             }

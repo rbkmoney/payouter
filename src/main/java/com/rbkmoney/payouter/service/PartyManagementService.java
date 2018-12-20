@@ -45,8 +45,10 @@ public interface PartyManagementService {
 
     Value getMetaData(String partyId, String namespace) throws NotFoundException;
 
-    List<FinalCashFlowPosting> computePayoutCashFlow(String partyId, String shopId, Cash amount, Instant timestamp) throws NotFoundException;
+    List<FinalCashFlowPosting> computePayoutCashFlow(String partyId, String shopId, String payoutToolId, Cash amount, Instant timestamp) throws NotFoundException;
 
     List<FinalCashFlowPosting> computePayoutCashFlow(String partyId, PayoutParams payoutParams) throws NotFoundException;
+
+    long getPartyRevision(String partyId) throws NotFoundException;
 
 }

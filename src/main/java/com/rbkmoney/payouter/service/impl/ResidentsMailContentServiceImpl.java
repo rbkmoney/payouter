@@ -1,20 +1,26 @@
 package com.rbkmoney.payouter.service.impl;
 
+import com.rbkmoney.payouter.dao.PayoutDao;
 import com.rbkmoney.payouter.dao.PayoutSummaryDao;
 import com.rbkmoney.payouter.domain.enums.PayoutSummaryOperationType;
-import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
+import com.rbkmoney.payouter.domain.tables.pojos.PayoutRangeData;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
+import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
 import com.rbkmoney.payouter.util.FormatUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
 import java.time.ZoneId;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
-public class ResidentsMailContentServiceImpl extends MailContentServiceImpl{
+public class ResidentsMailContentServiceImpl extends MailContentServiceImpl {
+
+    private final PayoutDao payoutDao;
 
     @Value("${report.residents.mailTemplateFileName}")
     private String mailTemplateFileName;
@@ -22,8 +28,13 @@ public class ResidentsMailContentServiceImpl extends MailContentServiceImpl{
     @Value("${report.residents.timezone}")
     private ZoneId zoneId;
 
-    public ResidentsMailContentServiceImpl(FreeMarkerConfigurer freeMarkerConfigurer, PayoutSummaryDao payoutSummaryDao) {
+    public ResidentsMailContentServiceImpl(
+            FreeMarkerConfigurer freeMarkerConfigurer,
+            PayoutSummaryDao payoutSummaryDao,
+            PayoutDao payoutDao
+    ) {
         super(freeMarkerConfigurer, payoutSummaryDao);
+        this.payoutDao = payoutDao;
     }
 
     @Override
@@ -36,7 +47,8 @@ public class ResidentsMailContentServiceImpl extends MailContentServiceImpl{
             payoutDescription.put("sum", FormatUtil.getFormattedAmount(payout.getAmount()));
             payoutDescription.put("curr", payout.getCurrencyCode());
             payoutDescription.put("inn", payout.getInn());
-            payoutDescription.put("to_date_description", getFormattedDateDescription(payout.getToTime(), zoneId));
+            PayoutRangeData payoutRangeData = payoutDao.getRangeData(payout.getPayoutId());
+            payoutDescription.put("to_date_description", getFormattedDateDescription(payoutRangeData.getToTime(), zoneId));
             List<PayoutSummary> cashFlowDescriptions = payoutSummaryDao.get(String.valueOf(payout.getId()));
             PayoutSummary payoutSummary = cashFlowDescriptions.stream().filter(cfd -> cfd.getCashFlowType() == PayoutSummaryOperationType.payment).findFirst().get();
             payoutDescription.put("payment_sum", FormatUtil.getFormattedAmount(payoutSummary.getAmount()));

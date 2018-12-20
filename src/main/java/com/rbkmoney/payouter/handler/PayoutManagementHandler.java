@@ -8,6 +8,7 @@ import com.rbkmoney.payouter.domain.enums.PayoutAccountType;
 import com.rbkmoney.payouter.domain.enums.PayoutType;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
+import com.rbkmoney.payouter.exception.InsufficientFundsException;
 import com.rbkmoney.payouter.exception.InvalidStateException;
 import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.service.PayoutService;
@@ -19,7 +20,6 @@ import com.rbkmoney.payouter.util.DamselUtil;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,12 +41,31 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
 
     private final NonresidentsReportServiceImpl nonresidentsReportService;
 
-    @Autowired
     public PayoutManagementHandler(PayoutService payoutService, PayoutSummaryService payoutSummaryService, ResidentsReportServiceImpl residentsReportService, NonresidentsReportServiceImpl nonresidentsReportService) {
         this.payoutService = payoutService;
         this.payoutSummaryService = payoutSummaryService;
         this.residentsReportService = residentsReportService;
         this.nonresidentsReportService = nonresidentsReportService;
+    }
+
+    @Override
+    public String createPayout(PayoutParams params) throws InvalidPayoutTool, InsufficientFunds, InvalidRequest, TException {
+        try {
+            return payoutService.create(
+                    params.getPayoutId(),
+                    params.getShop().getPartyId(),
+                    params.getShop().getShopId(),
+                    params.getPayoutToolId(),
+                    params.getAmount().getAmount(),
+                    params.getAmount().getCurrency().getSymbolicCode()
+            );
+        } catch (InsufficientFundsException ex) {
+            throw new InsufficientFunds();
+        } catch (InvalidStateException ex) {
+            throw new InvalidPayoutTool();
+        } catch (NotFoundException ex) {
+            throw new InvalidRequest(Collections.singletonList(ex.getMessage()));
+        }
     }
 
     @Override
@@ -62,11 +81,9 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
             }
 
             ShopParams shopParams = generatePayoutParams.getShop();
-            List<Long> payoutIds = payoutService.createPayouts(shopParams.getPartyId(), shopParams.getShopId(), fromTime, toTime, PayoutType.bank_account);
+            String payoutId = payoutService.createPayoutByRange(shopParams.getPartyId(), shopParams.getShopId(), fromTime, toTime);
 
-            return payoutIds.stream()
-                    .map(id -> String.valueOf(id))
-                    .collect(Collectors.toList());
+            return Collections.singletonList(payoutId);
 
         } catch (NotFoundException | InvalidStateException | IllegalArgumentException ex) {
             log.error("Failed to generate payouts, generatePayoutParams={}", generatePayoutParams, ex);
@@ -83,7 +100,7 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
             Set<String> confirmedPayouts = new HashSet<>();
             for (String payoutId : payoutIds) {
                 try {
-                    payoutService.confirm(Long.valueOf(payoutId));
+                    payoutService.confirm(payoutId);
                     confirmedPayouts.add(payoutId);
                 } catch (Exception ex) {
                     log.warn("Failed to confirm payout, payoutId={}", payoutId, ex);
@@ -102,7 +119,7 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
             Set<String> cancelledPayouts = new HashSet<>();
             for (String payoutId : payoutIds) {
                 try {
-                    payoutService.cancel(Long.valueOf(payoutId), details);
+                    payoutService.cancel(payoutId, details);
                     cancelledPayouts.add(payoutId);
                 } catch (Exception ex) {
                     log.warn("Failed to cancel payout, payoutId={}", payoutId, ex);
@@ -144,21 +161,16 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
-    public void generateReport(Set<String> sPayoutIds) throws InvalidRequest, TException {
-        log.info("Start generate report for payouts: {}", sPayoutIds);
-        if (sPayoutIds.isEmpty()) {
+    public void generateReport(Set<String> payoutIds) throws InvalidRequest, TException {
+        log.info("Start generate report for payouts: {}", payoutIds);
+        if (payoutIds.isEmpty()) {
             throw new InvalidRequest(Collections.singletonList("Empty list of payout ids"));
         }
-        List<Long> payoutIds;
-        try {
-            payoutIds = sPayoutIds.stream().map(Long::valueOf).collect(Collectors.toList());
-        } catch (NumberFormatException e) {
-            throw new InvalidRequest(Collections.singletonList("Couldn't convert to long value. " + e.getMessage()));
-        }
-        List<Payout> payouts = payoutService.getPayoutsByIds(payoutIds);
+
+        List<Payout> payouts = payoutService.getByIds(payoutIds);
         if (payoutIds.size() != payouts.size()) {
-            List<Long> foundedIds = payouts.stream().map(Payout::getId).collect(Collectors.toList());
-            List<Long> diff = payoutIds.stream().filter(id -> !foundedIds.contains(id)).collect(Collectors.toList());
+            List<String> foundedIds = payouts.stream().map(Payout::getPayoutId).collect(Collectors.toList());
+            List<String> diff = payoutIds.stream().filter(id -> !foundedIds.contains(id)).collect(Collectors.toList());
             throw new InvalidRequest(Collections.singletonList("Some of payouts not found: " + diff));
         }
         Optional<Payout> wrongPayout = payouts.stream().filter(p -> !p.getStatus().equals(com.rbkmoney.payouter.domain.enums.PayoutStatus.UNPAID)).findFirst();
@@ -174,7 +186,7 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
         }
         ReportService reportService = accountType.equals(PayoutAccountType.russian_payout_account) ? residentsReportService : nonresidentsReportService;
         reportService.generateAndSave(payouts);
-        payouts.forEach(payout -> payoutService.pay(payout.getId()));
+        payouts.forEach(payout -> payoutService.pay(payout.getPayoutId()));
         log.info("End generate report for payouts, count: {}", payouts.size());
     }
 
@@ -204,8 +216,8 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
             payoutInfo.setType(com.rbkmoney.damsel.payout_processing.PayoutType.bank_account(toPayoutAccount(record)));
         }
         payoutInfo.setStatus(DamselUtil.toDamselPayoutSearchStatus(record));
-        payoutInfo.setFromTime(TypeUtil.temporalToString(record.getFromTime()));
-        payoutInfo.setToTime(TypeUtil.temporalToString(record.getToTime()));
+//        payoutInfo.setFromTime(TypeUtil.temporalToString(record.getFromTime()));
+//        payoutInfo.setToTime(TypeUtil.temporalToString(record.getToTime()));
         payoutInfo.setCreatedAt(TypeUtil.temporalToString(record.getCreatedAt()));
         payoutInfo.setSummary(DamselUtil.toDamselPayoutSummary(payoutSummaries));
         return payoutInfo;
