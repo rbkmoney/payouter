@@ -17,8 +17,8 @@ import java.util.Arrays;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Matchers.any;
 
 public class ShumwayServiceTest extends AbstractIntegrationTest {
 

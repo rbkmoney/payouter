@@ -1,14 +1,11 @@
 package com.rbkmoney.payouter.job;
 
-import com.rbkmoney.damsel.payout_processing.InternalUser;
-import com.rbkmoney.damsel.payout_processing.UserType;
 import com.rbkmoney.payouter.exception.InsufficientFundsException;
 import com.rbkmoney.payouter.exception.InvalidStateException;
 import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.exception.StorageException;
 import com.rbkmoney.payouter.service.PayoutService;
 import com.rbkmoney.payouter.trigger.FreezeTimeCronTrigger;
-import com.rbkmoney.payouter.util.WoodyUtils;
 import com.rbkmoney.woody.api.flow.WFlow;
 import com.rbkmoney.woody.api.flow.error.WRuntimeException;
 import org.quartz.*;
@@ -56,15 +53,12 @@ public class GeneratePayoutJob implements Job {
             try {
                 LocalDateTime toTime = toLocalDateTime(trigger.getCurrentCronTime().toInstant());
                 String payoutId = wFlow.createServiceFork(
-                        () -> {
-                            WoodyUtils.setUserInfo(userId, UserType.internal_user(new InternalUser()));
-                            return payoutService.createPayoutByRange(
-                                    partyId,
-                                    shopId,
-                                    toTime.minusDays(1),
-                                    toTime
-                            );
-                        }
+                        () -> payoutService.createPayoutByRange(
+                                partyId,
+                                shopId,
+                                toTime.minusDays(1),
+                                toTime
+                        )
                 ).call();
 
                 log.info("Payout for shop have been successfully created, payoutId='{}' partyId='{}', shopId='{}', trigger='{}', jobExecutionContext='{}'",

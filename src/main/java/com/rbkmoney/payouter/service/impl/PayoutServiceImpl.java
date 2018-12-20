@@ -140,6 +140,7 @@ public class PayoutServiceImpl implements PayoutService {
     ) throws InsufficientFundsException, InvalidStateException, NotFoundException, StorageException {
         try {
             ShopMeta shopMeta = shopMetaDao.getExclusive(partyId, shopId);
+            
 
             Payout payout = buildAndValidatePayout(payoutId, partyId, shopId, payoutToolId, currencyCode, partyRevision);
             List<FinalCashFlowPosting> cashFlowPostings = partyManagementService.computePayoutCashFlow(
@@ -326,7 +327,6 @@ public class PayoutServiceImpl implements PayoutService {
             throw new StorageException(String.format("Failed to get payouts by ids, ids='%s'", payoutIds));
         }
     }
-
 
     @Override
     public List<Payout> search(

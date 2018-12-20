@@ -102,7 +102,8 @@ public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
                 .set(PAYOUT_RANGE_DATA.SHOP_ID, shopId)
                 .set(PAYOUT_RANGE_DATA.PAYOUT_ID, payoutId)
                 .set(PAYOUT_RANGE_DATA.FROM_TIME, fromTime)
-                .set(PAYOUT_RANGE_DATA.TO_TIME, toTime);
+                .set(PAYOUT_RANGE_DATA.TO_TIME, toTime)
+                .returning(PAYOUT_RANGE_DATA.ID);
 
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         executeOneWithReturn(query, keyHolder);

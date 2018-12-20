@@ -94,7 +94,7 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
 
             return Collections.singletonList(payoutId);
 
-        } catch (NotFoundException | InvalidStateException | IllegalArgumentException ex) {
+        } catch (InsufficientFundsException | NotFoundException | InvalidStateException | IllegalArgumentException ex) {
             log.error("Failed to generate payouts, generatePayoutParams={}", generatePayoutParams, ex);
             throw new InvalidRequest(Arrays.asList(ex.getMessage()));
         } finally {
