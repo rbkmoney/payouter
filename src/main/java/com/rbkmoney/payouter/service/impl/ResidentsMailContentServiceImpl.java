@@ -49,8 +49,9 @@ public class ResidentsMailContentServiceImpl extends MailContentServiceImpl {
             payoutDescription.put("inn", payout.getInn());
             PayoutRangeData payoutRangeData = payoutDao.getRangeData(payout.getPayoutId());
             payoutDescription.put("to_date_description", getFormattedDateDescription(payoutRangeData.getToTime(), zoneId));
-            List<PayoutSummary> cashFlowDescriptions = payoutSummaryDao.get(String.valueOf(payout.getId()));
-            PayoutSummary payoutSummary = cashFlowDescriptions.stream().filter(cfd -> cfd.getCashFlowType() == PayoutSummaryOperationType.payment).findFirst().get();
+            List<PayoutSummary> cashFlowDescriptions = payoutSummaryDao.get(payout.getPayoutId());
+            PayoutSummary payoutSummary = cashFlowDescriptions.stream()
+                    .filter(cfd -> cfd.getCashFlowType() == PayoutSummaryOperationType.payment).findFirst().get();
             payoutDescription.put("payment_sum", FormatUtil.getFormattedAmount(payoutSummary.getAmount()));
             payoutDescription.put("rbk_fee_sum", FormatUtil.getFormattedAmount(payoutSummary.getFee()));
             payoutDescription.put("payment_count", payoutSummary.getCount());

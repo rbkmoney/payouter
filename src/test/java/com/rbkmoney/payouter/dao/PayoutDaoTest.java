@@ -32,6 +32,7 @@ public class PayoutDaoTest extends AbstractIntegrationTest {
     @Test
     public void testSaveOnlyNonNullValues() throws DaoException {
         Payout payout = new Payout();
+        payout.setPayoutId("kek");
         payout.setCreatedAt(LocalDateTime.now());
         payout.setPartyId("kek");
         payout.setShopId("kek");

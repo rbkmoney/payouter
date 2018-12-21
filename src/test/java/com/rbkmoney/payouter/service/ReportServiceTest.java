@@ -84,12 +84,13 @@ public class ReportServiceTest extends AbstractIntegrationTest {
                     return payout;
                 }).collect(Collectors.toList());
         payouts.forEach(payout -> {
-            long payoutId = payoutDao.save(payout);
+            payoutDao.save(payout);
             List<PayoutSummary> cfds = randomListOf(2, PayoutSummary.class);
-            cfds.forEach(cfd -> cfd.setPayoutId(String.valueOf(payoutId)));
+            cfds.forEach(cfd -> cfd.setPayoutId(payout.getPayoutId()));
             cfds.get(0).setCashFlowType(PayoutSummaryOperationType.payment);
             cfds.get(1).setCashFlowType(PayoutSummaryOperationType.refund);
             payoutSummaryDao.save(cfds);
+            payoutDao.saveRangeData(payout.getPayoutId(), payout.getPartyId(), payout.getShopId(), LocalDateTime.now(), LocalDateTime.now());
         });
 
         Report report = reportDao.get(residentsReportService.generateAndSave(payouts));
@@ -136,12 +137,13 @@ public class ReportServiceTest extends AbstractIntegrationTest {
                     return payout;
                 }).collect(Collectors.toList());
         payouts.forEach(payout -> {
-            long payoutId = payoutDao.save(payout);
+            payoutDao.save(payout);
             List<PayoutSummary> cfds = randomListOf(2, PayoutSummary.class);
-            cfds.forEach(cfd -> cfd.setPayoutId(String.valueOf(payoutId)));
+            cfds.forEach(cfd -> cfd.setPayoutId(payout.getPayoutId()));
             cfds.get(0).setCashFlowType(PayoutSummaryOperationType.payment);
             cfds.get(1).setCashFlowType(PayoutSummaryOperationType.refund);
             payoutSummaryDao.save(cfds);
+            payoutDao.saveRangeData(payout.getPayoutId(), payout.getPartyId(), payout.getShopId(), LocalDateTime.now(), LocalDateTime.now());
         });
 
         residentsReportService.createNewReportsJob();
@@ -169,12 +171,13 @@ public class ReportServiceTest extends AbstractIntegrationTest {
                     return payout;
                 }).collect(Collectors.toList());
         payouts.forEach(payout -> {
-            long payoutId = payoutDao.save(payout);
+            payoutDao.save(payout);
             List<PayoutSummary> cfds = randomListOf(2, PayoutSummary.class);
-            cfds.forEach(cfd -> cfd.setPayoutId(String.valueOf(payoutId)));
+            cfds.forEach(cfd -> cfd.setPayoutId(payout.getPayoutId()));
             cfds.get(0).setCashFlowType(PayoutSummaryOperationType.payment);
             cfds.get(1).setCashFlowType(PayoutSummaryOperationType.refund);
             payoutSummaryDao.save(cfds);
+            payoutDao.saveRangeData(payout.getPayoutId(), payout.getPartyId(), payout.getShopId(), LocalDateTime.now(), LocalDateTime.now());
         });
 
         nonresidentsReportService.createNewReportsJob();
