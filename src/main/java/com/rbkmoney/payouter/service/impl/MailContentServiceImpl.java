@@ -21,12 +21,10 @@ import java.util.Map;
 
 public abstract class MailContentServiceImpl implements MailContentService {
 
-    public static DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-    public static DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
-
-    private final FreeMarkerConfigurer freeMarkerConfigurer;
-
+    public static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    public static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
     protected final PayoutSummaryDao payoutSummaryDao;
+    private final FreeMarkerConfigurer freeMarkerConfigurer;
 
     @Autowired
     public MailContentServiceImpl(FreeMarkerConfigurer freeMarkerConfigurer,

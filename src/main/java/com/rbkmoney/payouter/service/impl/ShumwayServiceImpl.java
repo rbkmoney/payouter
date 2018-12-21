@@ -40,6 +40,7 @@ public class ShumwayServiceImpl implements ShumwayService {
     }
 
     @Override
+    @Transactional(propagation = Propagation.REQUIRED)
     public PostingPlanLog hold(String payoutId, List<FinalCashFlowPosting> finalCashFlowPostings) {
         return hold(payoutId, toPlanId(payoutId), 1L, toCashFlowPostings(payoutId, finalCashFlowPostings));
     }

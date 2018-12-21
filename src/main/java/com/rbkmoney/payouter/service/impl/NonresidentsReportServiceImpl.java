@@ -6,7 +6,6 @@ import com.rbkmoney.payouter.dao.PaymentDao;
 import com.rbkmoney.payouter.dao.ReportDao;
 import com.rbkmoney.payouter.domain.enums.PayoutAccountType;
 import com.rbkmoney.payouter.domain.enums.ReportStatus;
-import com.rbkmoney.payouter.domain.tables.pojos.Payment;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.domain.tables.pojos.Report;
 import com.rbkmoney.payouter.exception.DaoException;
@@ -45,7 +44,7 @@ public class NonresidentsReportServiceImpl implements ReportService {
 
     public final static DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
-    public final static String[] headerRow = {
+    protected final static String[] headerRow = {
             "Id участника",
             "Id магазина",
             "Наименование юридического лица",

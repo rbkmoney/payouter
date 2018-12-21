@@ -1,12 +1,9 @@
 package com.rbkmoney.payouter.dao;
 
 import com.rbkmoney.payouter.domain.tables.pojos.Payment;
-import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
 import com.rbkmoney.payouter.exception.DaoException;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
 
 public interface PaymentDao extends GenericDao {
 

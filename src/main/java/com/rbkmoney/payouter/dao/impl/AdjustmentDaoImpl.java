@@ -6,17 +6,12 @@ import com.rbkmoney.payouter.domain.enums.AdjustmentStatus;
 import com.rbkmoney.payouter.domain.tables.pojos.Adjustment;
 import com.rbkmoney.payouter.exception.DaoException;
 import org.jooq.Query;
-import org.jooq.SelectQuery;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.core.SingleColumnRowMapper;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import static com.rbkmoney.payouter.domain.Tables.ADJUSTMENT;
 import static com.rbkmoney.payouter.domain.Tables.PAYMENT;
@@ -81,8 +76,8 @@ public class AdjustmentDaoImpl extends AbstractGenericDao implements AdjustmentD
                         .and(PAYMENT.PARTY_ID.eq(partyId))
                         .and(PAYMENT.SHOP_ID.eq(shopId))
                         .and(PAYMENT.CAPTURED_AT.lessThan(to)))
-                        .and(ADJUSTMENT.STATUS.eq(AdjustmentStatus.CAPTURED))
-                        .and(ADJUSTMENT.PAYOUT_ID.isNull());
+                .and(ADJUSTMENT.STATUS.eq(AdjustmentStatus.CAPTURED))
+                .and(ADJUSTMENT.PAYOUT_ID.isNull());
 
         return execute(query);
     }

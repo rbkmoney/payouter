@@ -1,8 +1,8 @@
 package com.rbkmoney.payouter.service;
 
 import com.rbkmoney.payouter.domain.tables.pojos.Adjustment;
-import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
 import com.rbkmoney.payouter.domain.tables.pojos.Payment;
+import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
 import com.rbkmoney.payouter.domain.tables.pojos.Refund;
 import com.rbkmoney.payouter.exception.StorageException;
 

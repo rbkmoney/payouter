@@ -138,7 +138,7 @@ public class FreezeTimeCronTrigger extends CronTriggerImpl {
         do {
             nextCronTime = getFireTimeAfter(nextCronTime);
             fireTime = computeNextFireTime(nextCronTime, calendar);
-        } while (fireTime.equals(computeNextFireTime(getFireTimeAfter(nextCronTime), calendar)));
+        } while (fireTime != null && fireTime.equals(computeNextFireTime(getFireTimeAfter(nextCronTime), calendar)));
         setNextFireTime(fireTime);
     }
 

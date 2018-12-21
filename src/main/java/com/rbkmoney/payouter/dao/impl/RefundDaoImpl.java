@@ -8,14 +8,10 @@ import com.rbkmoney.payouter.exception.DaoException;
 import org.jooq.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.core.SingleColumnRowMapper;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import static com.rbkmoney.payouter.domain.tables.Payment.PAYMENT;
 import static com.rbkmoney.payouter.domain.tables.Refund.REFUND;

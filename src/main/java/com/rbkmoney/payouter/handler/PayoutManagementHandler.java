@@ -28,9 +28,8 @@ import java.util.stream.Collectors;
 
 @Component
 public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
     public static final int MAX_SIZE = 1000;
-
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
     private final PayoutService payoutService;
 
     private final PayoutSummaryService payoutSummaryService;

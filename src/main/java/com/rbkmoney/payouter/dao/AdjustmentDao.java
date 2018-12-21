@@ -4,7 +4,6 @@ import com.rbkmoney.payouter.domain.tables.pojos.Adjustment;
 import com.rbkmoney.payouter.exception.DaoException;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 public interface AdjustmentDao extends GenericDao {
 

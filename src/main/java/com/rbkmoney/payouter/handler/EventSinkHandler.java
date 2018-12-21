@@ -2,10 +2,10 @@ package com.rbkmoney.payouter.handler;
 
 import com.rbkmoney.damsel.base.InvalidRequest;
 import com.rbkmoney.damsel.payout_processing.*;
-import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
 import com.rbkmoney.payouter.domain.tables.pojos.PayoutEvent;
-import com.rbkmoney.payouter.service.PayoutSummaryService;
+import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
 import com.rbkmoney.payouter.service.EventSinkService;
+import com.rbkmoney.payouter.service.PayoutSummaryService;
 import com.rbkmoney.payouter.util.DamselUtil;
 import org.apache.thrift.TException;
 import org.springframework.beans.factory.annotation.Autowired;

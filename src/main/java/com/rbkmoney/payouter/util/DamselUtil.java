@@ -4,16 +4,16 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
 import com.rbkmoney.damsel.domain.*;
-import com.rbkmoney.damsel.payout_processing.*;
 import com.rbkmoney.damsel.payout_processing.Wallet;
+import com.rbkmoney.damsel.payout_processing.*;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.geck.serializer.kit.json.JsonHandler;
 import com.rbkmoney.geck.serializer.kit.json.JsonProcessor;
 import com.rbkmoney.geck.serializer.kit.tbase.TBaseHandler;
 import com.rbkmoney.geck.serializer.kit.tbase.TBaseProcessor;
+import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.domain.tables.pojos.PayoutEvent;
 import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
-import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.exception.StorageException;
 import org.apache.thrift.TBase;
@@ -28,11 +28,9 @@ import static com.rbkmoney.payouter.util.CashFlowType.UNKNOWN;
 
 public class DamselUtil {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DamselUtil.class);
-
     public final static ObjectMapper objectMapper = new ObjectMapper();
-
     public final static JsonProcessor jsonProcessor = new JsonProcessor();
+    private static final Logger LOGGER = LoggerFactory.getLogger(DamselUtil.class);
 
     public static Map<CashFlowType, Long> parseCashFlow(List<FinalCashFlowPosting> finalCashFlow) {
         Map<CashFlowType, Long> collect = finalCashFlow.stream()

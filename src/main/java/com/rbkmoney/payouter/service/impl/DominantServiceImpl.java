@@ -1,8 +1,8 @@
 package com.rbkmoney.payouter.service.impl;
 
 import com.rbkmoney.damsel.domain.*;
-import com.rbkmoney.damsel.domain_config.*;
 import com.rbkmoney.damsel.domain_config.Reference;
+import com.rbkmoney.damsel.domain_config.*;
 import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.service.DominantService;
 import org.apache.thrift.TException;

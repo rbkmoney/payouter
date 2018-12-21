@@ -35,8 +35,8 @@ public class EventStockMetaDaoImpl extends AbstractGenericDao implements EventSt
     @Override
     public void setLastEventMeta(long eventId, LocalDateTime eventCreatedAt) throws DaoException {
         Query query = getDslContext().update(EVENT_STOCK_META)
-                    .set(EVENT_STOCK_META.LAST_EVENT_ID, eventId)
-                    .set(EVENT_STOCK_META.LAST_EVENT_CREATED_AT, eventCreatedAt);
+                .set(EVENT_STOCK_META.LAST_EVENT_ID, eventId)
+                .set(EVENT_STOCK_META.LAST_EVENT_CREATED_AT, eventCreatedAt);
         executeOne(query);
     }
 }

@@ -4,7 +4,6 @@ import com.rbkmoney.payouter.domain.tables.pojos.Refund;
 import com.rbkmoney.payouter.exception.DaoException;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 public interface RefundDao extends GenericDao {
 

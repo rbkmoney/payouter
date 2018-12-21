@@ -5,7 +5,6 @@ import com.rbkmoney.payouter.exception.DaoException;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 public interface ShopMetaDao extends GenericDao {
 

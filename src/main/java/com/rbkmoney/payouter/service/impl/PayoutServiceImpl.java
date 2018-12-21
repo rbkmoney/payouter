@@ -140,7 +140,7 @@ public class PayoutServiceImpl implements PayoutService {
     ) throws InsufficientFundsException, InvalidStateException, NotFoundException, StorageException {
         try {
             ShopMeta shopMeta = shopMetaDao.getExclusive(partyId, shopId);
-            
+
 
             Payout payout = buildAndValidatePayout(payoutId, partyId, shopId, payoutToolId, currencyCode, partyRevision);
             List<FinalCashFlowPosting> cashFlowPostings = partyManagementService.computePayoutCashFlow(

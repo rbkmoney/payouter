@@ -23,12 +23,9 @@ import static com.rbkmoney.geck.common.util.TypeUtil.toLocalDateTime;
 @Component
 public class GeneratePayoutJob implements Job {
 
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
-
     public static final String PARTY_ID = "party_id";
-
     public static final String SHOP_ID = "shop_id";
-
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
     private final WFlow wFlow = new WFlow();
 
     @Autowired
