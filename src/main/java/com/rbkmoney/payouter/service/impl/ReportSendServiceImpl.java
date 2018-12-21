@@ -43,6 +43,7 @@ public class ReportSendServiceImpl implements ReportSendService {
     }
 
     @Override
+    @Transactional
     @Scheduled(fixedDelay = 5000)
     public void sendUnsentReports() {
         List<Report> reports = reportDao.getForSend();

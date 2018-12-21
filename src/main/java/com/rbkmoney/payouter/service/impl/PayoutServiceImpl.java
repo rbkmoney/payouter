@@ -289,7 +289,7 @@ public class PayoutServiceImpl implements PayoutService {
 
     @Override
     public void includeUnpaid(String payoutId, String partyId, String shopId, LocalDateTime toTime) throws StorageException {
-        log.info("Trying to include operations in payout, payoutId='{}', partyId='{}', shopId='{}', toTime='{}'", payoutId, shopId, toTime);
+        log.info("Trying to include operations in payout, payoutId='{}', partyId='{}', shopId='{}', toTime='{}'", payoutId, partyId, shopId, toTime);
         try {
             int paymentCount = paymentDao.includeUnpaid(payoutId, partyId, shopId, toTime);
             int refundCount = refundDao.includeUnpaid(payoutId, partyId, shopId);

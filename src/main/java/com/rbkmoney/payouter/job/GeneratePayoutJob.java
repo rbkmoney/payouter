@@ -61,7 +61,7 @@ public class GeneratePayoutJob implements Job {
                 log.info("Payout for shop have been successfully created, payoutId='{}' partyId='{}', shopId='{}', trigger='{}', jobExecutionContext='{}'",
                         payoutId, partyId, shopId, trigger, jobExecutionContext);
             } catch (InsufficientFundsException ex) {
-                log.info("Payout can't be created, reason='{}', partyId='{}', shopId='{}', contractId='{}', fromTime='{}', toTime='{}', payoutType='{}'", ex.getMessage(), partyId, shopId);
+                log.info("Payout can't be created, reason='{}', partyId='{}', shopId='{}'", ex.getMessage(), partyId, shopId);
             } catch (NotFoundException | InvalidStateException ex) {
                 log.warn("Failed to generate payout, partyId='{}', shopId='{}', trigger='{}', jobExecutionContext='{}'",
                         partyId, shopId, trigger, jobExecutionContext, ex);

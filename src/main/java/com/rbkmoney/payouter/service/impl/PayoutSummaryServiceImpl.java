@@ -49,8 +49,8 @@ public class PayoutSummaryServiceImpl implements PayoutSummaryService {
         if (!payments.isEmpty()) {
             long paymentAmount = payments.stream().mapToLong(Payment::getAmount).sum();
             long paymentFee = payments.stream().mapToLong(Payment::getFee).sum();
-            LocalDateTime paymentFromTime = payments.stream().map(Payment::getCapturedAt).min(LocalDateTime::compareTo).get();
-            LocalDateTime paymentToTime = payments.stream().map(Payment::getCapturedAt).max(LocalDateTime::compareTo).get();
+            LocalDateTime paymentFromTime = payments.stream().map(Payment::getCapturedAt).min(LocalDateTime::compareTo).orElse(null);
+            LocalDateTime paymentToTime = payments.stream().map(Payment::getCapturedAt).max(LocalDateTime::compareTo).orElse(null);
             PayoutSummary paymentSummary = new PayoutSummary();
             paymentSummary.setAmount(paymentAmount);
             paymentSummary.setFee(paymentFee);
@@ -66,8 +66,8 @@ public class PayoutSummaryServiceImpl implements PayoutSummaryService {
         if (!refunds.isEmpty()) {
             long refundAmount = refunds.stream().mapToLong(Refund::getAmount).sum();
             long refundFee = refunds.stream().mapToLong(Refund::getFee).sum();
-            LocalDateTime refundFromTime = refunds.stream().map(Refund::getSucceededAt).min(LocalDateTime::compareTo).get();
-            LocalDateTime refundToTime = refunds.stream().map(Refund::getSucceededAt).max(LocalDateTime::compareTo).get();
+            LocalDateTime refundFromTime = refunds.stream().map(Refund::getSucceededAt).min(LocalDateTime::compareTo).orElse(null);
+            LocalDateTime refundToTime = refunds.stream().map(Refund::getSucceededAt).max(LocalDateTime::compareTo).orElse(null);
             PayoutSummary refundSummary = new PayoutSummary();
             refundSummary.setAmount(refundAmount);
             refundSummary.setFee(refundFee);
@@ -83,8 +83,8 @@ public class PayoutSummaryServiceImpl implements PayoutSummaryService {
         if (!adjustments.isEmpty()) {
             long adjustmentFee = adjustments.stream().mapToLong(Adjustment::getPaymentFee).sum();
             long adjustmentNewFee = adjustments.stream().mapToLong(Adjustment::getNewFee).sum();
-            LocalDateTime adjustmentFromTime = adjustments.stream().map(Adjustment::getCapturedAt).min(LocalDateTime::compareTo).get();
-            LocalDateTime adjustmentToTime = adjustments.stream().map(Adjustment::getCapturedAt).max(LocalDateTime::compareTo).get();
+            LocalDateTime adjustmentFromTime = adjustments.stream().map(Adjustment::getCapturedAt).min(LocalDateTime::compareTo).orElse(null);
+            LocalDateTime adjustmentToTime = adjustments.stream().map(Adjustment::getCapturedAt).max(LocalDateTime::compareTo).orElse(null);
             PayoutSummary adjustmentSummary = new PayoutSummary();
             adjustmentSummary.setAmount(adjustmentFee - adjustmentNewFee);
             adjustmentSummary.setFee(0L);
