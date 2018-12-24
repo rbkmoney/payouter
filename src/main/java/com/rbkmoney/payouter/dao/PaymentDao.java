@@ -1,5 +1,6 @@
 package com.rbkmoney.payouter.dao;
 
+import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
 import com.rbkmoney.payouter.domain.tables.pojos.Payment;
 import com.rbkmoney.payouter.exception.DaoException;
 
@@ -18,5 +19,7 @@ public interface PaymentDao extends GenericDao {
     void markAsCaptured(Long eventId, String invoiceId, String paymentId, LocalDateTime capturedAt) throws DaoException;
 
     void markAsCancelled(Long eventId, String invoiceId, String paymentId) throws DaoException;
+
+    PayoutSummary getSummary(String payoutId) throws DaoException;
 
 }

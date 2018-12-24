@@ -2,10 +2,15 @@ package com.rbkmoney.payouter.dao.impl;
 
 import com.rbkmoney.payouter.dao.RefundDao;
 import com.rbkmoney.payouter.dao.mapper.RecordRowMapper;
+import com.rbkmoney.payouter.domain.enums.PayoutSummaryOperationType;
 import com.rbkmoney.payouter.domain.enums.RefundStatus;
+import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
 import com.rbkmoney.payouter.domain.tables.pojos.Refund;
 import com.rbkmoney.payouter.exception.DaoException;
+import org.jooq.Field;
 import org.jooq.Query;
+import org.jooq.conf.ParamType;
+import org.jooq.impl.DSL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
@@ -86,5 +91,40 @@ public class RefundDaoImpl extends AbstractGenericDao implements RefundDao {
                 .set(REFUND.PAYOUT_ID, (String) null)
                 .where(REFUND.PAYOUT_ID.eq(payoutId));
         return execute(query);
+    }
+
+    @Override
+    public PayoutSummary getSummary(String payoutId) throws DaoException {
+        Field currencyCodeField = REFUND.CURRENCY_CODE;
+        Field amountField = DSL.sum(REFUND.AMOUNT).as("amount");
+        Field feeField = DSL.sum(REFUND.FEE).as("fee");
+        Field countField = DSL.count().as("count");
+        Field fromTimeField = DSL.min(REFUND.SUCCEEDED_AT).as("from_time");
+        Field toTimeField = DSL.max(REFUND.SUCCEEDED_AT).as("to_time");
+
+
+        Query query = getDslContext()
+                .select(
+                        currencyCodeField,
+                        amountField,
+                        feeField,
+                        countField,
+                        fromTimeField,
+                        toTimeField
+                ).from(REFUND)
+                .where(REFUND.PAYOUT_ID.eq(payoutId))
+                .groupBy(currencyCodeField);
+        return fetchOne(query, (resultSet, i) -> {
+            PayoutSummary payoutSummary = new PayoutSummary();
+            payoutSummary.setPayoutId(payoutId);
+            payoutSummary.setAmount(resultSet.getLong(amountField.getName()));
+            payoutSummary.setFee(resultSet.getLong(feeField.getName()));
+            payoutSummary.setCount(resultSet.getInt(countField.getName()));
+            payoutSummary.setFromTime(resultSet.getObject(fromTimeField.getName(), LocalDateTime.class));
+            payoutSummary.setToTime(resultSet.getObject(toTimeField.getName(), LocalDateTime.class));
+            payoutSummary.setCurrencyCode(resultSet.getString(currencyCodeField.getName()));
+            payoutSummary.setCashFlowType(PayoutSummaryOperationType.refund);
+            return payoutSummary;
+        });
     }
 }

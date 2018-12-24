@@ -10,6 +10,7 @@ import com.rbkmoney.payouter.domain.enums.PayoutAccountType;
 import com.rbkmoney.payouter.domain.enums.PayoutStatus;
 import com.rbkmoney.payouter.domain.enums.PayoutType;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
+import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
 import com.rbkmoney.payouter.domain.tables.pojos.ShopMeta;
 import com.rbkmoney.payouter.exception.*;
 import com.rbkmoney.payouter.service.*;
@@ -45,6 +46,8 @@ public class PayoutServiceImpl implements PayoutService {
 
     private final ShumwayService shumwayService;
 
+    private final PayoutSummaryService payoutSummaryService;
+
     private final PartyManagementService partyManagementService;
 
     private final FistfulService fistfulService;
@@ -57,6 +60,7 @@ public class PayoutServiceImpl implements PayoutService {
             AdjustmentDao adjustmentDao,
             PayoutDao payoutDao,
             ShumwayService shumwayService,
+            PayoutSummaryService payoutSummaryService,
             PartyManagementService partyManagementService,
             FistfulService fistfulService
     ) {
@@ -67,6 +71,7 @@ public class PayoutServiceImpl implements PayoutService {
         this.adjustmentDao = adjustmentDao;
         this.payoutDao = payoutDao;
         this.shumwayService = shumwayService;
+        this.payoutSummaryService = payoutSummaryService;
         this.partyManagementService = partyManagementService;
         this.fistfulService = fistfulService;
     }
@@ -94,6 +99,7 @@ public class PayoutServiceImpl implements PayoutService {
         includeUnpaid(payoutId, partyId, shopId, toTime);
         saveRangeData(payoutId, partyId, shopId, fromTime, toTime);
         long availableAmount = calculateAvailableAmount(payoutId);
+        buildAndSavePayoutSummaryData(payoutId);
 
         return create(
                 payoutId,
@@ -504,6 +510,25 @@ public class PayoutServiceImpl implements PayoutService {
             long availableAmount = payoutDao.getAvailableAmount(payoutId);
             log.info("Available amount have been calculated, payoutId='{}', availableAmount={}", payoutId, availableAmount);
             return availableAmount;
+        } catch (DaoException ex) {
+            throw new StorageException(ex);
+        }
+    }
+
+    private void buildAndSavePayoutSummaryData(String payoutId) {
+        try {
+            List<PayoutSummary> payoutSummaries = new ArrayList<>();
+            Optional.ofNullable(paymentDao.getSummary(payoutId)).ifPresent(
+                    summary -> payoutSummaries.add(summary)
+            );
+            Optional.ofNullable(refundDao.getSummary(payoutId)).ifPresent(
+                    summary -> payoutSummaries.add(summary)
+            );
+            Optional.ofNullable(payoutDao.getSummary(payoutId)).ifPresent(
+                    summary -> payoutSummaries.add(summary)
+            );
+
+            payoutSummaryService.save(payoutSummaries);
         } catch (DaoException ex) {
             throw new StorageException(ex);
         }

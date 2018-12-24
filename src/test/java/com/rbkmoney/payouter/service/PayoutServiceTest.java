@@ -11,12 +11,10 @@ import com.rbkmoney.damsel.event_stock.SourceEvent;
 import com.rbkmoney.damsel.event_stock.StockEvent;
 import com.rbkmoney.damsel.msgpack.Value;
 import com.rbkmoney.damsel.payment_processing.*;
-import com.rbkmoney.damsel.payment_processing.Event;
-import com.rbkmoney.damsel.payment_processing.EventPayload;
-import com.rbkmoney.damsel.payment_processing.EventSource;
-import com.rbkmoney.damsel.payment_processing.PayoutParams;
-import com.rbkmoney.damsel.payout_processing.*;
+import com.rbkmoney.damsel.payout_processing.GeneratePayoutParams;
+import com.rbkmoney.damsel.payout_processing.PayoutManagementSrv;
 import com.rbkmoney.damsel.payout_processing.ShopParams;
+import com.rbkmoney.damsel.payout_processing.TimeRange;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.generation.AdjustmentGenerator;
 import com.rbkmoney.generation.GeneratorConfig;
@@ -32,9 +30,7 @@ import com.rbkmoney.woody.thrift.impl.http.THSpawnClientBuilder;
 import org.apache.thrift.TException;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
-import org.mockito.BDDMockito;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.impl.matchers.GroupMatcher;
@@ -206,7 +202,7 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         ShopParams shopParams = new ShopParams();
         shopParams.setPartyId(partyId);
         shopParams.setShopId(shopId);
-        generatePayoutParams.setParams(shopParams);
+        generatePayoutParams.setShopParams(shopParams);
         generatePayoutParams.setTimeRange(new TimeRange("2015-06-17T00:00:00Z", "2018-06-17T00:00:00Z"));
 
         List<String> payoutIds = callService(() -> client.generatePayouts(generatePayoutParams));
@@ -233,7 +229,7 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         ShopParams shopParams = new ShopParams();
         shopParams.setPartyId(partyId);
         shopParams.setShopId(shopId);
-        generatePayoutParams.setParams(shopParams);
+        generatePayoutParams.setShopParams(shopParams);
         generatePayoutParams.setTimeRange(new TimeRange("2015-06-17T00:00:00Z", "2018-06-17T00:00:00Z"));
 
         List<String> payoutIds = callService(() -> client.generatePayouts(generatePayoutParams));
@@ -256,7 +252,7 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         ShopParams shopParams = new ShopParams();
         shopParams.setPartyId(partyId);
         shopParams.setShopId(shopId);
-        generatePayoutParams.setParams(shopParams);
+        generatePayoutParams.setShopParams(shopParams);
 
         TimeRange timeRange = new TimeRange();
         timeRange.setFromTime(TypeUtil.temporalToString(LocalDateTime.now()));
@@ -273,7 +269,7 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         addCapturedPayment("payment-id");
 
         GeneratePayoutParams generatePayoutParams = new GeneratePayoutParams();
-        generatePayoutParams.setParams(new ShopParams(partyId, shopId));
+        generatePayoutParams.setShopParams(new ShopParams(partyId, shopId));
         generatePayoutParams.setTimeRange(new TimeRange("2015-06-17T00:00:00Z", "2018-06-17T00:00:00Z"));
 
         List<String> payoutIds = callService(() -> client.generatePayouts(generatePayoutParams));
@@ -288,7 +284,7 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         ShopParams shopParams = new ShopParams();
         shopParams.setPartyId(partyId);
         shopParams.setShopId(shopId);
-        generatePayoutParams.setParams(shopParams);
+        generatePayoutParams.setShopParams(shopParams);
         generatePayoutParams.setTimeRange(new TimeRange("2015-06-17T00:00:00Z", "2018-06-17T00:00:00Z"));
 
         List<String> payoutIds = callService(() -> client.generatePayouts(generatePayoutParams));
@@ -415,7 +411,6 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @Ignore //TODO need to be repair
     public void testGeneratePayoutReport() throws Exception {
         addCapturedPayment();
 
@@ -423,7 +418,7 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         ShopParams shopParams = new ShopParams();
         shopParams.setPartyId(partyId);
         shopParams.setShopId(shopId);
-        generatePayoutParams.setParams(shopParams);
+        generatePayoutParams.setShopParams(shopParams);
         generatePayoutParams.setTimeRange(new TimeRange("2015-06-17T00:00:00Z", "2018-06-17T00:00:00Z"));
 
         List<String> payoutIds = callService(() -> client.generatePayouts(generatePayoutParams));

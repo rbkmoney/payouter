@@ -3,7 +3,14 @@ update sht.payout set payout_id = id::character varying;
 alter table sht.payout alter column payout_id set not null;
 
 alter table sht.payout alter column payout_id set not null;
-alter table sht.payout add constraint payout_ukey unique (party_id, shop_id, payout_id);
+alter table sht.payout add constraint payout_ukey unique (payout_id);
+
+alter table sht.payout_event add column amount bigint;
+alter table sht.payout_event add column fee bigint;
+alter table sht.payout_event add column currency_code character varying;
+update sht.payout_event
+set amount = payout.amount, fee = payout.fee, currency_code = payout.currency_code
+from sht.payout where payout_event.payout_id = payout.payout_id;
 
 alter table sht.payout_event add column wallet_id character varying;
 alter table sht.payout add column wallet_id character varying;
@@ -22,7 +29,7 @@ create table sht.payout_range_data (
    from_time timestamp without time zone not null,
    to_time timestamp without time zone not null,
    constraint payout_range_data_pkey primary key (id),
-   constraint payout_range_data_ukey unique (party_id, shop_id, payout_id)
+   constraint payout_range_data_ukey unique (payout_id)
 );
 
 insert into sht.payout_range_data(party_id, shop_id, payout_id, from_time, to_time)

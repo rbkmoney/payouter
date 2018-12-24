@@ -5,13 +5,16 @@ import com.rbkmoney.payouter.dao.PayoutDao;
 import com.rbkmoney.payouter.dao.mapper.RecordRowMapper;
 import com.rbkmoney.payouter.domain.enums.PayoutAccountType;
 import com.rbkmoney.payouter.domain.enums.PayoutStatus;
+import com.rbkmoney.payouter.domain.enums.PayoutSummaryOperationType;
 import com.rbkmoney.payouter.domain.enums.PayoutType;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.domain.tables.pojos.PayoutRangeData;
+import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
 import com.rbkmoney.payouter.exception.DaoException;
 import org.jooq.Field;
 import org.jooq.Query;
 import org.jooq.SelectQuery;
+import org.jooq.conf.ParamType;
 import org.jooq.impl.DSL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.RowMapper;
@@ -25,6 +28,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static com.rbkmoney.payouter.domain.Tables.*;
+import static com.rbkmoney.payouter.domain.tables.Refund.REFUND;
 
 @Component
 public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
@@ -206,5 +210,40 @@ public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
                 .orderBy(PAYOUT.ID);
 
         return fetch(query, payoutRowMapper);
+    }
+
+    @Override
+    public PayoutSummary getSummary(String payoutId) throws DaoException {
+        Field currencyCodeField = PAYOUT.CURRENCY_CODE;
+        Field amountField = DSL.sum(PAYOUT.AMOUNT).as("amount");
+        Field feeField = DSL.sum(PAYOUT.FEE).as("fee");
+        Field countField = DSL.count().as("count");
+        Field fromTimeField = DSL.min(PAYOUT.CREATED_AT).as("from_time");
+        Field toTimeField = DSL.max(PAYOUT.CREATED_AT).as("to_time");
+
+
+        Query query = getDslContext()
+                .select(
+                        currencyCodeField,
+                        amountField,
+                        feeField,
+                        countField,
+                        fromTimeField,
+                        toTimeField
+                ).from(PAYOUT)
+                .where(PAYOUT.PAYOUT_REF.eq(payoutId))
+                .groupBy(currencyCodeField);
+        return fetchOne(query, (resultSet, i) -> {
+            PayoutSummary payoutSummary = new PayoutSummary();
+            payoutSummary.setPayoutId(payoutId);
+            payoutSummary.setAmount(resultSet.getLong(amountField.getName()));
+            payoutSummary.setFee(resultSet.getLong(feeField.getName()));
+            payoutSummary.setCount(resultSet.getInt(countField.getName()));
+            payoutSummary.setFromTime(resultSet.getObject(fromTimeField.getName(), LocalDateTime.class));
+            payoutSummary.setToTime(resultSet.getObject(toTimeField.getName(), LocalDateTime.class));
+            payoutSummary.setCurrencyCode(resultSet.getString(currencyCodeField.getName()));
+            payoutSummary.setCashFlowType(PayoutSummaryOperationType.payout);
+            return payoutSummary;
+        });
     }
 }

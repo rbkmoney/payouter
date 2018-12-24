@@ -1,5 +1,6 @@
 package com.rbkmoney.payouter.dao;
 
+import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
 import com.rbkmoney.payouter.domain.tables.pojos.Refund;
 import com.rbkmoney.payouter.exception.DaoException;
 
@@ -18,5 +19,7 @@ public interface RefundDao extends GenericDao {
     int includeUnpaid(String payoutId, String partyId, String shopId) throws DaoException;
 
     int excludeFromPayout(String payoutId) throws DaoException;
+
+    PayoutSummary getSummary(String payoutId) throws DaoException;
 
 }

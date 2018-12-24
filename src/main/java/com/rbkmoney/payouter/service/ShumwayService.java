@@ -15,4 +15,6 @@ public interface ShumwayService {
 
     void revert(String payoutId);
 
+    List<FinalCashFlowPosting> getPostings(String payoutId);
+
 }

@@ -19,4 +19,8 @@
         <level value="info" />
     </logger>
 
+    <logger name="com.rbkmoney.woody.api.proxy.MethodCallInterceptors">
+        <level value="debug" />
+    </logger>
+
 </configuration>

@@ -98,6 +98,9 @@ public class DamselUtil {
         payoutEvent.setPayoutShopId(payout.getShopId());
         payoutEvent.setContractId(payout.getContractId());
         payoutEvent.setPayoutType(payout.getType().getLiteral());
+        payoutEvent.setAmount(payout.getAmount());
+        payoutEvent.setFee(payout.getFee());
+        payoutEvent.setCurrencyCode(payout.getCurrencyCode());
 
         payoutEvent.setPayoutAccountType(payout.getAccountType().getLiteral());
         payoutEvent.setPayoutAccountId(payout.getBankAccount());
@@ -181,6 +184,9 @@ public class DamselUtil {
         payout.setContractId(payoutEvent.getContractId());
         payout.setCreatedAt(TypeUtil.temporalToString(payoutEvent.getPayoutCreatedAt()));
         payout.setStatus(toDamselPayoutStatus(payoutEvent));
+        payout.setAmount(payoutEvent.getAmount());
+        payout.setFee(payoutEvent.getFee());
+        payout.setCurrency(new CurrencyRef(payoutEvent.getCurrencyCode()));
         payout.setType(toDamselPayoutType(payoutEvent));
         payout.setPayoutFlow(toDamselPayoutFlow(payoutEvent));
         return payout;

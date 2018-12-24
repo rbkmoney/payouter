@@ -146,6 +146,16 @@ public class ShumwayServiceImpl implements ShumwayService {
         }
     }
 
+    @Override
+    public List<FinalCashFlowPosting> getPostings(String payoutId) {
+        List<CashFlowPosting> cashFlowPostings = cashFlowPostingDao.getByPayoutId(payoutId);
+        if (cashFlowPostings.isEmpty()) {
+            throw new NotFoundException(String.format("Cash flow posting not found, payoutId='%s'", payoutId));
+        }
+
+        return toFinalCashFlowPostings(cashFlowPostings);
+    }
+
     private void doRevert(String payoutId, List<CashFlowPosting> cashFlowPostings) throws Exception {
         String revertPlanId = toRevertPlanId(payoutId);
         List<CashFlowPosting> revertCashFlowPostings = cashFlowPostings.stream()
@@ -213,6 +223,29 @@ public class ShumwayServiceImpl implements ShumwayService {
         posting.setDescription(cashFlowPosting.getDescription());
 
         return posting;
+    }
+
+    private List<FinalCashFlowPosting> toFinalCashFlowPostings(List<CashFlowPosting> cashFlowPostings) {
+        return cashFlowPostings.stream()
+                .map(cashFlowPosting -> {
+                    FinalCashFlowPosting finalCashFlowPosting = new FinalCashFlowPosting();
+                    finalCashFlowPosting.setSource(
+                            new FinalCashFlowAccount(toCashFlowAccount(cashFlowPosting.getFromAccountType()),
+                                    cashFlowPosting.getFromAccountId())
+                    );
+                    finalCashFlowPosting.setDestination(
+                            new FinalCashFlowAccount(toCashFlowAccount(cashFlowPosting.getToAccountType()),
+                                    cashFlowPosting.getToAccountId())
+                    );
+                    finalCashFlowPosting.setVolume(
+                            new Cash(
+                                    cashFlowPosting.getAmount(),
+                                    new CurrencyRef(cashFlowPosting.getCurrencyCode())
+                            )
+                    );
+                    finalCashFlowPosting.setDetails(cashFlowPosting.getDescription());
+                    return finalCashFlowPosting;
+                }).collect(Collectors.toList());
     }
 
     private List<CashFlowPosting> toCashFlowPostings(String payoutId, List<FinalCashFlowPosting> finalCashFlowPostings) {
