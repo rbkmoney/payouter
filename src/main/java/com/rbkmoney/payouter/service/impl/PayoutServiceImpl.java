@@ -84,6 +84,7 @@ public class PayoutServiceImpl implements PayoutService {
             LocalDateTime fromTime,
             LocalDateTime toTime
     ) throws InsufficientFundsException, InvalidStateException, NotFoundException, StorageException {
+        shopMetaDao.getExclusive(partyId, shopId);
         long partyRevision = partyManagementService.getPartyRevision(partyId);
         Shop shop = partyManagementService.getShop(partyId, shopId, partyRevision);
         if (shop.getBlocking().isSetBlocked() || isBlockedForPayouts(partyId)) {
@@ -146,7 +147,9 @@ public class PayoutServiceImpl implements PayoutService {
     ) throws InsufficientFundsException, InvalidStateException, NotFoundException, StorageException {
         try {
             ShopMeta shopMeta = shopMetaDao.getExclusive(partyId, shopId);
-
+            if (amount <= 0) {
+                throw new InsufficientFundsException("Available amount must be greater than 0");
+            }
 
             Payout payout = buildAndValidatePayout(payoutId, partyId, shopId, payoutToolId, currencyCode, partyRevision);
             List<FinalCashFlowPosting> cashFlowPostings = partyManagementService.computePayoutCashFlow(
@@ -478,12 +481,12 @@ public class PayoutServiceImpl implements PayoutService {
             }
         }
 
-        payout.setPurpose(buildPurpose(payout));
-
         if (payoutToolInfo.isSetWalletInfo()) {
             payout.setType(PayoutType.wallet);
             payout.setWalletId(payoutToolInfo.getWalletInfo().getWalletId());
         }
+
+        payout.setPurpose(buildPurpose(payout));
 
         if (payout.getType() != PayoutType.wallet
                 && !payout.getPayoutToolId().equals(shop.getPayoutToolId())) {

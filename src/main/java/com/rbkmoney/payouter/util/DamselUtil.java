@@ -102,7 +102,11 @@ public class DamselUtil {
         payoutEvent.setFee(payout.getFee());
         payoutEvent.setCurrencyCode(payout.getCurrencyCode());
 
-        payoutEvent.setPayoutAccountType(payout.getAccountType().getLiteral());
+        payoutEvent.setPayoutAccountType(
+                Optional.ofNullable(payout.getAccountType())
+                        .map(accountType -> accountType.getLiteral())
+                        .orElse(null)
+        );
         payoutEvent.setPayoutAccountId(payout.getBankAccount());
         payoutEvent.setPayoutAccountLegalName(payout.getAccountLegalName());
         payoutEvent.setPayoutAccountTradingName(payout.getAccountTradingName());

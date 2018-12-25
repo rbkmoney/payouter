@@ -168,6 +168,7 @@ public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
         Query query = getDslContext().selectFrom(PAYOUT)
                 .where(
                         PAYOUT.STATUS.eq(PayoutStatus.UNPAID)
+                                .and(PAYOUT.TYPE.eq(PayoutType.bank_account))
                                 .and(PAYOUT.ACCOUNT_TYPE.eq(accountType))
                 )
                 .forUpdate();
