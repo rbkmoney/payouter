@@ -91,7 +91,7 @@ public class DamselUtil {
     public static PayoutEvent toPayoutEvent(Payout payout, List<FinalCashFlowPosting> cashFlowPostings) {
         PayoutEvent payoutEvent = new PayoutEvent();
         payoutEvent.setEventType(PayoutChange._Fields.PAYOUT_CREATED.getFieldName());
-        payoutEvent.setPayoutStatus(com.rbkmoney.damsel.payout_processing.PayoutStatus._Fields.UNPAID.getFieldName());
+        payoutEvent.setPayoutStatus(PayoutStatus._Fields.UNPAID.getFieldName());
         payoutEvent.setPayoutId(payout.getPayoutId());
         payoutEvent.setPayoutCreatedAt(payout.getCreatedAt());
         payoutEvent.setPayoutPartyId(payout.getPartyId());

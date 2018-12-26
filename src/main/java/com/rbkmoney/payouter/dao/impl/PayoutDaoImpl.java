@@ -14,7 +14,6 @@ import com.rbkmoney.payouter.exception.DaoException;
 import org.jooq.Field;
 import org.jooq.Query;
 import org.jooq.SelectQuery;
-import org.jooq.conf.ParamType;
 import org.jooq.impl.DSL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.RowMapper;
@@ -221,7 +220,6 @@ public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
         Field countField = DSL.count().as("count");
         Field fromTimeField = DSL.min(PAYOUT.CREATED_AT).as("from_time");
         Field toTimeField = DSL.max(PAYOUT.CREATED_AT).as("to_time");
-
 
         Query query = getDslContext()
                 .select(
