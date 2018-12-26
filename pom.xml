@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>payouter</artifactId>
-    <version>1.0.33-SNAPSHOT</version>
+    <version>1.0.34-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>payouter</name>
@@ -19,10 +19,11 @@
 
     <properties>
         <project.maintainer>Pavel Popov &lt;p.popov@rbkmoney.com&gt;</project.maintainer>
-        <shared.resources.version>0.2.1</shared.resources.version>
+        <shared.resources.version>0.3.2</shared.resources.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <dockerfile.base.service.tag>2a8b44ac628c1bdb729abd04ed7a2a54676e574b</dockerfile.base.service.tag>
         <server.port>8022</server.port>
+        <exposed.ports>${server.port}</exposed.ports>
         <db.url>jdbc:postgresql://localhost:5432/payouter</db.url>
         <db.user>postgres</db.user>
         <db.password>postgres</db.password>
@@ -100,7 +101,7 @@
         <dependency>
             <groupId>net.logstash.logback</groupId>
             <artifactId>logstash-logback-encoder</artifactId>
-            <version>4.6</version>
+            <version>5.0</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
