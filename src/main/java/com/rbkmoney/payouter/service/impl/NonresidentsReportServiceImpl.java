@@ -6,7 +6,6 @@ import com.rbkmoney.payouter.dao.PaymentDao;
 import com.rbkmoney.payouter.dao.ReportDao;
 import com.rbkmoney.payouter.domain.enums.PayoutAccountType;
 import com.rbkmoney.payouter.domain.enums.ReportStatus;
-import com.rbkmoney.payouter.domain.tables.pojos.Payment;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.domain.tables.pojos.Report;
 import com.rbkmoney.payouter.exception.DaoException;
@@ -45,7 +44,7 @@ public class NonresidentsReportServiceImpl implements ReportService {
 
     public final static DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
-    public final static String[] headerRow = {
+    protected final static String[] headerRow = {
             "Id участника",
             "Id магазина",
             "Наименование юридического лица",
@@ -56,7 +55,6 @@ public class NonresidentsReportServiceImpl implements ReportService {
             "Сумма списания",
             "Комиссия за вывод",
             "Сумма получения",
-            "Сумма страхового депозита с данных платежей",
             "Курс",
             "Адрес юридического лица",
             "Регистрационный номер",
@@ -122,7 +120,7 @@ public class NonresidentsReportServiceImpl implements ReportService {
                 groupedPayoutsMap.values().forEach(payouts -> {
                     if (!payouts.isEmpty()) {
                         generateAndSave(payouts);
-                        payouts.forEach(payout -> payoutService.pay(payout.getId()));
+                        payouts.forEach(payout -> payoutService.pay(payout.getPayoutId()));
                     }
                 });
             }
@@ -155,7 +153,7 @@ public class NonresidentsReportServiceImpl implements ReportService {
         }
         LocalDateTime createdAt = LocalDateTime.now(ZoneOffset.UTC);
         String createdAtFormatted = LocalDateTime.now(zoneId).format(dateTimeFormatter);
-        List<String> payoutIds = payouts.stream().map(p -> String.valueOf(p.getId())).collect(Collectors.toList());
+        List<String> payoutIds = payouts.stream().map(p -> p.getPayoutId()).collect(Collectors.toList());
         Report report = new Report();
         report.setName(prefix + "_" + createdAtFormatted + extension);
         report.setSubject(String.format("Выплаты для нерезидентов, сгенерированные %s (%d)", createdAtFormatted, payouts.get(0).getPaymentInstitutionId()));
@@ -173,8 +171,6 @@ public class NonresidentsReportServiceImpl implements ReportService {
     private List<String[]> buildRows(List<Payout> payouts) {
         return payouts.stream().map(
                 payout -> {
-                    List<Payment> payments = paymentDao.getByPayoutId(payout.getId());
-                    long guaranteeDeposit = payments.stream().mapToLong(Payment::getGuaranteeDeposit).sum();
                     return new String[]{
                             payout.getPartyId(),
                             payout.getShopId(),
@@ -186,7 +182,6 @@ public class NonresidentsReportServiceImpl implements ReportService {
                             FormatUtil.getFormattedAmount(payout.getAmount() + payout.getFee()),
                             FormatUtil.getFormattedAmount(payout.getFee()),
                             FormatUtil.getFormattedAmount(payout.getAmount()),
-                            FormatUtil.getFormattedAmount(guaranteeDeposit),
                             "",
                             payout.getAccountRegisteredAddress(),
                             payout.getAccountRegisteredNumber(),

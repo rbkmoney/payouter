@@ -1,10 +1,10 @@
 package com.rbkmoney.payouter.dao;
 
+import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
 import com.rbkmoney.payouter.domain.tables.pojos.Refund;
 import com.rbkmoney.payouter.exception.DaoException;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 public interface RefundDao extends GenericDao {
 
@@ -16,14 +16,10 @@ public interface RefundDao extends GenericDao {
 
     void markAsFailed(long eventId, String invoiceId, String paymentId, String refundId) throws DaoException;
 
-    List<String> getContracts(String partyId, String shopId, LocalDateTime to) throws DaoException;
+    int includeUnpaid(String payoutId, String partyId, String shopId) throws DaoException;
 
-    List<Refund> getUnpaid(String partyId, String shopId, String contractId, LocalDateTime to) throws DaoException;
+    int excludeFromPayout(String payoutId) throws DaoException;
 
-    void includeToPayout(long payoutId, List<Refund> refunds) throws DaoException;
-
-    List<Refund> getByPayoutId(long payoutId) throws DaoException;
-
-    int excludeFromPayout(long payoutId) throws DaoException;
+    PayoutSummary getSummary(String payoutId) throws DaoException;
 
 }

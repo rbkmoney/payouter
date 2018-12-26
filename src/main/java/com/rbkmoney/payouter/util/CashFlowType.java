@@ -66,14 +66,6 @@ public enum CashFlowType {
         this.destinations = destinations;
     }
 
-    public List<CashFlowAccount> getSources() {
-        return sources;
-    }
-
-    public List<CashFlowAccount> getDestinations() {
-        return destinations;
-    }
-
     public static CashFlowType getCashFlowType(FinalCashFlowPosting cashFlowPosting) {
         for (CashFlowType cashFlowType : values()) {
             if (cashFlowType.sources.contains(cashFlowPosting.getSource().getAccountType())
@@ -82,5 +74,13 @@ public enum CashFlowType {
             }
         }
         return UNKNOWN;
+    }
+
+    public List<CashFlowAccount> getSources() {
+        return sources;
+    }
+
+    public List<CashFlowAccount> getDestinations() {
+        return destinations;
     }
 }

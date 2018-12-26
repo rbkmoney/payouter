@@ -17,8 +17,8 @@ import java.util.Arrays;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Matchers.any;
 
 public class ShumwayServiceTest extends AbstractIntegrationTest {
 
@@ -37,7 +37,7 @@ public class ShumwayServiceTest extends AbstractIntegrationTest {
         Payout payout = random(Payout.class);
         payoutDao.save(payout);
         try {
-            shumwayService.hold(String.valueOf(payout.getId()), Arrays.asList(
+            shumwayService.hold(payout.getPayoutId(), Arrays.asList(
                     new FinalCashFlowPosting(
                             new FinalCashFlowAccount(
                                     CashFlowAccount.merchant(MerchantCashFlowAccount.settlement),
@@ -54,7 +54,7 @@ public class ShumwayServiceTest extends AbstractIntegrationTest {
                     .willThrow(InvalidPostingParams.class);
             given(shumwayClient.rollbackPlan(any()))
                     .willThrow(InvalidPostingParams.class);
-            shumwayService.revert(String.valueOf(payout.getId()));
+            shumwayService.revert(payout.getPayoutId());
             fail();
         } catch (AccounterException ex) {
             Throwable throwable = ex.getCause();

@@ -14,6 +14,6 @@ public interface EventStockService {
 
     void setLastEventId(long eventId, LocalDateTime eventCreatedAt) throws StorageException;
 
-    void processStockEvent(StockEvent stockEvent)  throws StorageException, NotFoundException;
+    void processStockEvent(StockEvent stockEvent) throws StorageException, NotFoundException;
 
 }

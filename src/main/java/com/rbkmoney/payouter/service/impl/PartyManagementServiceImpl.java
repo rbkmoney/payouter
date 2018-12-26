@@ -6,7 +6,6 @@ import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.payment_processing.*;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.payouter.exception.NotFoundException;
-import com.rbkmoney.payouter.service.DominantService;
 import com.rbkmoney.payouter.service.PartyManagementService;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
@@ -187,8 +186,11 @@ public class PartyManagementServiceImpl implements PartyManagementService {
     }
 
     @Override
-    public List<FinalCashFlowPosting> computePayoutCashFlow(String partyId, String shopId, Cash amount, Instant timestamp) throws NotFoundException {
-        return computePayoutCashFlow(partyId, new PayoutParams(shopId, amount, TypeUtil.temporalToString(timestamp)));
+    public List<FinalCashFlowPosting> computePayoutCashFlow(String partyId, String shopId, String payoutToolId, Cash amount, Instant timestamp) throws NotFoundException {
+        PayoutParams payoutParams = new PayoutParams(shopId, amount, TypeUtil.temporalToString(timestamp));
+        payoutParams.setPayoutToolId(payoutToolId);
+
+        return computePayoutCashFlow(partyId, payoutParams);
     }
 
     @Override
@@ -198,10 +200,24 @@ public class PartyManagementServiceImpl implements PartyManagementService {
             List<FinalCashFlowPosting> finalCashFlowPostings = partyManagementClient.computePayoutCashFlow(userInfo, partyId, payoutParams);
             log.info("Payout cash flow has been computed, partyId='{}', payoutParams='{}', postings='{}'", partyId, payoutParams, finalCashFlowPostings);
             return finalCashFlowPostings;
-        } catch (PartyNotFound | PartyNotExistsYet | ShopNotFound ex) {
+        } catch (PartyNotFound | PartyNotExistsYet | ShopNotFound | PayoutToolNotFound ex) {
             throw new NotFoundException(String.format("%s, partyId='%s', payoutParams='%s'", ex.getClass().getSimpleName(), partyId, payoutParams), ex);
         } catch (TException ex) {
             throw new RuntimeException(String.format("Failed to compute payout cash flow, partyId='%s', payoutParams='%s'", partyId, payoutParams), ex);
+        }
+    }
+
+    @Override
+    public long getPartyRevision(String partyId) throws NotFoundException {
+        log.info("Trying to get party revision, partyId='{}'", partyId);
+        try {
+            long revision = partyManagementClient.getRevision(userInfo, partyId);
+            log.info("Party revision has been found, partyId='{}', revision='{}'", partyId, revision);
+            return revision;
+        } catch (PartyNotFound ex) {
+            throw new NotFoundException(String.format("Party not found, partyId='%s'", partyId), ex);
+        } catch (TException ex) {
+            throw new RuntimeException(String.format("Failed to get party revision, partyId='%s'", partyId), ex);
         }
     }
 

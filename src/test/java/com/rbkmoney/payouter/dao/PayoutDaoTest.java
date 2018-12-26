@@ -26,12 +26,13 @@ public class PayoutDaoTest extends AbstractIntegrationTest {
         long payoutId = payoutDao.save(payout);
         payout.setId(payoutId);
 
-        assertEquals(payout, payoutDao.get(payoutId));
+        assertEquals(payout, payoutDao.get(payout.getPayoutId()));
     }
 
     @Test
     public void testSaveOnlyNonNullValues() throws DaoException {
         Payout payout = new Payout();
+        payout.setPayoutId("kek");
         payout.setCreatedAt(LocalDateTime.now());
         payout.setPartyId("kek");
         payout.setShopId("kek");
@@ -42,7 +43,7 @@ public class PayoutDaoTest extends AbstractIntegrationTest {
         long payoutId = payoutDao.save(payout);
         payout.setId(payoutId);
 
-        assertEquals(payout, payoutDao.get(payoutId));
+        assertEquals(payout, payoutDao.get(payout.getPayoutId()));
     }
 
 }

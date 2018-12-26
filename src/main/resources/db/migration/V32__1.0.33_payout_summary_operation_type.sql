@@ -1,0 +1,1 @@
+alter type payout_summary_operation_type add value 'payout';

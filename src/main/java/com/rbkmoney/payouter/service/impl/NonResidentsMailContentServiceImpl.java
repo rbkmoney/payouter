@@ -1,14 +1,17 @@
 package com.rbkmoney.payouter.service.impl;
 
+import com.rbkmoney.payouter.dao.PayoutDao;
 import com.rbkmoney.payouter.dao.PayoutSummaryDao;
 import com.rbkmoney.payouter.domain.enums.PayoutSummaryOperationType;
-import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
+import com.rbkmoney.payouter.domain.tables.pojos.PayoutRangeData;
+import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
 import com.rbkmoney.payouter.util.FormatUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.List;
@@ -16,7 +19,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
-public class NonResidentsMailContentServiceImpl extends MailContentServiceImpl{
+public class NonResidentsMailContentServiceImpl extends MailContentServiceImpl {
+
+    private final PayoutDao payoutDao;
 
     @Value("${report.nonresidents.mailTemplateFileName}")
     private String mailTemplateFileName;
@@ -24,8 +29,13 @@ public class NonResidentsMailContentServiceImpl extends MailContentServiceImpl{
     @Value("${report.nonresidents.timezone}")
     private ZoneId zoneId;
 
-    public NonResidentsMailContentServiceImpl(FreeMarkerConfigurer freeMarkerConfigurer, PayoutSummaryDao payoutSummaryDao) {
+    public NonResidentsMailContentServiceImpl(
+            FreeMarkerConfigurer freeMarkerConfigurer,
+            PayoutSummaryDao payoutSummaryDao,
+            PayoutDao payoutDao
+    ) {
         super(freeMarkerConfigurer, payoutSummaryDao);
+        this.payoutDao = payoutDao;
     }
 
     @Override
@@ -36,16 +46,27 @@ public class NonResidentsMailContentServiceImpl extends MailContentServiceImpl{
             payoutDescription.put("name", payout.getAccountLegalName());
             payoutDescription.put("sum", FormatUtil.getFormattedAmount(payout.getAmount()));
             payoutDescription.put("curr", payout.getCurrencyCode());
-            payoutDescription.put("to_date_description", getFormattedDateDescription(payout.getToTime(), zoneId));
-            List<PayoutSummary> payoutSummaries = payoutSummaryDao.get(String.valueOf(payout.getId()));
-            PayoutSummary payoutSummary = payoutSummaries.stream().filter(cfd -> cfd.getCashFlowType() == PayoutSummaryOperationType.payment).findFirst().get();
-            payoutDescription.put("payment_sum", FormatUtil.getFormattedAmount(payoutSummary.getAmount()));
-            payoutDescription.put("rbk_fee_sum", FormatUtil.getFormattedAmount(payoutSummary.getFee()));
-            payoutDescription.put("payment_count", payoutSummary.getCount());
-            payoutSummaries.stream().filter(cfd -> cfd.getCashFlowType() == PayoutSummaryOperationType.refund).findFirst().ifPresent(x -> {
-                payoutDescription.put("refund_sum", FormatUtil.getFormattedAmount(x.getAmount()));
-                payoutDescription.put("refund_count", x.getCount());
-            });
+            PayoutRangeData payoutRangeData = payoutDao.getRangeData(payout.getPayoutId());
+            LocalDateTime toTime = payoutRangeData != null ? payoutRangeData.getToTime() : payout.getCreatedAt();
+            payoutDescription.put("to_date_description", getFormattedDateDescription(toTime, zoneId));
+            List<PayoutSummary> payoutSummaries = payoutSummaryDao.get(payout.getPayoutId());
+            payoutSummaries.stream()
+                    .filter(cfd -> cfd.getCashFlowType() == PayoutSummaryOperationType.payment)
+                    .findFirst().ifPresent(
+                    paymentSummary -> {
+                        payoutDescription.put("payment_sum", FormatUtil.getFormattedAmount(paymentSummary.getAmount()));
+                        payoutDescription.put("rbk_fee_sum", FormatUtil.getFormattedAmount(paymentSummary.getFee()));
+                        payoutDescription.put("payment_count", paymentSummary.getCount());
+                    }
+            );
+            payoutSummaries.stream()
+                    .filter(cfd -> cfd.getCashFlowType() == PayoutSummaryOperationType.refund)
+                    .findFirst().ifPresent(
+                    refundSummary -> {
+                        payoutDescription.put("refund_sum", FormatUtil.getFormattedAmount(refundSummary.getAmount()));
+                        payoutDescription.put("refund_count", refundSummary.getCount());
+                    }
+            );
             payoutDescription.put("fee_sum", FormatUtil.getFormattedAmount(payout.getFee()));
             return payoutDescription;
         }).collect(Collectors.toList());

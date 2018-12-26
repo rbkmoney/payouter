@@ -40,12 +40,13 @@ public class ShumwayServiceImpl implements ShumwayService {
     }
 
     @Override
-    public void hold(String payoutId, List<FinalCashFlowPosting> finalCashFlowPostings) {
-        hold(payoutId, toPlanId(payoutId), 1L, toCashFlowPostings(payoutId, finalCashFlowPostings));
+    @Transactional(propagation = Propagation.REQUIRED)
+    public PostingPlanLog hold(String payoutId, List<FinalCashFlowPosting> finalCashFlowPostings) {
+        return hold(payoutId, toPlanId(payoutId), 1L, toCashFlowPostings(payoutId, finalCashFlowPostings));
     }
 
     @Transactional(propagation = Propagation.REQUIRED)
-    public void hold(String payoutId, String planId, long batchId, List<CashFlowPosting> cashFlowPostings) {
+    public PostingPlanLog hold(String payoutId, String planId, long batchId, List<CashFlowPosting> cashFlowPostings) {
         log.debug("Trying to hold payout postings, payoutId='{}', cashFlowPostings='{}'", payoutId, cashFlowPostings);
         List<CashFlowPosting> newCashFlowPostings = cashFlowPostings.stream().map(cashFlowPosting -> {
             cashFlowPosting.setPayoutId(payoutId);
@@ -56,17 +57,18 @@ public class ShumwayServiceImpl implements ShumwayService {
 
         try {
             cashFlowPostingDao.save(cashFlowPostings);
-            hold(planId, toPostingBatch(batchId, newCashFlowPostings));
-            log.info("Payout has been held, payoutId='{}', cashFlowPostings='{}'", payoutId, newCashFlowPostings);
+            PostingPlanLog postingPlanLog = hold(planId, toPostingBatch(batchId, newCashFlowPostings));
+            log.info("Payout has been held, payoutId='{}', cashFlowPostings='{}', postingPlanLog='{}'", payoutId, newCashFlowPostings, postingPlanLog);
+            return postingPlanLog;
         } catch (Exception ex) {
             throw new AccounterException(String.format("Failed to hold payout, payoutId='%s'", payoutId), ex);
         }
     }
 
-    public void hold(String postingPlanId, PostingBatch postingBatch) throws TException {
+    public PostingPlanLog hold(String postingPlanId, PostingBatch postingBatch) throws TException {
         try {
             log.debug("Start hold operation, postingPlanId='{}', postingBatch='{}'", postingPlanId, postingBatch);
-            retryTemplate.execute(
+            return retryTemplate.execute(
                     context -> shumwayClient.hold(new PostingPlanChange(postingPlanId, postingBatch))
             );
         } finally {
@@ -144,6 +146,16 @@ public class ShumwayServiceImpl implements ShumwayService {
         }
     }
 
+    @Override
+    public List<FinalCashFlowPosting> getPostings(String payoutId) {
+        List<CashFlowPosting> cashFlowPostings = cashFlowPostingDao.getByPayoutId(payoutId);
+        if (cashFlowPostings.isEmpty()) {
+            throw new NotFoundException(String.format("Cash flow posting not found, payoutId='%s'", payoutId));
+        }
+
+        return toFinalCashFlowPostings(cashFlowPostings);
+    }
+
     private void doRevert(String payoutId, List<CashFlowPosting> cashFlowPostings) throws Exception {
         String revertPlanId = toRevertPlanId(payoutId);
         List<CashFlowPosting> revertCashFlowPostings = cashFlowPostings.stream()
@@ -211,6 +223,32 @@ public class ShumwayServiceImpl implements ShumwayService {
         posting.setDescription(cashFlowPosting.getDescription());
 
         return posting;
+    }
+
+    private List<FinalCashFlowPosting> toFinalCashFlowPostings(List<CashFlowPosting> cashFlowPostings) {
+        return cashFlowPostings.stream()
+                .map(this::toFinalCashFlowPosting)
+                .collect(Collectors.toList());
+    }
+
+    private FinalCashFlowPosting toFinalCashFlowPosting(CashFlowPosting cashFlowPosting) {
+            FinalCashFlowPosting finalCashFlowPosting = new FinalCashFlowPosting();
+            finalCashFlowPosting.setSource(
+                    new FinalCashFlowAccount(toCashFlowAccount(cashFlowPosting.getFromAccountType()),
+                            cashFlowPosting.getFromAccountId())
+            );
+            finalCashFlowPosting.setDestination(
+                    new FinalCashFlowAccount(toCashFlowAccount(cashFlowPosting.getToAccountType()),
+                            cashFlowPosting.getToAccountId())
+            );
+            finalCashFlowPosting.setVolume(
+                    new Cash(
+                            cashFlowPosting.getAmount(),
+                            new CurrencyRef(cashFlowPosting.getCurrencyCode())
+                    )
+            );
+            finalCashFlowPosting.setDetails(cashFlowPosting.getDescription());
+            return finalCashFlowPosting;
     }
 
     private List<CashFlowPosting> toCashFlowPostings(String payoutId, List<FinalCashFlowPosting> finalCashFlowPostings) {

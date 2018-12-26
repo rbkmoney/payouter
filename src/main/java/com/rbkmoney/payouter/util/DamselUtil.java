@@ -4,13 +4,18 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
 import com.rbkmoney.damsel.domain.*;
+import com.rbkmoney.damsel.payout_processing.Wallet;
 import com.rbkmoney.damsel.payout_processing.*;
 import com.rbkmoney.geck.common.util.TypeUtil;
+import com.rbkmoney.geck.serializer.kit.json.JsonHandler;
 import com.rbkmoney.geck.serializer.kit.json.JsonProcessor;
 import com.rbkmoney.geck.serializer.kit.tbase.TBaseHandler;
+import com.rbkmoney.geck.serializer.kit.tbase.TBaseProcessor;
+import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.domain.tables.pojos.PayoutEvent;
 import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
 import com.rbkmoney.payouter.exception.NotFoundException;
+import com.rbkmoney.payouter.exception.StorageException;
 import org.apache.thrift.TBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,11 +28,9 @@ import static com.rbkmoney.payouter.util.CashFlowType.UNKNOWN;
 
 public class DamselUtil {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DamselUtil.class);
-
     public final static ObjectMapper objectMapper = new ObjectMapper();
-
     public final static JsonProcessor jsonProcessor = new JsonProcessor();
+    private static final Logger LOGGER = LoggerFactory.getLogger(DamselUtil.class);
 
     public static Map<CashFlowType, Long> parseCashFlow(List<FinalCashFlowPosting> finalCashFlow) {
         Map<CashFlowType, Long> collect = finalCashFlow.stream()
@@ -64,7 +67,6 @@ public class DamselUtil {
 
     public static PayoutCreated toDamselPayoutCreated(PayoutEvent payoutEvent) {
         PayoutCreated payoutCreated = new PayoutCreated();
-        payoutCreated.setInitiator(toDamselUserInfo(payoutEvent));
         payoutCreated.setPayout(toDamselPayout(payoutEvent));
         return payoutCreated;
     }
@@ -86,40 +88,109 @@ public class DamselUtil {
         }
     }
 
+    public static PayoutEvent toPayoutEvent(Payout payout, List<FinalCashFlowPosting> cashFlowPostings) {
+        PayoutEvent payoutEvent = new PayoutEvent();
+        payoutEvent.setEventType(PayoutChange._Fields.PAYOUT_CREATED.getFieldName());
+        payoutEvent.setPayoutStatus(PayoutStatus._Fields.UNPAID.getFieldName());
+        payoutEvent.setPayoutId(payout.getPayoutId());
+        payoutEvent.setPayoutCreatedAt(payout.getCreatedAt());
+        payoutEvent.setPayoutPartyId(payout.getPartyId());
+        payoutEvent.setPayoutShopId(payout.getShopId());
+        payoutEvent.setContractId(payout.getContractId());
+        payoutEvent.setPayoutType(payout.getType().getLiteral());
+        payoutEvent.setAmount(payout.getAmount());
+        payoutEvent.setFee(payout.getFee());
+        payoutEvent.setCurrencyCode(payout.getCurrencyCode());
+
+        payoutEvent.setPayoutAccountType(
+                Optional.ofNullable(payout.getAccountType())
+                        .map(accountType -> accountType.getLiteral())
+                        .orElse(null)
+        );
+        payoutEvent.setPayoutAccountId(payout.getBankAccount());
+        payoutEvent.setPayoutAccountLegalName(payout.getAccountLegalName());
+        payoutEvent.setPayoutAccountTradingName(payout.getAccountTradingName());
+        payoutEvent.setPayoutAccountRegisteredAddress(payout.getAccountRegisteredAddress());
+        payoutEvent.setPayoutAccountActualAddress(payout.getAccountActualAddress());
+        payoutEvent.setPayoutAccountRegisteredNumber(payout.getAccountRegisteredNumber());
+        payoutEvent.setPayoutAccountBankPostId(payout.getBankPostAccount());
+        payoutEvent.setPayoutAccountBankName(payout.getBankName());
+        payoutEvent.setPayoutAccountBankNumber(payout.getBankNumber());
+        payoutEvent.setPayoutAccountBankAddress(payout.getBankAddress());
+        payoutEvent.setPayoutAccountBankBic(payout.getBankBic());
+        payoutEvent.setPayoutAccountBankIban(payout.getBankIban());
+        payoutEvent.setPayoutAccountBankLocalCode(payout.getBankLocalCode());
+        payoutEvent.setPayoutAccountBankAbaRtn(payout.getBankAbaRtn());
+        payoutEvent.setPayoutAccountBankCountryCode(payout.getBankCountryCode());
+
+        //OH SHI—
+        payoutEvent.setPayoutInternationalCorrespondentAccountBankAccount(payout.getIntCorrBankAccount());
+        payoutEvent.setPayoutInternationalCorrespondentAccountBankName(payout.getIntCorrBankName());
+        payoutEvent.setPayoutInternationalCorrespondentAccountBankNumber(payout.getIntCorrBankNumber());
+        payoutEvent.setPayoutInternationalCorrespondentAccountBankAddress(payout.getIntCorrBankAddress());
+        payoutEvent.setPayoutInternationalCorrespondentAccountBankBic(payout.getIntCorrBankBic());
+        payoutEvent.setPayoutInternationalCorrespondentAccountBankIban(payout.getIntCorrBankIban());
+        payoutEvent.setPayoutInternationalCorrespondentAccountBankAbaRtn(payout.getIntCorrBankAbaRtn());
+        payoutEvent.setPayoutInternationalCorrespondentAccountBankCountryCode(payout.getIntCorrBankCountryCode());
+
+        payoutEvent.setPayoutAccountInn(payout.getInn());
+        payoutEvent.setPayoutAccountPurpose(payout.getPurpose());
+
+        payoutEvent.setWalletId(payout.getWalletId());
+
+        try {
+            payoutEvent.setPayoutCashFlow(
+                    new ObjectMapper().writeValueAsString(cashFlowPostings.stream().map(
+                            cashFlowPosting -> {
+                                try {
+                                    return new TBaseProcessor().process(cashFlowPosting, new JsonHandler());
+                                } catch (IOException ex) {
+                                    throw new RuntimeJsonMappingException(ex.getMessage());
+                                }
+                            }).collect(Collectors.toList())
+                    )
+            );
+        } catch (IOException ex) {
+            throw new StorageException("Failed to generate cash flow", ex);
+        }
+
+        payoutEvent.setPayoutAccountLegalAgreementId(payout.getAccountLegalAgreementId());
+        payoutEvent.setPayoutAccountLegalAgreementSignedAt(payout.getAccountLegalAgreementSignedAt());
+
+        return payoutEvent;
+    }
+
     public static PayoutStatus toDamselPayoutStatus(PayoutEvent payoutEvent) {
         PayoutStatus._Fields payoutStatus = PayoutStatus._Fields.findByName(payoutEvent.getPayoutStatus());
         switch (payoutStatus) {
             case UNPAID:
                 return PayoutStatus.unpaid(new PayoutUnpaid());
             case PAID:
-                return PayoutStatus.paid(new PayoutPaid(PaidDetails.account_details(new AccountPaidDetails())));
+                return PayoutStatus.paid(new PayoutPaid());
             case CONFIRMED:
-                return PayoutStatus.confirmed(new PayoutConfirmed(toDamselUserInfo(payoutEvent)));
+                return PayoutStatus.confirmed(new PayoutConfirmed());
             case CANCELLED:
-                return PayoutStatus.cancelled(new PayoutCancelled(
-                        toDamselUserInfo(payoutEvent),
-                        payoutEvent.getPayoutStatusCancelDetails()
-                ));
+                return PayoutStatus.cancelled(new PayoutCancelled(payoutEvent.getPayoutStatusCancelDetails()));
             default:
                 throw new NotFoundException(String.format("Payout status not found, status = %s", payoutStatus));
         }
     }
 
-    public static UserInfo toDamselUserInfo(PayoutEvent payoutEvent) {
-        return new UserInfo(
-                payoutEvent.getUserId(),
-                toDamselUserType(payoutEvent)
-        );
+    public static com.rbkmoney.damsel.payout_processing.Payout toDamselPayout(Payout payout, List<FinalCashFlowPosting> cashFlowPostings) {
+        return toDamselPayout(toPayoutEvent(payout, cashFlowPostings));
     }
 
-    public static Payout toDamselPayout(PayoutEvent payoutEvent) {
-        Payout payout = new Payout();
+    public static com.rbkmoney.damsel.payout_processing.Payout toDamselPayout(PayoutEvent payoutEvent) {
+        com.rbkmoney.damsel.payout_processing.Payout payout = new com.rbkmoney.damsel.payout_processing.Payout();
         payout.setId(payoutEvent.getPayoutId());
         payout.setPartyId(payoutEvent.getPayoutPartyId());
         payout.setShopId(payoutEvent.getPayoutShopId());
         payout.setContractId(payoutEvent.getContractId());
         payout.setCreatedAt(TypeUtil.temporalToString(payoutEvent.getPayoutCreatedAt()));
         payout.setStatus(toDamselPayoutStatus(payoutEvent));
+        payout.setAmount(payoutEvent.getAmount());
+        payout.setFee(payoutEvent.getFee());
+        payout.setCurrency(new CurrencyRef(payoutEvent.getCurrencyCode()));
         payout.setType(toDamselPayoutType(payoutEvent));
         payout.setPayoutFlow(toDamselPayoutFlow(payoutEvent));
         return payout;
@@ -143,6 +214,8 @@ public class DamselUtil {
         switch (payoutType) {
             case BANK_ACCOUNT:
                 return PayoutType.bank_account(toPayoutAccount(payoutEvent));
+            case WALLET:
+                return PayoutType.wallet(new Wallet(payoutEvent.getWalletId()));
             default:
                 throw new NotFoundException(String.format("Payout type not found, type = %s", payoutType));
         }
@@ -223,20 +296,6 @@ public class DamselUtil {
         bankAccount.setCorrespondentAccount(correspondentBankAccount);
 
         return bankAccount;
-    }
-
-    public static UserType toDamselUserType(PayoutEvent payoutEvent) {
-        UserType._Fields userType = UserType._Fields.findByName(payoutEvent.getUserType());
-        switch (userType) {
-            case SERVICE_USER:
-                return UserType.service_user(new ServiceUser());
-            case EXTERNAL_USER:
-                return UserType.external_user(new ExternalUser());
-            case INTERNAL_USER:
-                return UserType.internal_user(new InternalUser());
-            default:
-                throw new NotFoundException(String.format("User type not found, userType = %s", userType));
-        }
     }
 
     public static PayoutChange toDamselPayoutChange(PayoutEvent payoutEvent) {

@@ -3,35 +3,60 @@ package com.rbkmoney.payouter.service;
 import com.rbkmoney.damsel.domain.CurrencyRef;
 import com.rbkmoney.payouter.domain.enums.PayoutAccountType;
 import com.rbkmoney.payouter.domain.enums.PayoutStatus;
-import com.rbkmoney.payouter.domain.enums.PayoutType;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
+import com.rbkmoney.payouter.exception.InsufficientFundsException;
 import com.rbkmoney.payouter.exception.InvalidStateException;
 import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.exception.StorageException;
 
 import java.time.LocalDateTime;
-import java.util.Currency;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
 public interface PayoutService {
 
-    List<Long> createPayouts(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType) throws InvalidStateException, NotFoundException, StorageException;
+    String createPayoutByRange(
+            String partyId,
+            String shopId,
+            LocalDateTime fromTime,
+            LocalDateTime toTime
+    ) throws InsufficientFundsException, InvalidStateException, NotFoundException, StorageException;
 
-    List<Long> createPayouts(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType, LocalDateTime createdAt) throws InvalidStateException, NotFoundException, StorageException;
+    String create(
+            String payoutId,
+            String partyId,
+            String shopId,
+            String payoutToolId,
+            long amount,
+            String currencyCode
+    ) throws InsufficientFundsException, InvalidStateException, NotFoundException, StorageException;
 
-    long createPayout(String partyId, String shopId, String contractId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType, LocalDateTime createdAt) throws InvalidStateException, NotFoundException, StorageException;
+    String create(
+            String payoutId,
+            String partyId,
+            String shopId,
+            String payoutToolId,
+            long amount,
+            String currencyCode,
+            long partyRevision
+    ) throws InsufficientFundsException, InvalidStateException, NotFoundException, StorageException;
 
-    void pay(long payoutId) throws InvalidStateException, StorageException;
+    void pay(String payoutId) throws InvalidStateException, StorageException;
 
-    void confirm(long payoutId) throws InvalidStateException, StorageException;
+    void confirm(String payoutId) throws InvalidStateException, StorageException;
 
-    void cancel(long payoutId, String details) throws InvalidStateException, StorageException;
+    void cancel(String payoutId, String details) throws InvalidStateException, StorageException;
+
+    Payout get(String payoutId) throws StorageException;
 
     List<Payout> getUnpaidPayoutsByAccountType(PayoutAccountType accountType) throws StorageException;
 
-    Set<String> getContractsForPayouts(String partyId, String shopId, LocalDateTime toTime);
+    void includeUnpaid(String payoutId, String partyId, String shopId, LocalDateTime toTime) throws StorageException;
+
+    void excludeFromPayout(String payoutId) throws StorageException;
+
+    List<Payout> getByIds(Set<String> payoutIds) throws StorageException;
 
     List<Payout> search(
             Optional<PayoutStatus> payoutStatus,
@@ -44,7 +69,4 @@ public interface PayoutService {
             Optional<Long> fromId,
             Optional<Integer> size) throws StorageException;
 
-    void excludeFromPayout(long payoutId) throws StorageException;
-
-    List<Payout> getPayoutsByIds(List<Long> payoutIds) throws StorageException;
 }

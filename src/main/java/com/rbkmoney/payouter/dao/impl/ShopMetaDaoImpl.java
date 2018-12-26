@@ -12,9 +12,7 @@ import org.springframework.stereotype.Component;
 import javax.sql.DataSource;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.AbstractMap;
 import java.util.List;
-import java.util.Map;
 
 import static com.rbkmoney.payouter.domain.Tables.SHOP_META;
 

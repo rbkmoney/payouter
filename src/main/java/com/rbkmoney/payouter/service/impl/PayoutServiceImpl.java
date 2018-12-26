@@ -1,22 +1,23 @@
 package com.rbkmoney.payouter.service.impl;
 
+import com.rbkmoney.damsel.accounter.Account;
+import com.rbkmoney.damsel.accounter.PostingPlanLog;
 import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.msgpack.Value;
-import com.rbkmoney.damsel.payout_processing.UserInfo;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.payouter.dao.*;
 import com.rbkmoney.payouter.domain.enums.PayoutAccountType;
 import com.rbkmoney.payouter.domain.enums.PayoutStatus;
 import com.rbkmoney.payouter.domain.enums.PayoutType;
-import com.rbkmoney.payouter.domain.tables.pojos.*;
+import com.rbkmoney.payouter.domain.tables.pojos.Payout;
+import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
+import com.rbkmoney.payouter.domain.tables.pojos.ShopMeta;
 import com.rbkmoney.payouter.exception.*;
 import com.rbkmoney.payouter.service.*;
 import com.rbkmoney.payouter.util.CashFlowType;
 import com.rbkmoney.payouter.util.DamselUtil;
-import com.rbkmoney.payouter.util.WoodyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +32,8 @@ public class PayoutServiceImpl implements PayoutService {
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
+    private final EventSinkService eventSinkService;
+
     private final ShopMetaDao shopMetaDao;
 
     private final PaymentDao paymentDao;
@@ -41,114 +44,119 @@ public class PayoutServiceImpl implements PayoutService {
 
     private final PayoutDao payoutDao;
 
-    private final PayoutSummaryService payoutSummaryService;
-
     private final ShumwayService shumwayService;
+
+    private final PayoutSummaryService payoutSummaryService;
 
     private final PartyManagementService partyManagementService;
 
-    private final EventSinkService eventSinkService;
+    private final FistfulService fistfulService;
 
-    @Autowired
-    public PayoutServiceImpl(ShopMetaDao shopMetaDao,
-                             PaymentDao paymentDao,
-                             RefundDao refundDao,
-                             AdjustmentDao adjustmentDao,
-                             PayoutDao payoutDao,
-                             PayoutSummaryService payoutSummaryService,
-                             ShumwayService shumwayService,
-                             PartyManagementService partyManagementService,
-                             EventSinkService eventSinkService) {
+    public PayoutServiceImpl(
+            EventSinkService eventSinkService,
+            ShopMetaDao shopMetaDao,
+            PaymentDao paymentDao,
+            RefundDao refundDao,
+            AdjustmentDao adjustmentDao,
+            PayoutDao payoutDao,
+            ShumwayService shumwayService,
+            PayoutSummaryService payoutSummaryService,
+            PartyManagementService partyManagementService,
+            FistfulService fistfulService
+    ) {
+        this.eventSinkService = eventSinkService;
         this.shopMetaDao = shopMetaDao;
         this.paymentDao = paymentDao;
         this.refundDao = refundDao;
         this.adjustmentDao = adjustmentDao;
         this.payoutDao = payoutDao;
-        this.payoutSummaryService = payoutSummaryService;
         this.shumwayService = shumwayService;
+        this.payoutSummaryService = payoutSummaryService;
         this.partyManagementService = partyManagementService;
-        this.eventSinkService = eventSinkService;
-        //over
+        this.fistfulService = fistfulService;
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
-    public List<Long> createPayouts(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType) throws InvalidStateException, NotFoundException, StorageException {
-        return createPayouts(partyId, shopId, fromTime, toTime, payoutType, LocalDateTime.now(ZoneOffset.UTC));
-    }
-
-    @Override
-    @Transactional(propagation = Propagation.REQUIRED)
-    public List<Long> createPayouts(String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType, LocalDateTime createdAt) throws InvalidStateException, NotFoundException, StorageException {
-        log.info("Trying to create payouts, partyId='{}', shopId='{}', fromTime='{}', toTime='{}', payoutType='{}'", partyId, shopId, fromTime, toTime, payoutType);
-        List<Long> payoutIds = new ArrayList<>();
-        try {
-            Set<String> contractIds = getContractsForPayouts(partyId, shopId, toTime);
-            if (contractIds.isEmpty()) {
-                throw new NotFoundException(String.format("Contracts not found, payouts can't be created, partyId='%s', shopId='%s', fromTime='%s', toTime='%s', payoutType='%s'", partyId, shopId, fromTime, toTime, payoutType));
-            }
-
-            for (String contractId : contractIds) {
-                try {
-                    long payoutId = createPayout(partyId, shopId, contractId, fromTime, toTime, payoutType, createdAt);
-                    payoutIds.add(payoutId);
-                } catch (InsufficientFundsException ex) {
-                    log.info("Payout can't be created, reason='{}', partyId='{}', shopId='{}', contractId='{}', fromTime='{}', toTime='{}', payoutType='{}'", ex.getMessage(), partyId, shopId, contractId, fromTime, toTime, payoutType);
-                }
-            }
-            log.info("Payouts have been created, payoutIds='{}', partyId='{}', shopId='{}', fromTime='{}', toTime='{}', payoutType='{}'", payoutIds, partyId, shopId, fromTime, toTime, payoutType);
-            return payoutIds;
-        } catch (RuntimeException ex) {
-            payoutIds.forEach(payoutId -> shumwayService.rollback(String.valueOf(payoutId)));
-            throw ex;
+    public String createPayoutByRange(
+            String partyId,
+            String shopId,
+            LocalDateTime fromTime,
+            LocalDateTime toTime
+    ) throws InsufficientFundsException, InvalidStateException, NotFoundException, StorageException {
+        shopMetaDao.getExclusive(partyId, shopId);
+        long partyRevision = partyManagementService.getPartyRevision(partyId);
+        Shop shop = partyManagementService.getShop(partyId, shopId, partyRevision);
+        if (shop.getBlocking().isSetBlocked() || isBlockedForPayouts(partyId)) {
+            throw new InvalidStateException(
+                    String.format("Party or shop blocked for payouts, partyId='%s', shopId='%s'", partyId, shopId)
+            );
         }
+
+        String payoutId = generatePayoutId();
+        String payoutToolId = shop.getPayoutToolId();
+        String currencyCode = shop.getAccount().getCurrency().getSymbolicCode();
+
+        includeUnpaid(payoutId, partyId, shopId, toTime);
+        saveRangeData(payoutId, partyId, shopId, fromTime, toTime);
+        long availableAmount = calculateAvailableAmount(payoutId);
+        buildAndSavePayoutSummaryData(payoutId);
+
+        return create(
+                payoutId,
+                partyId,
+                shopId,
+                payoutToolId,
+                availableAmount,
+                currencyCode,
+                partyRevision
+        );
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
-    public Set<String> getContractsForPayouts(String partyId, String shopId, LocalDateTime toTime) {
-        log.info("Trying to get contracts for payouts, partyId='{}', shopId='{}', toTime='{}'", partyId, shopId, toTime);
-        try {
-            Set<String> contractIds = new HashSet<>();
-            contractIds.addAll(paymentDao.getContracts(partyId, shopId, toTime));
-            contractIds.addAll(refundDao.getContracts(partyId, shopId, toTime));
-            contractIds.addAll(adjustmentDao.getContracts(partyId, shopId, toTime));
-            log.info("Contracts for payouts has been found, contractIds='{}', partyId='{}', shopId='{}', toTime='{}'", contractIds, partyId, shopId, toTime);
-            return contractIds;
-        } catch (DaoException ex) {
-            throw new StorageException(String.format("Failed to get contracts for payouts, partyId='%s', shopId='%s', toTime='%s'", partyId, shopId, toTime));
-        }
+    public String create(
+            String payoutId,
+            String partyId,
+            String shopId,
+            String payoutToolId,
+            long amount,
+            String currencyCode
+    ) throws InsufficientFundsException, InvalidStateException, NotFoundException, StorageException {
+        return create(
+                payoutId,
+                partyId,
+                shopId,
+                payoutToolId,
+                amount,
+                currencyCode,
+                partyManagementService.getPartyRevision(partyId)
+        );
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
-    public long createPayout(String partyId, String shopId, String contractId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType, LocalDateTime createdAt) throws InvalidStateException, NotFoundException, StorageException {
-        log.info("Trying to create payout, partyId='{}', shopId='{}', contractId='{}', fromTime='{}', toTime='{}', payoutType='{}', createdAt='{}'",
-                partyId, shopId, contractId, fromTime, toTime, payoutType, createdAt);
+    public String create(
+            String payoutId,
+            String partyId,
+            String shopId,
+            String payoutToolId,
+            long amount,
+            String currencyCode,
+            long partyRevision
+    ) throws InsufficientFundsException, InvalidStateException, NotFoundException, StorageException {
         try {
-            if (isBlockedForPayouts(partyId)) {
-                throw new InvalidStateException(
-                        String.format("Party is blocked for payouts, partyId='%s', shopId='%s'", partyId, shopId)
-                );
-            }
-
             ShopMeta shopMeta = shopMetaDao.getExclusive(partyId, shopId);
-
-            List<Payment> payments = paymentDao.getUnpaid(partyId, shopId, contractId, toTime);
-            List<Refund> refunds = refundDao.getUnpaid(partyId, shopId, contractId, toTime);
-            List<Adjustment> adjustments = adjustmentDao.getUnpaid(partyId, shopId, contractId, toTime);
-
-            long availableAmount = calculateAvailableAmount(payments, refunds, adjustments);
-
-            if (availableAmount <= 0) {
+            if (amount <= 0) {
                 throw new InsufficientFundsException("Available amount must be greater than 0");
             }
 
-            Payout payout = buildPayout(partyId, shopId, contractId, fromTime, toTime, payoutType, createdAt);
+            Payout payout = buildAndValidatePayout(payoutId, partyId, shopId, payoutToolId, currencyCode, partyRevision);
             List<FinalCashFlowPosting> cashFlowPostings = partyManagementService.computePayoutCashFlow(
                     partyId,
                     shopId,
-                    new Cash(availableAmount, new CurrencyRef(payout.getCurrencyCode())),
+                    payoutToolId,
+                    new Cash(amount, new CurrencyRef(currencyCode)),
                     payout.getCreatedAt().toInstant(ZoneOffset.UTC)
             );
 
@@ -160,132 +168,119 @@ public class PayoutServiceImpl implements PayoutService {
                         String.format("Negative amount in payout cash flow, amount='%d', fee='%d'", payout.getAmount(), payout.getFee())
                 );
             }
-
-            long payoutId = payoutDao.save(payout);
-            payoutSummaryService.save(payoutId, payout.getCurrencyCode(), payments, refunds, adjustments);
-
-            String purpose = buildPurpose(payoutId, payout);
-            payoutDao.changePurpose(payoutId, purpose);
-
-            paymentDao.includeToPayout(payoutId, payments);
-            refundDao.includeToPayout(payoutId, refunds);
-            adjustmentDao.includeToPayout(payoutId, adjustments);
-
+            payoutDao.save(payout);
+            eventSinkService.savePayoutCreatedEvent(payout, cashFlowPostings);
             shopMetaDao.updateLastPayoutCreatedAt(shopMeta.getPartyId(), shopMeta.getShopId(), payout.getCreatedAt());
 
-            eventSinkService.savePayoutCreatedEvent(
-                    String.valueOf(payoutId),
-                    purpose,
-                    payout,
-                    cashFlowPostings,
-                    WoodyUtils.getUserInfo()
-            );
-            shumwayService.hold(String.valueOf(payoutId), cashFlowPostings);
-
-            log.info("Payout successfully created, payoutId='{}', partyId={}, shopId={}, fromTime={}, toTime={}, payoutType={}",
-                    payoutId, partyId, shopId, fromTime, toTime, payoutType);
+            PostingPlanLog postingPlanLog = shumwayService.hold(payoutId, cashFlowPostings);
+            Account account = postingPlanLog.getAffectedAccounts().get(payout.getShopAcc());
+            if (account == null || account.getMinAvailableAmount() < 0) {
+                shumwayService.rollback(payoutId);
+                throw new InsufficientFundsException(String.format("Invalid available amount in shop account, account='%s'", account));
+            }
 
             return payoutId;
         } catch (DaoException ex) {
-            throw new StorageException(
-                    String.format("Failed to create payout, partyId='%s', shopId='%s', fromTime='%s', toTime='%s', payoutType='%s'",
-                            partyId, shopId, fromTime, toTime, payoutType), ex);
+            throw new StorageException(ex);
         }
-    }
-
-    private String buildPurpose(long payoutId, Payout payout) {
-        switch (payout.getAccountType()) {
-            case russian_payout_account:
-                return String.format(
-                        "Перевод согласно договора номер %s от %s. Без НДС",
-                        payout.getAccountLegalAgreementId(),
-                        payout.getAccountLegalAgreementSignedAt().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
-                );
-            case international_payout_account:
-                return String.format("Agr %s %s, %d for accepted payments.",
-                        payout.getAccountLegalAgreementId(),
-                        payout.getAccountLegalAgreementSignedAt().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")),
-                        payoutId
-                );
-            default:
-                throw new IllegalArgumentException(String.format("Unknown account type, accountType='%s'", payout.getAccountType()));
-        }
-    }
-
-    private boolean isBlockedForPayouts(String partyId) {
-        Value metaDataValue = partyManagementService.getMetaData(partyId, "payout_blocking");
-        return metaDataValue != null && metaDataValue.isSetB() && metaDataValue.getB();
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
-    public void pay(long payoutId) throws InvalidStateException, StorageException {
+    public void pay(String payoutId) throws InvalidStateException, StorageException {
         log.info("Trying to pay a payout, payoutId='{}'", payoutId);
         try {
             Payout payout = payoutDao.getExclusive(payoutId);
 
-            if (payout.getStatus() != PayoutStatus.UNPAID) {
+            if (payout.getStatus() == PayoutStatus.PAID) {
+                log.info("Payout already paid, payoutId='{}'", payoutId);
+                return;
+            } else if (payout.getStatus() != PayoutStatus.UNPAID) {
                 throw new InvalidStateException(
-                        String.format("Invalid status for 'pay' action, payoutId='%d', currentStatus='%s'", payoutId, payout.getStatus())
+                        String.format("Invalid status for 'pay' action, payoutId='%s', currentStatus='%s'", payoutId, payout.getStatus())
                 );
             }
 
             payoutDao.changeStatus(payoutId, PayoutStatus.PAID);
-            eventSinkService.savePayoutPaidEvent(String.valueOf(payoutId));
+            eventSinkService.savePayoutPaidEvent(payoutId);
             log.info("Payout have been paid, payoutId='{}'", payoutId);
         } catch (DaoException ex) {
-            throw new StorageException(String.format("Failed to pay a payout, payoutId='%d'", payoutId), ex);
+            throw new StorageException(String.format("Failed to confirm a payout, payoutId='%s'", payoutId), ex);
         }
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
-    public void confirm(long payoutId) throws InvalidStateException, StorageException {
-        log.info("Trying to confirm a payout, payoutId={}", payoutId);
+    public void confirm(String payoutId) throws InvalidStateException, StorageException {
+        log.info("Trying to confirm a payout, payoutId='{}'", payoutId);
         try {
             Payout payout = payoutDao.getExclusive(payoutId);
 
-            if (payout.getStatus() != PayoutStatus.PAID) {
+            if (payout.getStatus() == PayoutStatus.CONFIRMED) {
+                log.info("Payout already confirmed, payoutId='{}'", payoutId);
+                return;
+            } else if (payout.getStatus() != PayoutStatus.PAID) {
                 throw new InvalidStateException(
-                        String.format("Invalid status for 'confirm' action, payoutId='%d', currentStatus='%s'", payoutId, payout.getStatus())
+                        String.format("Invalid status for 'confirm' action, payoutId='%s', currentStatus='%s'", payoutId, payout.getStatus())
                 );
             }
 
             payoutDao.changeStatus(payoutId, PayoutStatus.CONFIRMED);
-            eventSinkService.savePayoutConfirmedEvent(String.valueOf(payoutId), WoodyUtils.getUserInfo());
-            shumwayService.commit(String.valueOf(payoutId));
-            log.info("Payout have been confirmed, payoutId={}", payoutId);
+            eventSinkService.savePayoutConfirmedEvent(payoutId);
+            shumwayService.commit(payoutId);
+
+            if (payout.getType() == PayoutType.wallet) {
+                fistfulService.createDeposit(payoutId, payout.getWalletId(), payout.getAmount(), payout.getCurrencyCode());
+            }
+            log.info("Payout have been confirmed, payoutId='{}'", payoutId);
         } catch (DaoException ex) {
-            throw new StorageException(String.format("Failed to confirm a payout, payoutId='%d'", payoutId), ex);
+            throw new StorageException(String.format("Failed to confirm a payout, payoutId='%s'", payoutId), ex);
         }
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
-    public void cancel(long payoutId, String details) throws InvalidStateException, StorageException {
+    public void cancel(String payoutId, String details) throws InvalidStateException, StorageException {
         log.info("Trying to cancel a payout, payoutId='{}'", payoutId);
         try {
             Payout payout = payoutDao.getExclusive(payoutId);
-            payoutDao.changeStatus(payoutId, PayoutStatus.CANCELLED);
-            excludeFromPayout(payoutId);
+            if (payout.getStatus() == PayoutStatus.CANCELLED) {
+                log.info("Payout already cancelled, payoutId='{}'", payoutId);
+                return;
+            }
 
-            UserInfo userInfo = WoodyUtils.getUserInfo();
-            eventSinkService.savePayoutCancelledEvent(String.valueOf(payoutId), details, userInfo);
+            payoutDao.changeStatus(payoutId, PayoutStatus.CANCELLED);
+            eventSinkService.savePayoutCancelledEvent(payoutId, details);
+            if (payout.getType() != PayoutType.wallet) {
+                excludeFromPayout(payoutId);
+            }
 
             switch (payout.getStatus()) {
                 case UNPAID:
                 case PAID:
-                    shumwayService.rollback(String.valueOf(payoutId));
+                    shumwayService.rollback(payoutId);
                     break;
                 case CONFIRMED:
-                    shumwayService.revert(String.valueOf(payoutId));
+                    if (payout.getType() == PayoutType.wallet) {
+                        throw new InvalidStateException(String.format("Unable to cancel confirmed payout to wallet, payoutId='%s'", payoutId));
+                    }
+                    shumwayService.revert(payoutId);
                     break;
                 default:
-                    throw new InvalidStateException(String.format("Invalid status for 'cancel' action, payoutId='%d', currentStatus='%s'", payoutId, payout.getStatus()));
+                    throw new InvalidStateException(String.format("Invalid status for 'cancel' action, payoutId='%s', currentStatus='%s'", payoutId, payout.getStatus()));
             }
-            log.info("Payout have been cancelled, payoutId={}", payoutId);
+            log.info("Payout have been cancelled, payoutId='{}'", payoutId);
         } catch (DaoException ex) {
-            throw new StorageException(String.format("Failed to cancel a payout, payoutId='%d'", payoutId), ex);
+            throw new StorageException(String.format("Failed to cancel a payout, payoutId='%s'", payoutId), ex);
+        }
+    }
+
+    @Override
+    public Payout get(String payoutId) throws StorageException {
+        try {
+            return payoutDao.get(payoutId);
+        } catch (DaoException ex) {
+            throw new StorageException(ex);
         }
     }
 
@@ -302,36 +297,36 @@ public class PayoutServiceImpl implements PayoutService {
     }
 
     @Override
-    public List<Payout> search(
-            Optional<PayoutStatus> payoutStatus,
-            Optional<LocalDateTime> fromTime,
-            Optional<LocalDateTime> toTime,
-            Optional<List<Long>> payoutIds,
-            Optional<Long> minAmount,
-            Optional<Long> maxAmount,
-            Optional<CurrencyRef> currency,
-            Optional<Long> fromId,
-            Optional<Integer> size
-    )  throws StorageException {
-        return payoutDao.search(payoutStatus, fromTime, toTime, payoutIds, minAmount, maxAmount, currency, fromId, size);
+    public void includeUnpaid(String payoutId, String partyId, String shopId, LocalDateTime toTime) throws StorageException {
+        log.info("Trying to include operations in payout, payoutId='{}', partyId='{}', shopId='{}', toTime='{}'", payoutId, partyId, shopId, toTime);
+        try {
+            int paymentCount = paymentDao.includeUnpaid(payoutId, partyId, shopId, toTime);
+            int refundCount = refundDao.includeUnpaid(payoutId, partyId, shopId);
+            int adjustmentCount = adjustmentDao.includeUnpaid(payoutId, partyId, shopId, toTime);
+            int payoutCount = payoutDao.includeUnpaid(payoutId, partyId, shopId);
+            log.info("Operations have been included in payout, payoutId='{}' (paymentCount='{}', refundCount='{}', adjustmentCount='{}', payoutCount='{}')", payoutId, paymentCount, refundCount, adjustmentCount, payoutCount);
+        } catch (DaoException ex) {
+            throw new StorageException(String.format("Failed to include operations in payout, payoutId='%s'", payoutId), ex);
+        }
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
-    public void excludeFromPayout(long payoutId) throws StorageException {
+    public void excludeFromPayout(String payoutId) throws StorageException {
         log.info("Trying to exclude operations from payout, payoutId='{}'", payoutId);
         try {
             int paymentCount = paymentDao.excludeFromPayout(payoutId);
             int refundCount = refundDao.excludeFromPayout(payoutId);
             int adjustmentCount = adjustmentDao.excludeFromPayout(payoutId);
-            log.info("Operations have been excluded from payout, payoutId='{}' (paymentCount='{}', refundCount='{}', adjustmentCount='{}')", payoutId, paymentCount, refundCount, adjustmentCount);
+            int payoutCount = payoutDao.excludeFromPayout(payoutId);
+            log.info("Operations have been excluded from payout, payoutId='{}' (paymentCount='{}', refundCount='{}', adjustmentCount='{}', payoutCount='{}')", payoutId, paymentCount, refundCount, adjustmentCount, payoutCount);
         } catch (DaoException ex) {
-            throw new StorageException(String.format("Failed to exclude operations from payout, payoutId='%d'", payoutId), ex);
+            throw new StorageException(String.format("Failed to exclude operations from payout, payoutId='%s'", payoutId), ex);
         }
     }
 
     @Override
-    public List<Payout> getPayoutsByIds(List<Long> payoutIds) throws StorageException {
+    public List<Payout> getByIds(Set<String> payoutIds) throws StorageException {
         log.info("Trying to get payouts by ids, ids='{}'", payoutIds);
         try {
             List<Payout> payouts = payoutDao.getByIds(payoutIds);
@@ -342,22 +337,38 @@ public class PayoutServiceImpl implements PayoutService {
         }
     }
 
-    private Payout buildPayout(String partyId, String shopId, String contractId, LocalDateTime fromTime, LocalDateTime toTime, PayoutType payoutType, LocalDateTime createdAt) {
+    @Override
+    public List<Payout> search(
+            Optional<PayoutStatus> payoutStatus,
+            Optional<LocalDateTime> fromTime,
+            Optional<LocalDateTime> toTime,
+            Optional<List<Long>> payoutIds,
+            Optional<Long> minAmount,
+            Optional<Long> maxAmount,
+            Optional<CurrencyRef> currency,
+            Optional<Long> fromId,
+            Optional<Integer> size
+    ) throws StorageException {
+        return payoutDao.search(payoutStatus, fromTime, toTime, payoutIds, minAmount, maxAmount, currency, fromId, size);
+    }
+
+    private Payout buildAndValidatePayout(String payoutId, String partyId, String shopId, String payoutToolId, String currencyCode, long partyRevision) throws InvalidStateException, NotFoundException {
+        Party party = partyManagementService.getParty(partyId, partyRevision);
+
         Payout payout = new Payout();
+        payout.setPayoutId(payoutId);
         payout.setPartyId(partyId);
         payout.setShopId(shopId);
-        payout.setContractId(contractId);
-        payout.setFromTime(fromTime);
-        payout.setToTime(toTime);
-        payout.setType(payoutType);
-        payout.setCreatedAt(createdAt);
-        payout.setStatus(PayoutStatus.UNPAID);
+        payout.setPartyRevision(partyRevision);
+        payout.setCurrencyCode(currencyCode);
+        payout.setPayoutToolId(payoutToolId);
 
-        Party party = partyManagementService.getParty(partyId, createdAt.toInstant(ZoneOffset.UTC));
+        payout.setCreatedAt(LocalDateTime.now(ZoneOffset.UTC));
+        payout.setStatus(PayoutStatus.UNPAID);
 
         Shop shop = party.getShops().get(shopId);
         if (shop == null) {
-            throw new NotFoundException(String.format("Shop not found, partyId='%s', contractId='%s', timestamp='%s'", partyId, shopId, createdAt));
+            throw new NotFoundException(String.format("Shop not found, partyId='%s', shopId='%s'", partyId, shopId));
         }
         if (shop.getLocation().isSetUrl()) {
             payout.setShopUrl(shop.getLocation().getUrl());
@@ -365,47 +376,73 @@ public class PayoutServiceImpl implements PayoutService {
         ShopAccount shopAccount = shop.getAccount();
         payout.setShopAcc(shopAccount.getSettlement());
         payout.setShopPayoutAcc(shopAccount.getPayout());
-        payout.setCurrencyCode(shopAccount.getCurrency().getSymbolicCode());
-
-        Contract contract = party.getContracts().get(shop.getContractId());
-        if (contract == null) {
-            throw new NotFoundException(String.format("Contract not found, partyId='%s', contractId='%s', timestamp='%s'", partyId, shop.getId(), createdAt));
+        if (!currencyCode.equals(shop.getAccount().getCurrency().getSymbolicCode())) {
+            throw new InvalidStateException("Shop account and payout currency must be equals");
         }
 
-        Optional<PayoutTool> payoutToolOptional = contract.getPayoutTools().stream()
-                .filter(payoutTool -> payoutTool.getId().equals(shop.getPayoutToolId()))
-                .findFirst();
+        Contract contract = party.getContracts().values().stream()
+                .filter(
+                        contractValue -> contractValue.getPayoutTools().stream()
+                                .anyMatch(payoutToolValue -> payoutToolValue.getId().equals(payoutToolId))
+                )
+                .findFirst()
+                .orElseThrow(() -> new NotFoundException(String.format("Contract for payout tool not found, partyId='%s', payoutToolId='%s'", partyId, payoutToolId)));
 
-        if (!payoutToolOptional.isPresent()) {
+        payout.setContractId(contract.getId());
+        if (!contract.isSetLegalAgreement()) {
             throw new NotFoundException(
-                    String.format("Payout tool with bank account not found, partyId='%s', shopId='%s', payoutToolId='%s'",
-                            partyId, shopId, shop.getPayoutToolId()));
+                    String.format("Legal agreement not found, partyId='%s', shopId='%s', contractId='%s'",
+                            partyId, shopId, contract.getId()));
         }
 
-        PayoutTool payoutTool = payoutToolOptional.get();
-        if (!payout.getCurrencyCode().equals(payoutTool.getCurrency().getSymbolicCode())) {
+        payout.setAccountLegalAgreementId(contract.getLegalAgreement().getLegalAgreementId());
+        payout.setAccountLegalAgreementSignedAt(
+                TypeUtil.stringToLocalDateTime(contract.getLegalAgreement().getSignedAt())
+        );
+        if (contract.isSetPaymentInstitution()) {
+            payout.setPaymentInstitutionId(contract.getPaymentInstitution().getId());
+        }
+        LegalEntity legalEntity = contract.getContractor().getLegalEntity();
+        if (legalEntity.isSetInternationalLegalEntity()) {
+            InternationalLegalEntity internationalLegalEntity = legalEntity.getInternationalLegalEntity();
+            payout.setAccountLegalName(internationalLegalEntity.getLegalName());
+            payout.setAccountTradingName(internationalLegalEntity.getTradingName());
+            payout.setAccountRegisteredAddress(internationalLegalEntity.getRegisteredAddress());
+            payout.setAccountActualAddress(internationalLegalEntity.getActualAddress());
+            payout.setAccountRegisteredNumber(internationalLegalEntity.getRegisteredNumber());
+        }
+
+        if (legalEntity.isSetRussianLegalEntity()) {
+            RussianLegalEntity russianLegalEntity = legalEntity.getRussianLegalEntity();
+            payout.setInn(russianLegalEntity.getInn());
+            payout.setDescription(russianLegalEntity.getRegisteredName());
+            payout.setAccountRegisteredNumber(russianLegalEntity.getRegisteredNumber());
+        }
+
+        PayoutTool payoutTool = contract.getPayoutTools().stream()
+                .filter(payoutToolValue -> payoutToolValue.getId().equals(payoutToolId))
+                .findFirst()
+                .orElseThrow(() -> new NotFoundException(String.format("Payout tool not found, partyId='%s', payoutToolId='%s'", partyId, payoutToolId)));
+
+        if (!shopAccount.getCurrency().equals(payoutTool.getCurrency())) {
             throw new InvalidStateException("Shop account and payout tool currency must be equals");
         }
-
-        if (payoutTool.getPayoutToolInfo().isSetRussianBankAccount()) {
+        PayoutToolInfo payoutToolInfo = payoutTool.getPayoutToolInfo();
+        if (payoutToolInfo.isSetRussianBankAccount()) {
+            payout.setType(PayoutType.bank_account);
             payout.setAccountType(PayoutAccountType.russian_payout_account);
-            RussianBankAccount bankAccount = payoutTool.getPayoutToolInfo().getRussianBankAccount();
+            RussianBankAccount bankAccount = payoutToolInfo.getRussianBankAccount();
 
             payout.setBankAccount(bankAccount.getAccount());
             payout.setBankLocalCode(bankAccount.getBankBik());
             payout.setBankName(bankAccount.getBankName());
             payout.setBankPostAccount(bankAccount.getBankPostAccount());
-            if (contract.getContractor().getLegalEntity().isSetRussianLegalEntity()) {
-                RussianLegalEntity legalEntity = contract.getContractor().getLegalEntity().getRussianLegalEntity();
-                payout.setInn(legalEntity.getInn());
-                payout.setDescription(legalEntity.getRegisteredName());
-                payout.setAccountRegisteredNumber(legalEntity.getRegisteredNumber());
-            }
         }
 
-        if (payoutTool.getPayoutToolInfo().isSetInternationalBankAccount()) {
+        if (payoutToolInfo.isSetInternationalBankAccount()) {
+            payout.setType(PayoutType.bank_account);
             payout.setAccountType(PayoutAccountType.international_payout_account);
-            InternationalBankAccount bankAccount = payoutTool.getPayoutToolInfo().getInternationalBankAccount();
+            InternationalBankAccount bankAccount = payoutToolInfo.getInternationalBankAccount();
 
             payout.setBankAccount(bankAccount.getAccountHolder());
             payout.setBankNumber(bankAccount.getNumber());
@@ -418,8 +455,8 @@ public class PayoutServiceImpl implements PayoutService {
                 payout.setBankAbaRtn(bankDetails.getAbaRtn());
                 payout.setBankCountryCode(
                         Optional.ofNullable(bankDetails.getCountry())
-                        .map(country -> country.toString())
-                        .orElse(null)
+                                .map(country -> country.toString())
+                                .orElse(null)
                 );
             }
 
@@ -442,52 +479,90 @@ public class PayoutServiceImpl implements PayoutService {
                     );
                 }
             }
-
-            if (contract.getContractor().getLegalEntity().isSetInternationalLegalEntity()) {
-                InternationalLegalEntity legalEntity = contract.getContractor().getLegalEntity().getInternationalLegalEntity();
-                payout.setAccountLegalName(legalEntity.getLegalName());
-                payout.setAccountTradingName(legalEntity.getTradingName());
-                payout.setAccountRegisteredAddress(legalEntity.getRegisteredAddress());
-                payout.setAccountActualAddress(legalEntity.getActualAddress());
-                payout.setAccountRegisteredNumber(legalEntity.getRegisteredNumber());
-            }
         }
 
-        if (!contract.isSetLegalAgreement()) {
-            throw new NotFoundException(
-                    String.format("Legal agreement not found, partyId='%s', shopId='%s', contractId='%s'",
-                            partyId, shopId, contract.getId()));
+        if (payoutToolInfo.isSetWalletInfo()) {
+            payout.setType(PayoutType.wallet);
+            payout.setWalletId(payoutToolInfo.getWalletInfo().getWalletId());
         }
 
-        payout.setAccountLegalAgreementId(contract.getLegalAgreement().getLegalAgreementId());
-        payout.setAccountLegalAgreementSignedAt(
-                TypeUtil.stringToLocalDateTime(contract.getLegalAgreement().getSignedAt())
-        );
-        if (contract.isSetPaymentInstitution()) {
-            payout.setPaymentInstitutionId(contract.getPaymentInstitution().getId());
+        payout.setPurpose(buildPurpose(payout));
+
+        if (payout.getType() != PayoutType.wallet
+                && !payout.getPayoutToolId().equals(shop.getPayoutToolId())) {
+            throw new InvalidStateException("Payout tool must be same as in shop for non-wallets payouts");
         }
 
         return payout;
     }
 
+    private void saveRangeData(String payoutId, String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime) throws StorageException {
+        try {
+            log.info("Trying to save payout range data, payoutId='{}', partyId='{}', shopId='{}', fromTime='{}', toTime='{}'",
+                    payoutId, partyId, shopId, fromTime, toTime);
+            payoutDao.saveRangeData(payoutId, partyId, shopId, fromTime, toTime);
+            log.info("Payout range data have been saved, payoutId='{}', partyId='{}', shopId='{}', fromTime='{}', toTime='{}'",
+                    payoutId, partyId, shopId, fromTime, toTime);
+        } catch (DaoException ex) {
+            throw new StorageException("Failed to save payout range data", ex);
+        }
+    }
 
-    private long calculateAvailableAmount(List<Payment> payments, List<Refund> refunds, List<Adjustment> adjustments) {
-        long paymentAmount = payments.stream()
-                .mapToLong(payment -> payment.getAmount() - payment.getFee() - payment.getGuaranteeDeposit())
-                .sum();
+    private long calculateAvailableAmount(String payoutId) {
+        try {
+            long availableAmount = payoutDao.getAvailableAmount(payoutId);
+            log.info("Available amount have been calculated, payoutId='{}', availableAmount={}", payoutId, availableAmount);
+            return availableAmount;
+        } catch (DaoException ex) {
+            throw new StorageException(ex);
+        }
+    }
 
-        long refundAmount = refunds.stream()
-                .mapToLong(refund -> refund.getAmount() + refund.getFee())
-                .sum();
+    private void buildAndSavePayoutSummaryData(String payoutId) {
+        try {
+            List<PayoutSummary> payoutSummaries = new ArrayList<>();
+            Optional.ofNullable(paymentDao.getSummary(payoutId)).ifPresent(
+                    summary -> payoutSummaries.add(summary)
+            );
+            Optional.ofNullable(refundDao.getSummary(payoutId)).ifPresent(
+                    summary -> payoutSummaries.add(summary)
+            );
+            Optional.ofNullable(payoutDao.getSummary(payoutId)).ifPresent(
+                    summary -> payoutSummaries.add(summary)
+            );
 
-        long adjustmentAmount = adjustments.stream()
-                .mapToLong(adjustment -> adjustment.getPaymentFee() - adjustment.getNewFee())
-                .sum();
+            payoutSummaryService.save(payoutSummaries);
+        } catch (DaoException ex) {
+            throw new StorageException(ex);
+        }
+    }
 
-        long availableAmount = paymentAmount + adjustmentAmount - refundAmount;
+    //legacy
+    private boolean isBlockedForPayouts(String partyId) {
+        Value metaDataValue = partyManagementService.getMetaData(partyId, "payout_blocking");
+        return metaDataValue != null && metaDataValue.isSetB() && metaDataValue.getB();
+    }
 
-        log.info("Available amount have been calculated, availableAmount={}", availableAmount);
-        return availableAmount;
+    private String generatePayoutId() {
+        return UUID.randomUUID().toString();
+    }
+
+    private String buildPurpose(Payout payout) {
+        if (payout.getAccountType() == PayoutAccountType.russian_payout_account) {
+            return String.format(
+                    "Перевод согласно договора номер %s от %s. Без НДС",
+                    payout.getAccountLegalAgreementId(),
+                    payout.getAccountLegalAgreementSignedAt().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+            );
+        } else if (payout.getAccountType() == PayoutAccountType.international_payout_account || payout.getType() == PayoutType.wallet) {
+            return String.format("Agr %s %s, %s for accepted payments.",
+                    payout.getAccountLegalAgreementId(),
+                    payout.getAccountLegalAgreementSignedAt().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")),
+                    payout.getPayoutId()
+            );
+        }
+
+        throw new IllegalArgumentException(String.format("Unknown type, type='%s', accountType='%s'", payout.getType(), payout.getAccountType()));
     }
 
 }

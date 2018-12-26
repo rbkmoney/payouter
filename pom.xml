@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>payouter</artifactId>
-    <version>1.0.32-SNAPSHOT</version>
+    <version>1.0.33-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>payouter</name>
@@ -29,7 +29,9 @@
         <db.schema>sht</db.schema>
         <db.port>5432</db.port>
         <db.name>payouter</db.name>
-        <damsel.version>1.256-2afe121</damsel.version>
+        <damsel.version>1.271-0fca200</damsel.version>
+        <fistful-proto.version>1.14-7bbae46</fistful-proto.version>
+        <sonar.jacoco.reportPath>${project.basedir}/../target/jacoco.exec</sonar.jacoco.reportPath>
     </properties>
 
     <dependencies>
@@ -126,6 +128,11 @@
             <groupId>com.rbkmoney</groupId>
             <artifactId>damsel</artifactId>
             <version>${damsel.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.rbkmoney</groupId>
+            <artifactId>fistful-proto</artifactId>
+            <version>${fistful-proto.version}</version>
         </dependency>
         <dependency>
             <groupId>com.rbkmoney</groupId>
@@ -324,6 +331,23 @@
                     <execution>
                         <goals>
                             <goal>process</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.2</version>
+                <configuration>
+                    <destFile>${sonar.jacoco.reportPath}</destFile>
+                    <append>true</append>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
                         </goals>
                     </execution>
                 </executions>

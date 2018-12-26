@@ -6,17 +6,12 @@ import com.rbkmoney.payouter.domain.enums.AdjustmentStatus;
 import com.rbkmoney.payouter.domain.tables.pojos.Adjustment;
 import com.rbkmoney.payouter.exception.DaoException;
 import org.jooq.Query;
-import org.jooq.SelectQuery;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.core.SingleColumnRowMapper;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import static com.rbkmoney.payouter.domain.Tables.ADJUSTMENT;
 import static com.rbkmoney.payouter.domain.Tables.PAYMENT;
@@ -71,60 +66,26 @@ public class AdjustmentDaoImpl extends AbstractGenericDao implements AdjustmentD
     }
 
     @Override
-    public List<String> getContracts(String partyId, String shopId, LocalDateTime to) throws DaoException {
-        Query query = getDslContext().select(PAYMENT.CONTRACT_ID).from(PAYMENT)
-                .join(ADJUSTMENT)
-                .on(ADJUSTMENT.INVOICE_ID.eq(PAYMENT.INVOICE_ID)
-                        .and(ADJUSTMENT.PAYMENT_ID.eq(PAYMENT.PAYMENT_ID))
-                        .and(PAYMENT.PARTY_ID.eq(partyId))
-                        .and(PAYMENT.SHOP_ID.eq(shopId))
-                        .and(PAYMENT.CAPTURED_AT.lt(to))
-                        .and(ADJUSTMENT.PAYOUT_ID.isNull())
-                        .and(ADJUSTMENT.STATUS.eq(AdjustmentStatus.CAPTURED))
-                ).groupBy(PAYMENT.CONTRACT_ID);
-        return fetch(query, new SingleColumnRowMapper<>(String.class));
-    }
-
-    @Override
-    public List<Adjustment> getUnpaid(String partyId, String shopId, String contractId, LocalDateTime to) throws DaoException {
-        Query query = getDslContext().select(ADJUSTMENT.fields())
-                .from(ADJUSTMENT)
-                .join(PAYMENT).on(ADJUSTMENT.INVOICE_ID.eq(PAYMENT.INVOICE_ID)
-                        .and(ADJUSTMENT.PAYMENT_ID.eq(PAYMENT.PAYMENT_ID))
-                        .and(PAYMENT.PARTY_ID.eq(partyId))
-                        .and(PAYMENT.SHOP_ID.eq(shopId))
-                        .and(PAYMENT.CONTRACT_ID.eq(contractId))
-                        .and(PAYMENT.CAPTURED_AT.lessThan(to)))
-                        .and(ADJUSTMENT.STATUS.eq(AdjustmentStatus.CAPTURED))
-                        .and(ADJUSTMENT.PAYOUT_ID.isNull());
-
-        return fetch(query, adjustmentRowMapper);
-    }
-
-    @Override
-    public List<Adjustment> getByPayoutId(long payoutId) throws DaoException {
-        Query query = getDslContext().selectFrom(ADJUSTMENT)
-                .where(ADJUSTMENT.PAYOUT_ID.eq(payoutId))
-                .orderBy(ADJUSTMENT.CAPTURED_AT);
-        return fetch(query, adjustmentRowMapper);
-    }
-
-    @Override
-    public void includeToPayout(long payoutId, List<Adjustment> adjustments) throws DaoException {
-        Set<Long> adjustmentsIds = adjustments.stream()
-                .map(adjustment -> adjustment.getId())
-                .collect(Collectors.toSet());
-
-        Query query = getDslContext().update(ADJUSTMENT)
+    public int includeUnpaid(String payoutId, String partyId, String shopId, LocalDateTime to) throws DaoException {
+        Query query = getDslContext()
+                .update(ADJUSTMENT)
                 .set(ADJUSTMENT.PAYOUT_ID, payoutId)
-                .where(ADJUSTMENT.ID.in(adjustmentsIds));
-        execute(query, adjustmentsIds.size());
+                .from(PAYMENT)
+                .where(ADJUSTMENT.INVOICE_ID.eq(PAYMENT.INVOICE_ID)
+                        .and(ADJUSTMENT.PAYMENT_ID.eq(PAYMENT.PAYMENT_ID))
+                        .and(PAYMENT.PARTY_ID.eq(partyId))
+                        .and(PAYMENT.SHOP_ID.eq(shopId))
+                        .and(PAYMENT.CAPTURED_AT.lessThan(to)))
+                .and(ADJUSTMENT.STATUS.eq(AdjustmentStatus.CAPTURED))
+                .and(ADJUSTMENT.PAYOUT_ID.isNull());
+
+        return execute(query);
     }
 
     @Override
-    public int excludeFromPayout(long payoutId) throws DaoException {
+    public int excludeFromPayout(String payoutId) throws DaoException {
         Query query = getDslContext().update(ADJUSTMENT)
-                .set(ADJUSTMENT.PAYOUT_ID, (Long) null)
+                .set(ADJUSTMENT.PAYOUT_ID, (String) null)
                 .where(ADJUSTMENT.PAYOUT_ID.eq(payoutId));
         return execute(query);
     }

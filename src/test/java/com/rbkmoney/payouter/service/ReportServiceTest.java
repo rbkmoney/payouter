@@ -2,8 +2,8 @@ package com.rbkmoney.payouter.service;
 
 import com.google.common.collect.ImmutableMap;
 import com.rbkmoney.damsel.base.Month;
-import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.domain.Calendar;
+import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.domain_config.RepositoryClientSrv;
 import com.rbkmoney.damsel.domain_config.VersionedObject;
 import com.rbkmoney.damsel.message_sender.Message;
@@ -27,7 +27,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.Year;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
@@ -36,9 +35,9 @@ import static io.github.benas.randombeans.api.EnhancedRandom.randomListOf;
 import static io.github.benas.randombeans.api.EnhancedRandom.randomStreamOf;
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertFalse;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doAnswer;
 
 public class ReportServiceTest extends AbstractIntegrationTest {
@@ -71,8 +70,8 @@ public class ReportServiceTest extends AbstractIntegrationTest {
                         new VersionedObject(
                                 1,
                                 DomainObject.calendar(new CalendarObject(
-                                        new CalendarRef(1),
-                                        new Calendar("calendar", "Europe/Moscow", Collections.emptyMap())
+                                                new CalendarRef(1),
+                                                new Calendar("calendar", "Europe/Moscow", Collections.emptyMap())
                                         )
                                 )
                         )
@@ -85,12 +84,13 @@ public class ReportServiceTest extends AbstractIntegrationTest {
                     return payout;
                 }).collect(Collectors.toList());
         payouts.forEach(payout -> {
-            long payoutId = payoutDao.save(payout);
+            payoutDao.save(payout);
             List<PayoutSummary> cfds = randomListOf(2, PayoutSummary.class);
-            cfds.forEach(cfd -> cfd.setPayoutId(String.valueOf(payoutId)));
+            cfds.forEach(cfd -> cfd.setPayoutId(payout.getPayoutId()));
             cfds.get(0).setCashFlowType(PayoutSummaryOperationType.payment);
             cfds.get(1).setCashFlowType(PayoutSummaryOperationType.refund);
             payoutSummaryDao.save(cfds);
+            payoutDao.saveRangeData(payout.getPayoutId(), payout.getPartyId(), payout.getShopId(), LocalDateTime.now(), LocalDateTime.now());
         });
 
         Report report = reportDao.get(residentsReportService.generateAndSave(payouts));
@@ -137,12 +137,13 @@ public class ReportServiceTest extends AbstractIntegrationTest {
                     return payout;
                 }).collect(Collectors.toList());
         payouts.forEach(payout -> {
-            long payoutId = payoutDao.save(payout);
+            payoutDao.save(payout);
             List<PayoutSummary> cfds = randomListOf(2, PayoutSummary.class);
-            cfds.forEach(cfd -> cfd.setPayoutId(String.valueOf(payoutId)));
+            cfds.forEach(cfd -> cfd.setPayoutId(payout.getPayoutId()));
             cfds.get(0).setCashFlowType(PayoutSummaryOperationType.payment);
             cfds.get(1).setCashFlowType(PayoutSummaryOperationType.refund);
             payoutSummaryDao.save(cfds);
+            payoutDao.saveRangeData(payout.getPayoutId(), payout.getPartyId(), payout.getShopId(), LocalDateTime.now(), LocalDateTime.now());
         });
 
         residentsReportService.createNewReportsJob();
@@ -156,8 +157,8 @@ public class ReportServiceTest extends AbstractIntegrationTest {
                         new VersionedObject(
                                 1,
                                 DomainObject.calendar(new CalendarObject(
-                                        new CalendarRef(1),
-                                        new Calendar("calendar", "Europe/Moscow", Collections.emptyMap())
+                                                new CalendarRef(1),
+                                                new Calendar("calendar", "Europe/Moscow", Collections.emptyMap())
                                         )
                                 )
                         )
@@ -170,12 +171,13 @@ public class ReportServiceTest extends AbstractIntegrationTest {
                     return payout;
                 }).collect(Collectors.toList());
         payouts.forEach(payout -> {
-            long payoutId = payoutDao.save(payout);
+            payoutDao.save(payout);
             List<PayoutSummary> cfds = randomListOf(2, PayoutSummary.class);
-            cfds.forEach(cfd -> cfd.setPayoutId(String.valueOf(payoutId)));
+            cfds.forEach(cfd -> cfd.setPayoutId(payout.getPayoutId()));
             cfds.get(0).setCashFlowType(PayoutSummaryOperationType.payment);
             cfds.get(1).setCashFlowType(PayoutSummaryOperationType.refund);
             payoutSummaryDao.save(cfds);
+            payoutDao.saveRangeData(payout.getPayoutId(), payout.getPartyId(), payout.getShopId(), LocalDateTime.now(), LocalDateTime.now());
         });
 
         nonresidentsReportService.createNewReportsJob();

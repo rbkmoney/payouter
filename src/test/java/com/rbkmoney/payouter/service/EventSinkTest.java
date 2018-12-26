@@ -3,6 +3,8 @@ package com.rbkmoney.payouter.service;
 import com.rbkmoney.damsel.base.InvalidRequest;
 import com.rbkmoney.damsel.payout_processing.*;
 import com.rbkmoney.payouter.AbstractIntegrationTest;
+import com.rbkmoney.payouter.domain.enums.PayoutAccountType;
+import com.rbkmoney.payouter.domain.enums.PayoutType;
 import com.rbkmoney.payouter.domain.tables.pojos.PayoutEvent;
 import com.rbkmoney.woody.thrift.impl.http.THSpawnClientBuilder;
 import org.apache.thrift.TException;
@@ -15,7 +17,6 @@ import org.springframework.test.jdbc.JdbcTestUtils;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -47,10 +48,9 @@ public class EventSinkTest extends AbstractIntegrationTest {
         PayoutEvent payoutEvent = random(PayoutEvent.class);
         payoutEvent.setPayoutId("12345");
         payoutEvent.setEventType("payout_created");
-        payoutEvent.setUserType("internal_user");
         payoutEvent.setPayoutStatus("paid");
-        payoutEvent.setPayoutType("bank_account");
-        payoutEvent.setPayoutAccountType("russian_payout_account");
+        payoutEvent.setPayoutType(random(PayoutType.class).toString());
+        payoutEvent.setPayoutAccountType(random(PayoutAccountType.class).toString());
         payoutEvent.setPayoutCashFlow("[{\"source\":{\"account_type\":{\"external\":\"outcome\"},\"account_id\":3597919171377506497},\"destination\":{\"account_type\":{\"external\":\"outcome\"},\"account_id\":6831933432983240766},\"volume\":{\"amount\":5211427573358778888,\"currency\":{\"symbolic_code\":\"\"}},\"details\":\"1H 7\"},{\"source\":{\"account_type\":{\"system\":\"settlement\"},\"account_id\":5023621675459118179},\"destination\":{\"account_type\":{\"merchant\":\"settlement\"},\"account_id\":5917509550248754017},\"volume\":{\"amount\":-4222063269285646320,\"currency\":{\"symbolic_code\":\"_Xhj+XMxL*\"}},\"details\":\"(\"},{\"source\":{\"account_type\":{\"provider\":\"settlement\"},\"account_id\":-5960687128262570088},\"destination\":{\"account_type\":{\"system\":\"settlement\"},\"account_id\":-7162006304489189748},\"volume\":{\"amount\":5968107316042487537,\"currency\":{\"symbolic_code\":\"9AEc=`4q((+\"}},\"details\":\"`s\"},{\"source\":{\"account_type\":{\"external\":\"income\"},\"account_id\":-6956345410083087622},\"destination\":{\"account_type\":{\"system\":\"settlement\"},\"account_id\":-1431660791080627688},\"volume\":{\"amount\":-8572831265387909550,\"currency\":{\"symbolic_code\":\"RKT/x<a.\"}},\"details\":\"lYU.V%k(Y\"},{\"source\":{\"account_type\":{\"external\":\"income\"},\"account_id\":2719813353463804457},\"destination\":{\"account_type\":{\"external\":\"outcome\"},\"account_id\":-4963934282946639877},\"volume\":{\"amount\":-8810554754230626184,\"currency\":{\"symbolic_code\":\"^$xfA250z%iEnI\"}},\"details\":\"B fP\"}]");
 
         eventSinkService.saveEvent(payoutEvent);
@@ -110,6 +110,9 @@ public class EventSinkTest extends AbstractIntegrationTest {
                         payoutEvent.setPayoutId(String.valueOf(payoutEvent.getEventId()));
                         payoutEvent.setEventType("payout_created");
                         payoutEvent.setUserType("internal_user");
+                        payoutEvent.setAmount(100L);
+                        payoutEvent.setFee(10L);
+                        payoutEvent.setCurrencyCode("RUB");
                         payoutEvent.setPayoutStatus("paid");
                         payoutEvent.setPayoutType("bank_account");
                         payoutEvent.setPayoutAccountType("russian_payout_account");

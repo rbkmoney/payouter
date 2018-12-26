@@ -45,6 +45,10 @@ service:
     mail:
       from: no-reply@rbkmoney.com
       to: trash@rbkmoney.com
+  fistful:
+    url: http://fistful:8022/fustful
+    networkTimeout: 5000
+    sourceId: source
 report:
   nonresidents:
     file:
