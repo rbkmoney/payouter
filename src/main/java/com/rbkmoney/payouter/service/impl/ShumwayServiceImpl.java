@@ -227,25 +227,28 @@ public class ShumwayServiceImpl implements ShumwayService {
 
     private List<FinalCashFlowPosting> toFinalCashFlowPostings(List<CashFlowPosting> cashFlowPostings) {
         return cashFlowPostings.stream()
-                .map(cashFlowPosting -> {
-                    FinalCashFlowPosting finalCashFlowPosting = new FinalCashFlowPosting();
-                    finalCashFlowPosting.setSource(
-                            new FinalCashFlowAccount(toCashFlowAccount(cashFlowPosting.getFromAccountType()),
-                                    cashFlowPosting.getFromAccountId())
-                    );
-                    finalCashFlowPosting.setDestination(
-                            new FinalCashFlowAccount(toCashFlowAccount(cashFlowPosting.getToAccountType()),
-                                    cashFlowPosting.getToAccountId())
-                    );
-                    finalCashFlowPosting.setVolume(
-                            new Cash(
-                                    cashFlowPosting.getAmount(),
-                                    new CurrencyRef(cashFlowPosting.getCurrencyCode())
-                            )
-                    );
-                    finalCashFlowPosting.setDetails(cashFlowPosting.getDescription());
-                    return finalCashFlowPosting;
-                }).collect(Collectors.toList());
+                .map(this::toFinalCashFlowPosting)
+                .collect(Collectors.toList());
+    }
+
+    private FinalCashFlowPosting toFinalCashFlowPosting(CashFlowPosting cashFlowPosting) {
+            FinalCashFlowPosting finalCashFlowPosting = new FinalCashFlowPosting();
+            finalCashFlowPosting.setSource(
+                    new FinalCashFlowAccount(toCashFlowAccount(cashFlowPosting.getFromAccountType()),
+                            cashFlowPosting.getFromAccountId())
+            );
+            finalCashFlowPosting.setDestination(
+                    new FinalCashFlowAccount(toCashFlowAccount(cashFlowPosting.getToAccountType()),
+                            cashFlowPosting.getToAccountId())
+            );
+            finalCashFlowPosting.setVolume(
+                    new Cash(
+                            cashFlowPosting.getAmount(),
+                            new CurrencyRef(cashFlowPosting.getCurrencyCode())
+                    )
+            );
+            finalCashFlowPosting.setDetails(cashFlowPosting.getDescription());
+            return finalCashFlowPosting;
     }
 
     private List<CashFlowPosting> toCashFlowPostings(String payoutId, List<FinalCashFlowPosting> finalCashFlowPostings) {
