@@ -31,10 +31,6 @@ public class GeneratePayoutJob implements Job {
     @Autowired
     private PayoutService payoutService;
 
-    @Value("${scheduler.user-id}")
-    private String userId;
-
-
     @Override
     public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
         JobDetail jobDetail = jobExecutionContext.getJobDetail();

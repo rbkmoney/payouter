@@ -339,15 +339,15 @@ public class PayoutServiceImpl implements PayoutService {
 
     @Override
     public List<Payout> search(
-            Optional<PayoutStatus> payoutStatus,
-            Optional<LocalDateTime> fromTime,
-            Optional<LocalDateTime> toTime,
-            Optional<List<Long>> payoutIds,
-            Optional<Long> minAmount,
-            Optional<Long> maxAmount,
-            Optional<CurrencyRef> currency,
-            Optional<Long> fromId,
-            Optional<Integer> size
+            PayoutStatus payoutStatus,
+            LocalDateTime fromTime,
+            LocalDateTime toTime,
+            List<String> payoutIds,
+            Long minAmount,
+            Long maxAmount,
+            CurrencyRef currency,
+            Long fromId,
+            int size
     ) throws StorageException {
         return payoutDao.search(payoutStatus, fromTime, toTime, payoutIds, minAmount, maxAmount, currency, fromId, size);
     }

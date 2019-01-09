@@ -23,9 +23,4 @@ public interface DominantService {
 
     Calendar getCalendar(CalendarRef calendarRef, Reference revisionReference) throws NotFoundException;
 
-    CategoryType getCategoryType(CategoryRef categoryRef) throws NotFoundException;
-
-    CategoryType getCategoryType(CategoryRef categoryRef, long domainRevision) throws NotFoundException;
-
-    CategoryType getCategoryType(CategoryRef categoryRef, Reference revisionReference) throws NotFoundException;
 }

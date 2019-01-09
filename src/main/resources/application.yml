@@ -11,7 +11,7 @@ spring:
     password: @db.password@
     hikari:
       idle-timeout: 30000
-      maximum-pool-size: 3
+      maximum-pool-size: 10
   flyway:
     schemas: sht
   quartz:
@@ -72,8 +72,6 @@ report:
     cron: "0 0 9 * * *"
     calendar: 1
     timezone: Europe/Moscow
-scheduler:
-  user-id: test
 management.metrics.export.statsd.flavor: etsy
 
 

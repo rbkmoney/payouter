@@ -108,33 +108,6 @@ public class DominantServiceImpl implements DominantService {
         }
     }
 
-    @Override
-    public CategoryType getCategoryType(CategoryRef categoryRef) throws NotFoundException {
-        return getCategoryType(categoryRef, Reference.head(new Head()));
-    }
-
-    @Override
-    public CategoryType getCategoryType(CategoryRef categoryRef, long domainRevision) throws NotFoundException {
-        return getCategoryType(categoryRef, Reference.version(domainRevision));
-    }
-
-    @Override
-    public CategoryType getCategoryType(CategoryRef categoryRef, Reference revisionReference) throws NotFoundException {
-        log.info("Trying to get category type, categoryRef='{}', revisionReference='{}'", categoryRef, revisionReference);
-        try {
-            com.rbkmoney.damsel.domain.Reference reference = new com.rbkmoney.damsel.domain.Reference();
-            reference.setCategory(categoryRef);
-            VersionedObject versionedObject = checkoutObject(revisionReference, reference);
-            CategoryType categoryType = versionedObject.getObject().getCategory().getData().getType();
-            log.info("Category type has been found, categoryRef='{}', revisionReference='{}', categoryType='{}'", categoryRef, revisionReference, categoryType);
-            return categoryType;
-        } catch (VersionNotFound | ObjectNotFound ex) {
-            throw new NotFoundException(String.format("Version not found, categoryRef='%s', revisionReference='%s'", categoryRef, revisionReference), ex);
-        } catch (TException ex) {
-            throw new RuntimeException(String.format("Failed to get category type, categoryRef='%s', revisionReference='%s'", categoryRef, revisionReference), ex);
-        }
-    }
-
     private VersionedObject checkoutObject(Reference revisionReference, com.rbkmoney.damsel.domain.Reference reference) throws TException {
         return retryTemplate.execute(
                 context -> dominantClient.checkoutObject(revisionReference, reference)

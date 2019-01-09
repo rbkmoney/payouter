@@ -3,14 +3,13 @@ package com.rbkmoney.payouter.dao;
 import com.rbkmoney.damsel.domain.CurrencyRef;
 import com.rbkmoney.payouter.domain.enums.PayoutAccountType;
 import com.rbkmoney.payouter.domain.enums.PayoutStatus;
-import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.domain.tables.pojos.PayoutRangeData;
+import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
 import com.rbkmoney.payouter.exception.DaoException;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 public interface PayoutDao extends GenericDao {
@@ -38,15 +37,15 @@ public interface PayoutDao extends GenericDao {
     List<Payout> getUnpaidPayoutsByAccountType(PayoutAccountType accountType) throws DaoException;
 
     List<Payout> search(
-            Optional<PayoutStatus> payoutStatus,
-            Optional<LocalDateTime> fromTime,
-            Optional<LocalDateTime> toTime,
-            Optional<List<Long>> payoutIds,
-            Optional<Long> minAmount,
-            Optional<Long> maxAmount,
-            Optional<CurrencyRef> currency,
-            Optional<Long> fromId,
-            Optional<Integer> size
+            PayoutStatus payoutStatus,
+            LocalDateTime fromTime,
+            LocalDateTime toTime,
+            List<String> payoutIds,
+            Long minAmount,
+            Long maxAmount,
+            CurrencyRef currency,
+            Long fromId,
+            int size
     ) throws DaoException;
 
     List<Payout> getByIds(Set<String> payoutIds) throws DaoException;
