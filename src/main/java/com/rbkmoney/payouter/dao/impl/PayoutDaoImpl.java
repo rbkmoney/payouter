@@ -23,7 +23,6 @@ import org.springframework.stereotype.Component;
 import javax.sql.DataSource;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import static com.rbkmoney.payouter.domain.Tables.*;
@@ -177,27 +176,43 @@ public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
 
     @Override
     public List<Payout> search(
-            Optional<PayoutStatus> payoutStatus,
-            Optional<LocalDateTime> fromTime,
-            Optional<LocalDateTime> toTime,
-            Optional<List<Long>> payoutIds,
-            Optional<Long> minAmountOptional,
-            Optional<Long> maxAmountOptional,
-            Optional<CurrencyRef> currencyOptional,
-            Optional<Long> fromIdOptional,
-            Optional<Integer> sizeOptional
+            PayoutStatus payoutStatus,
+            LocalDateTime fromTime,
+            LocalDateTime toTime,
+            List<String> payoutIds,
+            Long minAmount,
+            Long maxAmount,
+            CurrencyRef currency,
+            Long fromId,
+            int size
     ) throws DaoException {
         SelectQuery query = getDslContext().selectQuery();
         query.addFrom(PAYOUT);
-        payoutStatus.ifPresent(ps -> query.addConditions(PAYOUT.STATUS.eq(ps)));
-        fromTime.ifPresent(from -> query.addConditions(PAYOUT.CREATED_AT.ge(from)));
-        toTime.ifPresent(to -> query.addConditions(PAYOUT.CREATED_AT.lt(to)));
-        payoutIds.ifPresent(ids -> query.addConditions(PAYOUT.ID.in(ids)));
-        minAmountOptional.ifPresent(minAmount -> query.addConditions(PAYOUT.AMOUNT.ge(minAmount)));
-        maxAmountOptional.ifPresent(maxAmount -> query.addConditions(PAYOUT.AMOUNT.le(maxAmount)));
-        currencyOptional.ifPresent(currencyRef -> query.addConditions(PAYOUT.CURRENCY_CODE.eq(currencyRef.getSymbolicCode())));
-        fromIdOptional.ifPresent(fromId -> query.addConditions(PAYOUT.ID.gt(fromId)));
-        sizeOptional.ifPresent(size -> query.addLimit(size));
+        if (payoutStatus != null) {
+            query.addConditions(PAYOUT.STATUS.eq(payoutStatus));
+        }
+        if (fromTime != null) {
+            query.addConditions(PAYOUT.CREATED_AT.ge(fromTime));
+        }
+        if (toTime != null) {
+            query.addConditions(PAYOUT.CREATED_AT.lt(toTime));
+        }
+        if (payoutIds != null) {
+            query.addConditions(PAYOUT.PAYOUT_ID.in(payoutIds));
+        }
+        if (minAmount != null) {
+            query.addConditions(PAYOUT.AMOUNT.ge(minAmount));
+        }
+        if (maxAmount != null) {
+            query.addConditions(PAYOUT.AMOUNT.le(maxAmount));
+        }
+        if (currency != null) {
+            query.addConditions(PAYOUT.CURRENCY_CODE.eq(currency.getSymbolicCode()));
+        }
+        if (fromId != null) {
+            query.addConditions(PAYOUT.ID.lt(fromId));
+        }
+        query.addLimit(size);
         query.addOrderBy(PAYOUT.ID.desc());
         return fetch(query, payoutRowMapper);
     }

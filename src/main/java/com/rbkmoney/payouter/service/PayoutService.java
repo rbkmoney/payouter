@@ -11,7 +11,6 @@ import com.rbkmoney.payouter.exception.StorageException;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 public interface PayoutService {
@@ -59,14 +58,14 @@ public interface PayoutService {
     List<Payout> getByIds(Set<String> payoutIds) throws StorageException;
 
     List<Payout> search(
-            Optional<PayoutStatus> payoutStatus,
-            Optional<LocalDateTime> fromTime,
-            Optional<LocalDateTime> toTime,
-            Optional<List<Long>> payoutIds,
-            Optional<Long> minAmount,
-            Optional<Long> maxAmount,
-            Optional<CurrencyRef> currencyRef,
-            Optional<Long> fromId,
-            Optional<Integer> size) throws StorageException;
+            PayoutStatus payoutStatus,
+            LocalDateTime fromTime,
+            LocalDateTime toTime,
+            List<String> payoutIds,
+            Long minAmount,
+            Long maxAmount,
+            CurrencyRef currencyRef,
+            Long fromId,
+            int size) throws StorageException;
 
 }

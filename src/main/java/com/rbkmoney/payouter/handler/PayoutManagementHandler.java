@@ -142,17 +142,19 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
     public PayoutSearchResponse getPayoutsInfo(PayoutSearchRequest payoutSearchRequest) throws InvalidRequest, TException {
         PayoutSearchCriteria payoutSearchCriteria = payoutSearchRequest.getSearchCriteria();
         log.info("GetPayoutsInfo with request parameters: {}", payoutSearchRequest);
-        Optional<Long> fromId = payoutSearchRequest.isSetFromId() ? Optional.ofNullable(payoutSearchRequest.getFromId()) : Optional.empty();
-        Optional<Integer> size = payoutSearchRequest.isSetSize() ? Optional.ofNullable(payoutSearchRequest.getSize()) : Optional.empty();
-        Optional<com.rbkmoney.payouter.domain.enums.PayoutStatus> payoutStatus = Optional.ofNullable(payoutSearchCriteria.getStatus()).map(ps -> com.rbkmoney.payouter.domain.enums.PayoutStatus.valueOf(ps.name().toUpperCase()));
+        Long fromId = payoutSearchRequest.isSetFromId() ? payoutSearchRequest.getFromId() : null;
+        int size = payoutSearchRequest.isSetSize() ? payoutSearchRequest.getSize() : MAX_SIZE;
+        com.rbkmoney.payouter.domain.enums.PayoutStatus payoutStatus = Optional.ofNullable(payoutSearchCriteria.getStatus())
+                .map(ps -> com.rbkmoney.payouter.domain.enums.PayoutStatus.valueOf(ps.name().toUpperCase()))
+                .orElse(null);
         Optional<TimeRange> timeRangeOptional = Optional.ofNullable(payoutSearchCriteria.getTimeRange());
-        Optional<LocalDateTime> fromTime = timeRangeOptional.map(tr -> TypeUtil.stringToLocalDateTime(tr.getFromTime()));
-        Optional<LocalDateTime> toTime = timeRangeOptional.map(tr -> TypeUtil.stringToLocalDateTime(tr.getToTime()));
+        LocalDateTime fromTime = timeRangeOptional.map(tr -> TypeUtil.stringToLocalDateTime(tr.getFromTime())).orElse(null);
+        LocalDateTime toTime = timeRangeOptional.map(tr -> TypeUtil.stringToLocalDateTime(tr.getToTime())).orElse(null);
         Optional<AmountRange> amountRangeOptional = Optional.ofNullable(payoutSearchCriteria.getAmountRange());
-        Optional<Long> minAmount = amountRangeOptional.map(amountRange -> amountRange.getMin());
-        Optional<Long> maxAmount = amountRangeOptional.map(amountRange -> amountRange.getMax());
-        Optional<CurrencyRef> currencyCode = Optional.ofNullable(payoutSearchCriteria.getCurrency());
-        Optional<List<Long>> payoutIds = Optional.ofNullable(payoutSearchCriteria.getPayoutIds()).map(pids -> pids.stream().map(Long::valueOf).collect(Collectors.toList()));
+        Long minAmount = amountRangeOptional.map(amountRange -> amountRange.getMin()).orElse(null);
+        Long maxAmount = amountRangeOptional.map(amountRange -> amountRange.getMax()).orElse(null);
+        CurrencyRef currencyCode = payoutSearchCriteria.getCurrency();
+        List<String> payoutIds = payoutSearchCriteria.getPayoutIds();
 
         validateRequest(size, fromTime, toTime);
 
@@ -207,14 +209,14 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
         log.info("End generate report for payouts, count: {}", payouts.size());
     }
 
-    private void validateRequest(Optional<Integer> size, Optional<LocalDateTime> fromTime, Optional<LocalDateTime> toTime) throws InvalidRequest {
+    private void validateRequest(Integer size, LocalDateTime fromTime, LocalDateTime toTime) throws InvalidRequest {
         List<String> errorList = new ArrayList<>();
-        if (size.isPresent() && (size.get() <= 0 || size.get() > MAX_SIZE)) {
-            errorList.add(String.format("Size %d must be positive and less then %d", size.get(), MAX_SIZE));
+        if (size != null && (size <= 0 || size > MAX_SIZE)) {
+            errorList.add(String.format("Size %d must be positive and less then %d", size, MAX_SIZE));
         }
-        if (toTime.isPresent() && fromTime.isPresent()) {
-            if (fromTime.get().isAfter(toTime.get())) {
-                errorList.add(String.format("FromTime %s must be before toTime %s", fromTime.get(), toTime.get()));
+        if (toTime != null && fromTime != null) {
+            if (fromTime.isAfter(toTime)) {
+                errorList.add(String.format("FromTime %s must be before toTime %s", fromTime, toTime));
             }
         }
         if (!errorList.isEmpty()) {
