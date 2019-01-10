@@ -177,7 +177,7 @@ public class NonresidentsReportServiceImpl implements ReportService {
                             payout.getAccountLegalName(),
                             payout.getShopUrl(),
                             payout.getCreatedAt().format(dateTimeFormatter),
-                            String.valueOf(payout.getId()),
+                            payout.getPayoutId(),
                             payout.getCurrencyCode(),
                             FormatUtil.getFormattedAmount(payout.getAmount() + payout.getFee()),
                             FormatUtil.getFormattedAmount(payout.getFee()),

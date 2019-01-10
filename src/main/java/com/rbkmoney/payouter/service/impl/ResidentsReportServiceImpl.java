@@ -133,7 +133,7 @@ public class ResidentsReportServiceImpl implements ReportService {
         final String reportContent = processTemplate(dataModel, reportTemplateFileName);
         final String reportMailContent = residentsMailContentService.generateContent(payouts);
 
-        List<String> payoutIds = payouts.stream().map(p -> p.getId().toString()).collect(Collectors.toList());
+        List<String> payoutIds = payouts.stream().map(p -> p.getPayoutId()).collect(Collectors.toList());
         Report report = new Report();
         report.setName(prefix + "_" + createdAtFormatted + extension);
         report.setSubject(String.format("Выплаты для резидентов, сгенерированные %s (%d)", createdAtFormatted, payouts.get(0).getPaymentInstitutionId()));
