@@ -26,7 +26,7 @@ public class FistfulService {
     public FistfulService(
             FistfulAdminSrv.Iface fistfulClient,
             RetryTemplate retryTemplate,
-            @Value("service.fistful.sourceId") String defaultSourceId
+            @Value("${service.fistful.sourceId}") String defaultSourceId
     ) {
         this.fistfulClient = fistfulClient;
         this.retryTemplate = retryTemplate;
