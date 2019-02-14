@@ -52,6 +52,7 @@ public class InvoicePaymentCashFlowChangedHandler implements Handler<InvoiceChan
 
         List<FinalCashFlowPosting> finalCashFlow = invoicePaymentChange.getPayload().getInvoicePaymentCashFlowChanged().getCashFlow();
         Map<CashFlowType, Long> parsedCashFlow = DamselUtil.parseCashFlow(finalCashFlow);
+        payment.setAmount(parsedCashFlow.getOrDefault(AMOUNT, 0L));
         payment.setFee(parsedCashFlow.getOrDefault(FEE, 0L));
         payment.setProviderFee(parsedCashFlow.getOrDefault(PROVIDER_FEE, 0L));
         payment.setExternalFee(parsedCashFlow.getOrDefault(EXTERNAL_FEE, 0L));

@@ -373,12 +373,21 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
 
         Event paymentStarted = invoicePaymentGenerator.createInvoicePaymentStarted();
         List<FinalCashFlowPosting> finalCashFlowPostings = new ArrayList<>();
+        FinalCashFlowPosting amountPosting = new FinalCashFlowPosting(
+                new FinalCashFlowAccount(
+                        CashFlowAccount.provider(ProviderCashFlowAccount.settlement), 2L
+                ),
+                new FinalCashFlowAccount(
+                        CashFlowAccount.merchant(MerchantCashFlowAccount.settlement), 2L
+                ),
+                new Cash(20L, new CurrencyRef("RUB")));
+        finalCashFlowPostings.add(amountPosting);
         FinalCashFlowPosting feePosting = new FinalCashFlowPosting(
                 new FinalCashFlowAccount(
                         CashFlowAccount.merchant(MerchantCashFlowAccount.settlement), 2L
                 ),
                 new FinalCashFlowAccount(
-                        CashFlowAccount.system(SystemCashFlowAccount.settlement.settlement), 2L
+                        CashFlowAccount.system(SystemCashFlowAccount.settlement), 2L
                 ),
                 new Cash(20L, new CurrencyRef("RUB")));
         finalCashFlowPostings.add(feePosting);
@@ -404,6 +413,7 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
 
         eventStockService.processStockEvent(buildStockEvent(paymentStarted));
         Payment payment = paymentDao.get(invoiceId, paymentId);
+        assertEquals((Long) 20L, payment.getAmount());
         assertEquals((Long) 20L, payment.getFee());
         assertEquals((Long) 0L, payment.getExternalFee());
         assertEquals((Long) 0L, payment.getProviderFee());
