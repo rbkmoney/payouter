@@ -154,9 +154,7 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
         Long minAmount = amountRangeOptional.map(AmountRange::getMin).orElse(null);
         Long maxAmount = amountRangeOptional.map(AmountRange::getMax).orElse(null);
         CurrencyRef currencyCode = payoutSearchCriteria.getCurrency();
-        PayoutType payoutType = Optional.ofNullable(payoutSearchCriteria.getType()).map(Enum::name)
-                .map(PayoutType::valueOf)
-                .orElse(null);
+        PayoutType payoutType = getPayoutType(payoutSearchCriteria);
         List<String> payoutIds = payoutSearchCriteria.getPayoutIds();
 
         validateRequest(size, fromTime, toTime);
@@ -225,6 +223,13 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
         if (!errorList.isEmpty()) {
             throw new InvalidRequest(errorList);
         }
+    }
+
+    private PayoutType getPayoutType(PayoutSearchCriteria payoutSearchCriteria) {
+        return Optional.ofNullable(payoutSearchCriteria.getType())
+                .map(Enum::name)
+                .map(PayoutType::valueOf)
+                .orElse(null);
     }
 
 }
