@@ -183,6 +183,7 @@ public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
             Long minAmount,
             Long maxAmount,
             CurrencyRef currency,
+            PayoutType payoutType,
             Long fromId,
             int size
     ) throws DaoException {
@@ -208,6 +209,9 @@ public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
         }
         if (currency != null) {
             query.addConditions(PAYOUT.CURRENCY_CODE.eq(currency.getSymbolicCode()));
+        }
+        if (payoutType != null) {
+            query.addConditions(PAYOUT.TYPE.eq(payoutType));
         }
         if (fromId != null) {
             query.addConditions(PAYOUT.ID.lt(fromId));

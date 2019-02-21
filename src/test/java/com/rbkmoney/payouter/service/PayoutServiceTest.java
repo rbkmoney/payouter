@@ -156,6 +156,7 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
                     null,
                     null,
                     null,
+                    null,
                     1
             );
         } while (payouts.isEmpty());
@@ -164,19 +165,19 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         Payout payout = payouts.get(0);
         assertEquals(9500L, (long) payout.getAmount());
         assertEquals(UNPAID, payout.getStatus());
-        assertTrue(
-                !payoutService.search(
-                        null,
-                        null,
-                        null,
-                        null,
-                        payout.getAmount() - 1,
-                        payout.getAmount() + 1,
-                        new CurrencyRef("RUB"),
-                        null,
-                        1
-                ).isEmpty()
+        List<Payout> searchResult = payoutService.search(
+                null,
+                null,
+                null,
+                null,
+                payout.getAmount() - 1,
+                payout.getAmount() + 1,
+                new CurrencyRef("RUB"),
+                payout.getType(),
+                null,
+                1
         );
+        assertTrue(!searchResult.isEmpty());
     }
 
     @Test

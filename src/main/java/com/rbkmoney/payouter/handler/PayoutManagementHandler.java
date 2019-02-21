@@ -151,20 +151,21 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
         LocalDateTime fromTime = timeRangeOptional.map(tr -> TypeUtil.stringToLocalDateTime(tr.getFromTime())).orElse(null);
         LocalDateTime toTime = timeRangeOptional.map(tr -> TypeUtil.stringToLocalDateTime(tr.getToTime())).orElse(null);
         Optional<AmountRange> amountRangeOptional = Optional.ofNullable(payoutSearchCriteria.getAmountRange());
-        Long minAmount = amountRangeOptional.map(amountRange -> amountRange.getMin()).orElse(null);
-        Long maxAmount = amountRangeOptional.map(amountRange -> amountRange.getMax()).orElse(null);
+        Long minAmount = amountRangeOptional.map(AmountRange::getMin).orElse(null);
+        Long maxAmount = amountRangeOptional.map(AmountRange::getMax).orElse(null);
         CurrencyRef currencyCode = payoutSearchCriteria.getCurrency();
+        PayoutType payoutType = getPayoutType(payoutSearchCriteria);
         List<String> payoutIds = payoutSearchCriteria.getPayoutIds();
 
         validateRequest(size, fromTime, toTime);
 
-        List<Payout> payouts = payoutService.search(payoutStatus, fromTime, toTime, payoutIds, minAmount, maxAmount, currencyCode, fromId, size);
+        List<Payout> payouts = payoutService.search(payoutStatus, fromTime, toTime, payoutIds, minAmount, maxAmount, currencyCode, payoutType, fromId, size);
         long lastId = payouts.isEmpty() ? 0L : payouts.get(payouts.size() - 1).getId();
         PayoutSearchResponse payoutSearchResponse = new PayoutSearchResponse(
                 payouts.stream()
                         .map(payout ->
                                 DamselUtil.toDamselPayout(payout, shumwayService.getPostings(payout.getPayoutId()))
-                                .setSummary(DamselUtil.toDamselPayoutSummary(payoutSummaryService.get(payout.getPayoutId())))
+                                        .setSummary(DamselUtil.toDamselPayoutSummary(payoutSummaryService.get(payout.getPayoutId())))
                         )
                         .collect(Collectors.toList()),
                 lastId
@@ -222,6 +223,13 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
         if (!errorList.isEmpty()) {
             throw new InvalidRequest(errorList);
         }
+    }
+
+    private PayoutType getPayoutType(PayoutSearchCriteria payoutSearchCriteria) {
+        return Optional.ofNullable(payoutSearchCriteria.getType())
+                .map(Enum::name)
+                .map(PayoutType::valueOf)
+                .orElse(null);
     }
 
 }
