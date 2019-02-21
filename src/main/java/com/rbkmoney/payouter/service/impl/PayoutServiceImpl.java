@@ -346,10 +346,11 @@ public class PayoutServiceImpl implements PayoutService {
             Long minAmount,
             Long maxAmount,
             CurrencyRef currency,
+            PayoutType payoutType,
             Long fromId,
             int size
     ) throws StorageException {
-        return payoutDao.search(payoutStatus, fromTime, toTime, payoutIds, minAmount, maxAmount, currency, fromId, size);
+        return payoutDao.search(payoutStatus, fromTime, toTime, payoutIds, minAmount, maxAmount, currency, payoutType, fromId, size);
     }
 
     private Payout buildAndValidatePayout(String payoutId, String partyId, String shopId, String payoutToolId, String currencyCode, long partyRevision) throws InvalidStateException, NotFoundException {

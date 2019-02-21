@@ -3,6 +3,7 @@ package com.rbkmoney.payouter.dao;
 import com.rbkmoney.damsel.domain.CurrencyRef;
 import com.rbkmoney.payouter.domain.enums.PayoutAccountType;
 import com.rbkmoney.payouter.domain.enums.PayoutStatus;
+import com.rbkmoney.payouter.domain.enums.PayoutType;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
 import com.rbkmoney.payouter.domain.tables.pojos.PayoutRangeData;
 import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
@@ -44,6 +45,7 @@ public interface PayoutDao extends GenericDao {
             Long minAmount,
             Long maxAmount,
             CurrencyRef currency,
+            PayoutType payoutType,
             Long fromId,
             int size
     ) throws DaoException;
