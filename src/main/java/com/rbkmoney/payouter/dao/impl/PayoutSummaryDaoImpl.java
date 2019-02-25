@@ -2,6 +2,7 @@ package com.rbkmoney.payouter.dao.impl;
 
 import com.rbkmoney.payouter.dao.PayoutSummaryDao;
 import com.rbkmoney.payouter.dao.mapper.RecordRowMapper;
+import com.rbkmoney.payouter.domain.enums.PayoutSummaryOperationType;
 import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
 import com.rbkmoney.payouter.domain.tables.records.PayoutSummaryRecord;
 import com.rbkmoney.payouter.exception.DaoException;
@@ -41,7 +42,8 @@ public class PayoutSummaryDaoImpl extends AbstractGenericDao implements PayoutSu
     @Override
     public List<PayoutSummary> get(String payoutId) throws DaoException {
         Query query = getDslContext().selectFrom(PAYOUT_SUMMARY)
-                .where(PAYOUT_SUMMARY.PAYOUT_ID.eq(payoutId));
+                .where(PAYOUT_SUMMARY.PAYOUT_ID.eq(payoutId))
+                .and(PAYOUT_SUMMARY.CASH_FLOW_TYPE.ne(PayoutSummaryOperationType.payout));
         return fetch(query, payoutSummaryRowMapper);
     }
 }
