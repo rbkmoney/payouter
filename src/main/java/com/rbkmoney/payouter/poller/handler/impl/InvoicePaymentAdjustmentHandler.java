@@ -75,8 +75,6 @@ public class InvoicePaymentAdjustmentHandler implements Handler<InvoiceChange, E
 
         adjustment.setPartyId(payment.getPartyId());
         adjustment.setShopId(payment.getShopId());
-        adjustment.setPaymentAmount(payment.getAmount());
-        adjustment.setPaymentFee(payment.getFee());
 
         adjustment.setAdjustmentId(invoicePaymentAdjustment.getId());
         adjustment.setStatus(AdjustmentStatus.PENDING);
@@ -84,11 +82,18 @@ public class InvoicePaymentAdjustmentHandler implements Handler<InvoiceChange, E
         adjustment.setDomainRevision(invoicePaymentAdjustment.getDomainRevision());
         adjustment.setReason(invoicePaymentAdjustment.getReason());
 
+        Map<CashFlowType, Long> oldCashFlowInverse = DamselUtil.parseInverseCashFlow(invoicePaymentAdjustment.getOldCashFlowInverse());
+        adjustment.setPaymentAmount(oldCashFlowInverse.getOrDefault(AMOUNT, 0L));
+        adjustment.setPaymentFee(oldCashFlowInverse.getOrDefault(FEE, 0L));
+        adjustment.setPaymentGuaranteeDeposit(oldCashFlowInverse.getOrDefault(GUARANTEE_DEPOSIT, 0L));
+
+
         Map<CashFlowType, Long> newCashFlow = DamselUtil.parseCashFlow(invoicePaymentAdjustment.getNewCashFlow());
         adjustment.setNewAmount(newCashFlow.getOrDefault(AMOUNT, 0L));
         adjustment.setNewFee(newCashFlow.getOrDefault(FEE, 0L));
         adjustment.setNewProviderFee(newCashFlow.getOrDefault(PROVIDER_FEE, 0L));
         adjustment.setNewExternalFee(newCashFlow.getOrDefault(EXTERNAL_FEE, 0L));
+        adjustment.setPaymentGuaranteeDeposit(newCashFlow.getOrDefault(GUARANTEE_DEPOSIT, 0L));
 
         adjustmentDao.save(adjustment);
         log.info("Adjustment have been saved, eventId={}, adjustment={}", eventId, adjustment);
