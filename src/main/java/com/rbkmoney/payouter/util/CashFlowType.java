@@ -46,7 +46,10 @@ public enum CashFlowType {
     ),
     PAYOUT_FIXED_FEE(
             CashFlowAccount.merchant(MerchantCashFlowAccount.payout),
-            CashFlowAccount.system(SystemCashFlowAccount.settlement)
+            Arrays.asList(
+                    CashFlowAccount.system(SystemCashFlowAccount.settlement),
+                    CashFlowAccount.merchant(MerchantCashFlowAccount.settlement)
+            )
     );
 
     private List<CashFlowAccount> sources;
