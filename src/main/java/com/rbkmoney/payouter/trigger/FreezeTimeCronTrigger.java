@@ -182,7 +182,7 @@ public class FreezeTimeCronTrigger extends CronTriggerImpl {
 
     private Instant computeBoundByDuration(Instant cronTime, long amountToAdd, Duration duration, Calendar calendar) {
         for (TemporalUnit temporalUnit : Arrays.asList(DAYS, HOURS, MINUTES, SECONDS)) {
-            cronTime = skipExcludedTimes(cronTime, amountToAdd, temporalUnit, calendar);
+            cronTime = skipExcludedTimes(cronTime, amountToAdd, SECONDS, calendar);
             long unitCount = duration.getSeconds() / temporalUnit.getDuration().getSeconds();
             for (int unit = 0; unit < unitCount; unit++) {
                 cronTime = skipExcludedTimes(cronTime.plus(amountToAdd, temporalUnit), amountToAdd, temporalUnit, calendar);

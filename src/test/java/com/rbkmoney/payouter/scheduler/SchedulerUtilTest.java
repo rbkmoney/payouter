@@ -26,6 +26,42 @@ import static org.junit.Assert.*;
 public class SchedulerUtilTest {
 
     @Test
+    public void testEveryDayOnWeekends() throws ParseException, IOException {
+        FreezeTimeCronTrigger trigger = new FreezeTimeCronTrigger();
+        trigger.setCronExpression(new CronExpression("0 0 20 ? * * *"));
+
+        trigger.setStartTime(
+                Date.from(
+                        LocalDate.of(2018, java.time.Month.JANUARY, 12)
+                                .atStartOfDay(ZoneId.of("Europe/Moscow"))
+                                .toInstant()
+                )
+        );
+        trigger.setTimeZone(TimeZone.getTimeZone("Europe/Moscow"));
+        trigger.withHours(5);
+
+        HolidayCalendar calendar = SchedulerUtil.buildCalendar(buildTestCalendar());
+        trigger.computeFirstFireTime(calendar);
+
+        trigger.triggered(calendar);
+
+        assertEquals(
+                LocalDate.of(2018, java.time.Month.JANUARY, 12)
+                        .atTime(20, 00)
+                        .atZone(ZoneId.of("Europe/Moscow"))
+                        .toInstant(),
+                trigger.getNextCronTime().toInstant()
+        );
+        assertEquals(
+                LocalDate.of(2018, java.time.Month.JANUARY, 15)
+                        .atTime(01, 00)
+                        .atZone(ZoneId.of("Europe/Moscow"))
+                        .toInstant(),
+                trigger.getNextFireTime().toInstant()
+        );
+    }
+
+    @Test
     public void testStartOfWeekOnThirdWorkingDay() throws ParseException, IOException {
         FreezeTimeCronTrigger trigger = new FreezeTimeCronTrigger();
         trigger.setCronExpression(new CronExpression("0 0 0 ? * MON *"));
