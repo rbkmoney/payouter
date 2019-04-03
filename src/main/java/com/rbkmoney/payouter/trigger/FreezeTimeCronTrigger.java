@@ -182,7 +182,7 @@ public class FreezeTimeCronTrigger extends CronTriggerImpl {
 
     private Instant computeBoundByDuration(Instant cronTime, long amountToAdd, Duration duration, Calendar calendar) {
         for (TemporalUnit temporalUnit : Arrays.asList(DAYS, HOURS, MINUTES, SECONDS)) {
-            cronTime = skipExcludedTimes(cronTime, amountToAdd, SECONDS, calendar);
+            cronTime = skipExcludedTimes(cronTime, calendar);
             long unitCount = duration.getSeconds() / temporalUnit.getDuration().getSeconds();
             for (int unit = 0; unit < unitCount; unit++) {
                 cronTime = skipExcludedTimes(cronTime.plus(amountToAdd, temporalUnit), amountToAdd, temporalUnit, calendar);
@@ -190,6 +190,11 @@ public class FreezeTimeCronTrigger extends CronTriggerImpl {
             duration = duration.minus(unitCount, temporalUnit);
         }
         return cronTime;
+    }
+
+    private Instant skipExcludedTimes(Instant time, Calendar calendar) {
+        Instant nextIncludedTime = Instant.ofEpochMilli(calendar.getNextIncludedTime(time.toEpochMilli()));
+        return nextIncludedTime.isAfter(time) ? nextIncludedTime : time;
     }
 
     private Instant skipExcludedTimes(Instant time, long amountToAdd, TemporalUnit temporalUnit, Calendar calendar) {

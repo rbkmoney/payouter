@@ -38,15 +38,30 @@ public class SchedulerUtilTest {
                 )
         );
         trigger.setTimeZone(TimeZone.getTimeZone("Europe/Moscow"));
-        trigger.withHours(5);
+        trigger.withHours(1);
 
         HolidayCalendar calendar = SchedulerUtil.buildCalendar(buildTestCalendar());
         trigger.computeFirstFireTime(calendar);
 
+        assertEquals(
+                LocalDate.of(2018, java.time.Month.JANUARY, 12)
+                        .atTime(20, 00)
+                        .atZone(ZoneId.of("Europe/Moscow"))
+                        .toInstant(),
+                trigger.getNextCronTime().toInstant()
+        );
+        assertEquals(
+                LocalDate.of(2018, java.time.Month.JANUARY, 12)
+                        .atTime(21, 00)
+                        .atZone(ZoneId.of("Europe/Moscow"))
+                        .toInstant(),
+                trigger.getNextFireTime().toInstant()
+        );
+
         trigger.triggered(calendar);
 
         assertEquals(
-                LocalDate.of(2018, java.time.Month.JANUARY, 12)
+                LocalDate.of(2018, java.time.Month.JANUARY, 14)
                         .atTime(20, 00)
                         .atZone(ZoneId.of("Europe/Moscow"))
                         .toInstant(),
