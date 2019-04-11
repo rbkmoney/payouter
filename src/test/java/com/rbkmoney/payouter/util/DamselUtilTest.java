@@ -3,6 +3,8 @@ package com.rbkmoney.payouter.util;
 import com.rbkmoney.damsel.domain.*;
 import org.junit.Test;
 
+import java.util.Arrays;
+
 import static org.junit.Assert.assertEquals;
 
 public class DamselUtilTest {
@@ -45,15 +47,17 @@ public class DamselUtilTest {
         }
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void testIncorrectCashFlowPostings() {
-        CashFlowType.getCashFlowType(
+        assertEquals(
+                CashFlowType.UNKNOWN,
+                CashFlowType.getCashFlowType(
                 new FinalCashFlowPosting(
                         new FinalCashFlowAccount(CashFlowAccount.provider(ProviderCashFlowAccount.settlement), 1),
                         new FinalCashFlowAccount(CashFlowAccount.merchant(MerchantCashFlowAccount.guarantee), 2),
                         new Cash(5, new CurrencyRef("UGA"))
                 )
-        );
+        ));
     }
 
 }
