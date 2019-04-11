@@ -93,7 +93,7 @@ public class InvoicePaymentAdjustmentHandler implements Handler<InvoiceChange, E
         adjustment.setNewFee(newCashFlow.getOrDefault(FEE, 0L));
         adjustment.setNewProviderFee(newCashFlow.getOrDefault(PROVIDER_FEE, 0L));
         adjustment.setNewExternalFee(newCashFlow.getOrDefault(EXTERNAL_FEE, 0L));
-        adjustment.setPaymentGuaranteeDeposit(newCashFlow.getOrDefault(GUARANTEE_DEPOSIT, 0L));
+        adjustment.setNewGuaranteeDeposit(newCashFlow.getOrDefault(GUARANTEE_DEPOSIT, 0L));
 
         adjustmentDao.save(adjustment);
         log.info("Adjustment have been saved, eventId={}, adjustment={}", eventId, adjustment);
