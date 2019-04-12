@@ -213,7 +213,7 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         payoutService.pay(payoutId);
 
         Payout payout = payoutDao.get(payoutId);
-        assertEquals(Long.valueOf(9500L), payout.getAmount());
+        assertEquals(Long.valueOf(9600L), payout.getAmount());
         assertEquals(PAID, payout.getStatus());
         assertEquals(partyId, payout.getPartyId());
 
