@@ -6,7 +6,7 @@ import com.rbkmoney.eventstock.client.EventPublisher;
 import com.rbkmoney.eventstock.client.SubscriberConfig;
 import com.rbkmoney.eventstock.client.poll.EventFlowFilter;
 import com.rbkmoney.payouter.domain.tables.pojos.EventStockMeta;
-import com.rbkmoney.payouter.service.EventStockService;
+import com.rbkmoney.payouter.service.PartyManagementEventService;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
@@ -18,9 +18,9 @@ public class OnStart implements ApplicationListener<ApplicationReadyEvent> {
 
     private final EventPublisher eventPublisher;
 
-    private final EventStockService eventStockService;
+    private final PartyManagementEventService eventStockService;
 
-    public OnStart(EventPublisher eventPublisher, EventStockService eventStockService) {
+    public OnStart(EventPublisher eventPublisher, PartyManagementEventService eventStockService) {
         this.eventPublisher = eventPublisher;
         this.eventStockService = eventStockService;
     }

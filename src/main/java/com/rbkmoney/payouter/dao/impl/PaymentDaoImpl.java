@@ -86,7 +86,11 @@ public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao {
         Query query = getDslContext().update(PAYMENT)
                 .set(PAYMENT.EVENT_ID, eventId)
                 .set(PAYMENT.STATUS, PaymentStatus.CANCELLED)
-                .where(PAYMENT.INVOICE_ID.eq(invoiceId).and(PAYMENT.PAYMENT_ID.eq(paymentId)));
+                .where(
+                        PAYMENT.INVOICE_ID.eq(invoiceId)
+                        .and(PAYMENT.PAYMENT_ID.eq(paymentId))
+                        .and(PAYMENT.PAYOUT_ID.isNull())
+                );
 
         executeOne(query);
     }

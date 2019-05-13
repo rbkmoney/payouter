@@ -10,6 +10,7 @@ import com.rbkmoney.geck.filter.Filter;
 import com.rbkmoney.geck.filter.PathConditionFilter;
 import com.rbkmoney.geck.filter.condition.IsNullCondition;
 import com.rbkmoney.geck.filter.rule.PathConditionRule;
+import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.payouter.dao.AdjustmentDao;
 import com.rbkmoney.payouter.dao.PaymentDao;
 import com.rbkmoney.payouter.domain.enums.AdjustmentStatus;
@@ -17,6 +18,7 @@ import com.rbkmoney.payouter.domain.tables.pojos.Adjustment;
 import com.rbkmoney.payouter.domain.tables.pojos.Payment;
 import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.poller.handler.Handler;
+import com.rbkmoney.payouter.poller.handler.PaymentProcessingHandler;
 import com.rbkmoney.payouter.util.CashFlowType;
 import com.rbkmoney.payouter.util.DamselUtil;
 import org.slf4j.Logger;
@@ -29,7 +31,7 @@ import java.util.Map;
 import static com.rbkmoney.payouter.util.CashFlowType.*;
 
 @Component
-public class InvoicePaymentAdjustmentHandler implements Handler<InvoiceChange, Event> {
+public class InvoicePaymentAdjustmentHandler implements PaymentProcessingHandler {
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -49,9 +51,9 @@ public class InvoicePaymentAdjustmentHandler implements Handler<InvoiceChange, E
     }
 
     @Override
-    public void handle(InvoiceChange invoiceChange, Event event) {
-        long eventId = event.getId();
-        String invoiceId = event.getSource().getInvoiceId();
+    public void handle(InvoiceChange invoiceChange, MachineEvent event) {
+        long eventId = event.getEventId();
+        String invoiceId = event.getSourceId();
 
         InvoicePaymentChange invoicePaymentChange = invoiceChange.getInvoicePaymentChange();
 
@@ -96,7 +98,7 @@ public class InvoicePaymentAdjustmentHandler implements Handler<InvoiceChange, E
         adjustment.setNewGuaranteeDeposit(newCashFlow.getOrDefault(GUARANTEE_DEPOSIT, 0L));
 
         adjustmentDao.save(adjustment);
-        log.info("Adjustment have been saved, eventId={}, adjustment={}", eventId, adjustment);
+        log.info("Adjustment have been saved, adjustment={}", adjustment);
     }
 
     @Override

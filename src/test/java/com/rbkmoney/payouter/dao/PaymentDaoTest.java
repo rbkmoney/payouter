@@ -23,6 +23,8 @@ public class PaymentDaoTest extends AbstractIntegrationTest {
         Payment payment = random(Payment.class);
 
         paymentDao.save(payment);
+        payment.setPayoutId(null);
+        paymentDao.save(payment);
 
         assertEquals(payment, paymentDao.get(payment.getInvoiceId(), payment.getPaymentId()));
     }

@@ -20,6 +20,7 @@ import com.rbkmoney.generation.AdjustmentGenerator;
 import com.rbkmoney.generation.GeneratorConfig;
 import com.rbkmoney.generation.InvoicePaymentGenerator;
 import com.rbkmoney.generation.RefundGenerator;
+import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.payouter.AbstractIntegrationTest;
 import com.rbkmoney.payouter.dao.PaymentDao;
 import com.rbkmoney.payouter.dao.PayoutDao;
@@ -56,7 +57,10 @@ import static org.mockito.BDDMockito.given;
 public class PayoutServiceTest extends AbstractIntegrationTest {
 
     @Autowired
-    EventStockService eventStockService;
+    PaymentProcessingEventService paymentProcessingEventService;
+
+    @Autowired
+    PartyManagementEventService partyManagementEventService;
 
     @Autowired
     PayoutService payoutService;
@@ -140,7 +144,7 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
 
     @Test
     public void testCreatePayoutWithScheduler() {
-        eventStockService.processStockEvent(
+        partyManagementEventService.processStockEvent(
                 buildStockEvent(buildScheduleEvent(partyId, shopId))
         );
         addCapturedPayment();
@@ -182,12 +186,12 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
 
     @Test
     public void testRegisterAndDeregisterScheduler() throws SchedulerException {
-        eventStockService.processStockEvent(
+        partyManagementEventService.processStockEvent(
                 buildStockEvent(buildScheduleEvent(partyId, shopId))
         );
         assertTrue(!scheduler.getJobKeys(GroupMatcher.anyGroup()).isEmpty());
         assertTrue(!scheduler.getTriggerKeys(GroupMatcher.anyGroup()).isEmpty());
-        eventStockService.processStockEvent(
+        partyManagementEventService.processStockEvent(
                 buildStockEvent(buildScheduleEvent(partyId, shopId, null))
         );
         assertTrue(scheduler.getJobKeys(GroupMatcher.anyGroup()).isEmpty());
@@ -329,7 +333,10 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         InvoicePaymentGenerator invoicePaymentGenerator = new InvoicePaymentGenerator(generatorConfig);
 
         Event invoiceCreated = invoicePaymentGenerator.createInvoiceCreated();
-        eventStockService.processStockEvent(buildStockEvent(invoiceCreated));
+        paymentProcessingEventService.processEvent(
+                new MachineEvent(),
+                invoiceCreated.getPayload()
+        );
 
         Event paymentStarted = invoicePaymentGenerator.createInvoicePaymentStarted();
         PaymentRoute paymentRoute = new PaymentRoute(new ProviderRef(42), new TerminalRef(24));
@@ -352,7 +359,10 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
                 )
         );
 
-        eventStockService.processStockEvent(buildStockEvent(paymentStarted));
+        paymentProcessingEventService.processEvent(
+                new MachineEvent(),
+                paymentStarted.getPayload()
+        );
         Payment payment = paymentDao.get(invoiceId, paymentId);
         assertEquals((Integer) paymentRoute.getProvider().getId(), payment.getProviderId());
         assertEquals((Integer) paymentRoute.getTerminal().getId(), payment.getTerminalId());
@@ -370,7 +380,10 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         InvoicePaymentGenerator invoicePaymentGenerator = new InvoicePaymentGenerator(generatorConfig);
 
         Event invoiceCreated = invoicePaymentGenerator.createInvoiceCreated();
-        eventStockService.processStockEvent(buildStockEvent(invoiceCreated));
+        paymentProcessingEventService.processEvent(
+                new MachineEvent(),
+                invoiceCreated.getPayload()
+        );
 
         Event paymentStarted = invoicePaymentGenerator.createInvoicePaymentStarted();
         List<FinalCashFlowPosting> finalCashFlowPostings = new ArrayList<>();
@@ -412,7 +425,10 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
                 )
         );
 
-        eventStockService.processStockEvent(buildStockEvent(paymentStarted));
+        paymentProcessingEventService.processEvent(
+                new MachineEvent(),
+                paymentStarted.getPayload()
+        );
         Payment payment = paymentDao.get(invoiceId, paymentId);
         assertEquals((Long) 20L, payment.getAmount());
         assertEquals((Long) 20L, payment.getFee());
@@ -471,8 +487,14 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         Event adjustmentCreated = adjustmentGenerator.createAdjustmentCreated();
         Event adjustmentStatusChanged = adjustmentGenerator.createAdjustmentStatusChanged();
 
-        eventStockService.processStockEvent(buildStockEvent(adjustmentCreated));
-        eventStockService.processStockEvent(buildStockEvent(adjustmentStatusChanged));
+        paymentProcessingEventService.processEvent(
+                new MachineEvent(),
+                adjustmentCreated.getPayload()
+        );
+        paymentProcessingEventService.processEvent(
+                new MachineEvent(),
+                adjustmentStatusChanged.getPayload()
+        );
     }
 
     public void addCapturedRefund() {
@@ -488,8 +510,14 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         Event refundCreated = refundGenerator.createRefundCreated();
         Event refundCaptured = refundGenerator.createRefundCaptured();
 
-        eventStockService.processStockEvent(buildStockEvent(refundCreated));
-        eventStockService.processStockEvent(buildStockEvent(refundCaptured));
+        paymentProcessingEventService.processEvent(
+                new MachineEvent(),
+                refundCreated.getPayload()
+        );
+        paymentProcessingEventService.processEvent(
+                new MachineEvent(),
+                refundCaptured.getPayload()
+        );
     }
 
     public void addCapturedPayment() {
@@ -506,9 +534,18 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         Event paymentStarted = invoicePaymentGenerator.createInvoicePaymentStarted();
         Event paymentCaptured = invoicePaymentGenerator.createPaymentStatusChanged();
 
-        eventStockService.processStockEvent(buildStockEvent(invoiceCreated));
-        eventStockService.processStockEvent(buildStockEvent(paymentStarted));
-        eventStockService.processStockEvent(buildStockEvent(paymentCaptured));
+        paymentProcessingEventService.processEvent(
+                new MachineEvent(),
+                invoiceCreated.getPayload()
+        );
+        paymentProcessingEventService.processEvent(
+                new MachineEvent(),
+                paymentStarted.getPayload()
+        );
+        paymentProcessingEventService.processEvent(
+                new MachineEvent(),
+                paymentCaptured.getPayload()
+        );
     }
 
     public StockEvent buildStockEvent(Event event) {

@@ -8,10 +8,12 @@ import com.rbkmoney.geck.filter.Filter;
 import com.rbkmoney.geck.filter.PathConditionFilter;
 import com.rbkmoney.geck.filter.condition.IsNullCondition;
 import com.rbkmoney.geck.filter.rule.PathConditionRule;
+import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.payouter.dao.PaymentDao;
 import com.rbkmoney.payouter.domain.tables.pojos.Payment;
 import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.poller.handler.Handler;
+import com.rbkmoney.payouter.poller.handler.PaymentProcessingHandler;
 import com.rbkmoney.payouter.util.CashFlowType;
 import com.rbkmoney.payouter.util.DamselUtil;
 import org.slf4j.Logger;
@@ -24,7 +26,7 @@ import java.util.Map;
 import static com.rbkmoney.payouter.util.CashFlowType.*;
 
 @Component
-public class InvoicePaymentCashFlowChangedHandler implements Handler<InvoiceChange, Event> {
+public class InvoicePaymentCashFlowChangedHandler implements PaymentProcessingHandler {
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -40,9 +42,9 @@ public class InvoicePaymentCashFlowChangedHandler implements Handler<InvoiceChan
     }
 
     @Override
-    public void handle(InvoiceChange change, Event event) {
+    public void handle(InvoiceChange change, MachineEvent event) {
         InvoicePaymentChange invoicePaymentChange = change.getInvoicePaymentChange();
-        String invoiceId = event.getSource().getInvoiceId();
+        String invoiceId = event.getSourceId();
         String paymentId = invoicePaymentChange.getId();
         Payment payment = paymentDao.get(invoiceId, paymentId);
         if (payment == null) {
@@ -59,8 +61,8 @@ public class InvoicePaymentCashFlowChangedHandler implements Handler<InvoiceChan
         payment.setGuaranteeDeposit(parsedCashFlow.getOrDefault(GUARANTEE_DEPOSIT, 0L));
 
         paymentDao.save(payment);
-        log.info("Payment cash flow have been saved, finalCashFlow='{}', eventId='{}', invoiceId='{}', paymentId='{}'",
-                finalCashFlow, event.getId(), invoiceId, paymentId);
+        log.info("Payment cash flow have been saved, finalCashFlow='{}', invoiceId='{}', paymentId='{}'",
+                finalCashFlow, invoiceId, paymentId);
     }
 
     @Override

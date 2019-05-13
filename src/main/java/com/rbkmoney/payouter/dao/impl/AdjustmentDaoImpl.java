@@ -4,6 +4,7 @@ import com.rbkmoney.payouter.dao.AdjustmentDao;
 import com.rbkmoney.payouter.dao.mapper.RecordRowMapper;
 import com.rbkmoney.payouter.domain.enums.AdjustmentStatus;
 import com.rbkmoney.payouter.domain.tables.pojos.Adjustment;
+import com.rbkmoney.payouter.domain.tables.records.AdjustmentRecord;
 import com.rbkmoney.payouter.exception.DaoException;
 import org.jooq.Query;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,8 +30,11 @@ public class AdjustmentDaoImpl extends AbstractGenericDao implements AdjustmentD
 
     @Override
     public void save(Adjustment adjustment) throws DaoException {
+        AdjustmentRecord adjustmentRecord = getDslContext().newRecord(ADJUSTMENT, adjustment);
         Query query = getDslContext().insertInto(ADJUSTMENT)
-                .set(getDslContext().newRecord(ADJUSTMENT, adjustment));
+                .set(adjustmentRecord)
+                .onDuplicateKeyUpdate()
+                .set(adjustmentRecord);
         executeOne(query);
     }
 

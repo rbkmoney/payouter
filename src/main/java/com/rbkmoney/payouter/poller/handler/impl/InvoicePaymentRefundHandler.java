@@ -8,6 +8,7 @@ import com.rbkmoney.geck.filter.Filter;
 import com.rbkmoney.geck.filter.PathConditionFilter;
 import com.rbkmoney.geck.filter.condition.IsNullCondition;
 import com.rbkmoney.geck.filter.rule.PathConditionRule;
+import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.payouter.dao.PaymentDao;
 import com.rbkmoney.payouter.dao.RefundDao;
 import com.rbkmoney.payouter.domain.enums.RefundStatus;
@@ -15,6 +16,7 @@ import com.rbkmoney.payouter.domain.tables.pojos.Payment;
 import com.rbkmoney.payouter.domain.tables.pojos.Refund;
 import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.poller.handler.Handler;
+import com.rbkmoney.payouter.poller.handler.PaymentProcessingHandler;
 import com.rbkmoney.payouter.util.CashFlowType;
 import com.rbkmoney.payouter.util.DamselUtil;
 import org.slf4j.Logger;
@@ -28,7 +30,7 @@ import static com.rbkmoney.payouter.util.CashFlowType.FEE;
 import static com.rbkmoney.payouter.util.CashFlowType.RETURN_FEE;
 
 @Component
-public class InvoicePaymentRefundHandler implements Handler<InvoiceChange, Event> {
+public class InvoicePaymentRefundHandler implements PaymentProcessingHandler {
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -48,9 +50,9 @@ public class InvoicePaymentRefundHandler implements Handler<InvoiceChange, Event
     }
 
     @Override
-    public void handle(InvoiceChange invoiceChange, Event event) {
-        long eventId = event.getId();
-        String invoiceId = event.getSource().getInvoiceId();
+    public void handle(InvoiceChange invoiceChange, MachineEvent event) {
+        long eventId = event.getEventId();
+        String invoiceId = event.getSourceId();
 
         InvoicePaymentChange invoicePaymentChange = invoiceChange.getInvoicePaymentChange();
         String paymentId = invoicePaymentChange.getId();
@@ -96,7 +98,7 @@ public class InvoicePaymentRefundHandler implements Handler<InvoiceChange, Event
         refund.setFee(cashFlow.getOrDefault(FEE, 0L) - cashFlow.getOrDefault(RETURN_FEE, 0L));
 
         refundDao.save(refund);
-        log.info("Refund have been saved, eventId={}, refund={}", eventId, refund);
+        log.info("Refund have been saved, refund={}", refund);
     }
 
     @Override
