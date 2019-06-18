@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>payouter</artifactId>
-    <version>1.0.38-SNAPSHOT</version>
+    <version>1.0.39-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>payouter</name>
@@ -30,7 +30,7 @@
         <db.schema>sht</db.schema>
         <db.port>5432</db.port>
         <db.name>payouter</db.name>
-        <damsel.version>1.303-d99319c</damsel.version>
+        <damsel.version>1.304-e8ad32f</damsel.version>
         <fistful-proto.version>1.14-7bbae46</fistful-proto.version>
         <sonar.jacoco.reportPath>${project.basedir}/../target/jacoco.exec</sonar.jacoco.reportPath>
     </properties>
