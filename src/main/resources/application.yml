@@ -14,35 +14,6 @@ spring:
       maximum-pool-size: 10
   flyway:
     schemas: sht
-  kafka:
-    bootstrap-servers: localhost:9092
-    #    ssl:
-    #      trust-store-location: "classpath:cert/truststore.p12"
-    #      trust-store-password: "kenny12"
-    #      key-store-location: "classpath:cert/keystore.p12"
-    #      key-store-password: ""
-    #      key-password: ""
-    #      key-store-type: PKCS12
-    #      trust-store-type: PKCS12
-    consumer:
-      group-id: "PayouterListener"
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: com.rbkmoney.payouter.serde.SinkEventDeserializer
-      enable-auto-commit: false
-      auto-offset-reset: earliest
-      client-id: payouter
-    listener:
-      type: batch
-      ack-mode: manual
-      concurrency: 1
-      poll-timeout: 1000 #ms
-      no-poll-threshold: 5.0 # * poll-timeout value = when consumer is dead
-      log-container-config: true
-      monitor-interval: 10s
-    client-id: payouter
-    properties:
-      security:
-        protocol: PLAINTEXT
   quartz:
     job-store-type: jdbc
     jdbc:
@@ -103,6 +74,19 @@ report:
     timezone: Europe/Moscow
 invoicing:
   kafka.topic: mg-invoice-100-2
+kafka:
+  bootstrap-servers: kafka1.bst1.rbkmoney.net:9092
+  client-id: magista
+  consumer:
+    group-id: payouter-group-1
+    enable-auto-commit: false
+    auto-offset-reset: earliest
+    concurrency: 1
+    max-poll-records: 20
+  topics:
+    invocing: mg-invoice-100-2
+  ssl:
+    enabled: false
 
 management.metrics.export.statsd.flavor: etsy
 
