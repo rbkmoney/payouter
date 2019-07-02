@@ -9,6 +9,8 @@ import com.rbkmoney.payouter.domain.tables.pojos.CashFlowPosting;
 import com.rbkmoney.payouter.exception.AccounterException;
 import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.service.ShumwayService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,23 +23,16 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class ShumwayServiceImpl implements ShumwayService {
-
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private final AccounterSrv.Iface shumwayClient;
 
     private final CashFlowPostingDao cashFlowPostingDao;
 
     private final RetryTemplate retryTemplate;
-
-    @Autowired
-    public ShumwayServiceImpl(AccounterSrv.Iface shumwayClient, CashFlowPostingDao cashFlowPostingDao, RetryTemplate retryTemplate) {
-        this.shumwayClient = shumwayClient;
-        this.cashFlowPostingDao = cashFlowPostingDao;
-        this.retryTemplate = retryTemplate;
-    }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)

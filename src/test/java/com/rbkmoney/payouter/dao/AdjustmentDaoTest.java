@@ -5,13 +5,9 @@ import com.rbkmoney.payouter.domain.tables.pojos.Adjustment;
 import com.rbkmoney.payouter.exception.DaoException;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DuplicateKeyException;
-
-import java.util.List;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
-import static io.github.benas.randombeans.api.EnhancedRandom.randomListOf;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class AdjustmentDaoTest extends AbstractIntegrationTest {
 
@@ -23,14 +19,7 @@ public class AdjustmentDaoTest extends AbstractIntegrationTest {
         Adjustment adjustment = random(Adjustment.class);
 
         adjustmentDao.save(adjustment);
-
-        //save again
-        try {
-            adjustmentDao.save(adjustment);
-            fail();
-        } catch (DaoException ex) {
-            assertTrue(DuplicateKeyException.class.isAssignableFrom(ex.getCause().getClass()));
-        }
+        adjustmentDao.save(adjustment);
 
         assertEquals(adjustment, adjustmentDao.get(adjustment.getInvoiceId(), adjustment.getPaymentId(), adjustment.getAdjustmentId()));
     }

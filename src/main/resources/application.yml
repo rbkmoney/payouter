@@ -72,11 +72,9 @@ report:
     cron: "0 0 9 * * *"
     calendar: 1
     timezone: Europe/Moscow
-invoicing:
-  kafka.topic: mg-invoice-100-2
 kafka:
   bootstrap-servers: kafka1.bst1.rbkmoney.net:9092
-  client-id: magista
+  client-id: payouter
   consumer:
     group-id: payouter-group-1
     enable-auto-commit: false
@@ -84,7 +82,7 @@ kafka:
     concurrency: 1
     max-poll-records: 20
   topics:
-    invocing: mg-invoice-100-2
+    invoicing: mg-invoice-100-2
   ssl:
     enabled: false
 

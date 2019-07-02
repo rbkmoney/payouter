@@ -360,7 +360,7 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         );
 
         paymentProcessingEventService.processEvent(
-                new MachineEvent(),
+                new MachineEvent().setSourceId(invoiceId).setCreatedAt(invoiceCreated.getCreatedAt()),
                 paymentStarted.getPayload()
         );
         Payment payment = paymentDao.get(invoiceId, paymentId);
@@ -426,7 +426,7 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         );
 
         paymentProcessingEventService.processEvent(
-                new MachineEvent(),
+                new MachineEvent().setSourceId(invoiceId).setCreatedAt(invoiceCreated.getCreatedAt()),
                 paymentStarted.getPayload()
         );
         Payment payment = paymentDao.get(invoiceId, paymentId);
@@ -486,13 +486,14 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
 
         Event adjustmentCreated = adjustmentGenerator.createAdjustmentCreated();
         Event adjustmentStatusChanged = adjustmentGenerator.createAdjustmentStatusChanged();
+        MachineEvent machineEvent = new MachineEvent().setSourceId(invoiceId).setCreatedAt(adjustmentCreated.getCreatedAt());
 
         paymentProcessingEventService.processEvent(
-                new MachineEvent(),
+                machineEvent,
                 adjustmentCreated.getPayload()
         );
         paymentProcessingEventService.processEvent(
-                new MachineEvent(),
+                machineEvent,
                 adjustmentStatusChanged.getPayload()
         );
     }
@@ -509,13 +510,14 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
 
         Event refundCreated = refundGenerator.createRefundCreated();
         Event refundCaptured = refundGenerator.createRefundCaptured();
+        MachineEvent machineEvent = new MachineEvent().setSourceId(invoiceId).setCreatedAt(refundCreated.getCreatedAt());
 
         paymentProcessingEventService.processEvent(
-                new MachineEvent(),
+                machineEvent,
                 refundCreated.getPayload()
         );
         paymentProcessingEventService.processEvent(
-                new MachineEvent(),
+                machineEvent,
                 refundCaptured.getPayload()
         );
     }
@@ -533,17 +535,18 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         Event invoiceCreated = invoicePaymentGenerator.createInvoiceCreated();
         Event paymentStarted = invoicePaymentGenerator.createInvoicePaymentStarted();
         Event paymentCaptured = invoicePaymentGenerator.createPaymentStatusChanged();
+        MachineEvent machineEvent = new MachineEvent().setSourceId(invoiceId).setCreatedAt(invoiceCreated.getCreatedAt());
 
         paymentProcessingEventService.processEvent(
-                new MachineEvent(),
+                machineEvent,
                 invoiceCreated.getPayload()
         );
         paymentProcessingEventService.processEvent(
-                new MachineEvent(),
+                machineEvent,
                 paymentStarted.getPayload()
         );
         paymentProcessingEventService.processEvent(
-                new MachineEvent(),
+                machineEvent,
                 paymentCaptured.getPayload()
         );
     }

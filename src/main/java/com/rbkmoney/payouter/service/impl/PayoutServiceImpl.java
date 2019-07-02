@@ -16,8 +16,8 @@ import com.rbkmoney.payouter.exception.*;
 import com.rbkmoney.payouter.service.*;
 import com.rbkmoney.payouter.util.CashFlowType;
 import com.rbkmoney.payouter.util.DamselUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,10 +27,10 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class PayoutServiceImpl implements PayoutService {
-
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private final EventSinkService eventSinkService;
 
@@ -51,30 +51,6 @@ public class PayoutServiceImpl implements PayoutService {
     private final PartyManagementService partyManagementService;
 
     private final FistfulService fistfulService;
-
-    public PayoutServiceImpl(
-            EventSinkService eventSinkService,
-            ShopMetaDao shopMetaDao,
-            PaymentDao paymentDao,
-            RefundDao refundDao,
-            AdjustmentDao adjustmentDao,
-            PayoutDao payoutDao,
-            ShumwayService shumwayService,
-            PayoutSummaryService payoutSummaryService,
-            PartyManagementService partyManagementService,
-            FistfulService fistfulService
-    ) {
-        this.eventSinkService = eventSinkService;
-        this.shopMetaDao = shopMetaDao;
-        this.paymentDao = paymentDao;
-        this.refundDao = refundDao;
-        this.adjustmentDao = adjustmentDao;
-        this.payoutDao = payoutDao;
-        this.shumwayService = shumwayService;
-        this.payoutSummaryService = payoutSummaryService;
-        this.partyManagementService = partyManagementService;
-        this.fistfulService = fistfulService;
-    }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)

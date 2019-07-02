@@ -27,6 +27,8 @@ import java.util.Map;
 @EnableConfigurationProperties(KafkaSslProperties.class)
 public class KafkaConfig {
 
+    @Value("${kafka.enabled:false}")
+    private boolean kafkaEnabled;
     @Value("${kafka.consumer.auto-offset-reset}")
     private String autoOffsetReset;
     @Value("${kafka.consumer.enable-auto-commit}")
@@ -87,6 +89,7 @@ public class KafkaConfig {
             RetryTemplate retryTemplate
     ) {
         ConcurrentKafkaListenerContainerFactory<String, MachineEvent> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setAutoStartup(kafkaEnabled);
         factory.setConsumerFactory(consumerFactory);
         factory.getContainerProperties().setAckOnError(false);
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
