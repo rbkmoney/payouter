@@ -38,7 +38,7 @@ public class InvoicePaymentCancelledHandler implements PaymentProcessingHandler 
         String paymentId = invoiceChange.getInvoicePaymentChange().getId();
 
         paymentDao.markAsCancelled(eventId, invoiceId, paymentId);
-        log.info("Payment have been cancelled, eventId={}, invoiceId={}, paymentId={}", invoiceId, paymentId);
+        log.info("Payment have been cancelled, invoiceId={}, paymentId={}", invoiceId, paymentId);
     }
 
     @Override
