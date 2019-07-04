@@ -3,6 +3,8 @@ package com.rbkmoney.payouter.util;
 import com.rbkmoney.damsel.domain.*;
 import org.junit.Test;
 
+import java.util.Arrays;
+
 import static org.junit.Assert.assertEquals;
 
 public class DamselUtilTest {
@@ -13,42 +15,49 @@ public class DamselUtilTest {
             cashFlowType.getSources().forEach((sourceAccount) ->
                     cashFlowType.getDestinations().forEach(
                             (destinationAccount) ->
-                            assertEquals(
-                                    cashFlowType,
-                                    DamselUtil.getCashFlowType(
-                                            new FinalCashFlowPosting(
-                                                    new FinalCashFlowAccount(sourceAccount, 1),
-                                                    new FinalCashFlowAccount(destinationAccount, 2),
-                                                    new Cash(5, new CurrencyRef("UGA"))
+                                    assertEquals(
+                                            cashFlowType,
+                                            CashFlowType.getCashFlowType(
+                                                    new FinalCashFlowPosting(
+                                                            new FinalCashFlowAccount(sourceAccount, 1),
+                                                            new FinalCashFlowAccount(destinationAccount, 2),
+                                                            new Cash(5, new CurrencyRef("UGA"))
+                                                    )
                                             )
                                     )
-                            )
 
                     )
             );
         }
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
+    public void testCorrectCashFlowPostingsWithCashFlowAccount() {
+        for (CashFlowType cashFlowType : CashFlowType.values()) {
+            cashFlowType.getSources().forEach((sourceAccount) ->
+                    cashFlowType.getDestinations().forEach(
+                            (destinationAccount) ->
+                                    assertEquals(
+                                            cashFlowType,
+                                            CashFlowType.getCashFlowType(sourceAccount, destinationAccount)
+                                    )
+
+                    )
+            );
+        }
+    }
+
+    @Test
     public void testIncorrectCashFlowPostings() {
-        DamselUtil.getCashFlowType(
+        assertEquals(
+                CashFlowType.UNKNOWN,
+                CashFlowType.getCashFlowType(
                 new FinalCashFlowPosting(
                         new FinalCashFlowAccount(CashFlowAccount.provider(ProviderCashFlowAccount.settlement), 1),
                         new FinalCashFlowAccount(CashFlowAccount.merchant(MerchantCashFlowAccount.guarantee), 2),
                         new Cash(5, new CurrencyRef("UGA"))
                 )
-        );
-    }
-
-    @Test
-    public void testIncorrectButIgnoreCashFlowPostings() {
-        DamselUtil.getCashFlowType(
-                new FinalCashFlowPosting(
-                        new FinalCashFlowAccount(CashFlowAccount.merchant(MerchantCashFlowAccount.guarantee), 1),
-                        new FinalCashFlowAccount(CashFlowAccount.system(SystemCashFlowAccount.settlement), 2),
-                        new Cash(5, new CurrencyRef("UGA"))
-                )
-        );
+        ));
     }
 
 }

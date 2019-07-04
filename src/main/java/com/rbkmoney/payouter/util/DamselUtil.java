@@ -17,48 +17,41 @@ import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
 import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.exception.StorageException;
 import org.apache.thrift.TBase;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import static com.rbkmoney.payouter.util.CashFlowType.UNKNOWN;
 
 public class DamselUtil {
 
     public final static ObjectMapper objectMapper = new ObjectMapper();
     public final static JsonProcessor jsonProcessor = new JsonProcessor();
-    private static final Logger LOGGER = LoggerFactory.getLogger(DamselUtil.class);
+
+    public static Map<CashFlowType, Long> parseInverseCashFlow(List<FinalCashFlowPosting> finalCashFlow) {
+        return parseCashFlow(
+                finalCashFlow,
+                cashFlowPosting -> CashFlowType.getCashFlowType(
+                        cashFlowPosting.getDestination().getAccountType(),
+                        cashFlowPosting.getSource().getAccountType()
+                )
+        );
+    }
 
     public static Map<CashFlowType, Long> parseCashFlow(List<FinalCashFlowPosting> finalCashFlow) {
+        return parseCashFlow(finalCashFlow, CashFlowType::getCashFlowType);
+    }
+
+    public static Map<CashFlowType, Long> parseCashFlow(List<FinalCashFlowPosting> finalCashFlow, Function<FinalCashFlowPosting, CashFlowType> classifier) {
         Map<CashFlowType, Long> collect = finalCashFlow.stream()
                 .collect(
                         Collectors.groupingBy(
-                                DamselUtil::getCashFlowType,
+                                classifier,
                                 Collectors.summingLong(cashFlow -> cashFlow.getVolume().getAmount()
                                 )
                         )
                 );
         return collect;
-    }
-
-    public static CashFlowType getCashFlowType(FinalCashFlowPosting cashFlowPosting) {
-        CashFlowType cashFlowType = CashFlowType.getCashFlowType(cashFlowPosting);
-
-        if (cashFlowType == UNKNOWN) {
-            //ignore specific incorrect postings
-            if (cashFlowPosting.getSource().getAccountType().equals(CashFlowAccount.merchant(MerchantCashFlowAccount.guarantee))
-                    && cashFlowPosting.getDestination().getAccountType().equals(CashFlowAccount.system(SystemCashFlowAccount.settlement))) {
-                LOGGER.warn("Ignore specific incorrect posting, posting='{}'", cashFlowPosting);
-                return cashFlowType;
-            }
-        } else {
-            return cashFlowType;
-        }
-
-        throw new UnsupportedOperationException(String.format("Unsupported cash flow posting, cashFlowPosting='%s'", cashFlowPosting));
     }
 
     public static <T extends TBase> T jsonToTBase(JsonNode jsonNode, Class<T> type) throws IOException {
