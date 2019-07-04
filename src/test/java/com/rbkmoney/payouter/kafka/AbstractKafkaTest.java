@@ -25,7 +25,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @ContextConfiguration(classes = PayouterApplication.class, initializers = AbstractKafkaTest.Initializer.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-public class AbstractKafkaTest {
+public abstract class AbstractKafkaTest {
 
 
     private static TestContainers testContainers = TestContainersBuilder.builderWithTestContainers(getTestContainersParametersSupplier())
