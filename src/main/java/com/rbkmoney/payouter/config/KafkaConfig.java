@@ -1,6 +1,5 @@
 package com.rbkmoney.payouter.config;
 
-import com.fasterxml.jackson.databind.deser.std.StringDeserializer;
 import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.payouter.config.properties.KafkaSslProperties;
 import com.rbkmoney.payouter.serde.MachineEventDeserializer;
@@ -8,6 +7,7 @@ import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.security.auth.SecurityProtocol;
+import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
