@@ -6,6 +6,7 @@ import com.rbkmoney.damsel.payment_processing.Event;
 import com.rbkmoney.damsel.payment_processing.EventPayload;
 import com.rbkmoney.damsel.payment_processing.PartyChange;
 import com.rbkmoney.geck.common.util.TypeUtil;
+import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.payouter.dao.EventStockMetaDao;
 import com.rbkmoney.payouter.domain.tables.pojos.EventStockMeta;
 import com.rbkmoney.payouter.exception.DaoException;
@@ -14,6 +15,7 @@ import com.rbkmoney.payouter.exception.StorageException;
 import com.rbkmoney.payouter.poller.handler.Handler;
 import com.rbkmoney.payouter.poller.handler.PartyManagementHandler;
 import com.rbkmoney.payouter.service.PartyManagementEventService;
+import com.rbkmoney.payouter.service.PaymentProcessingEventService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +36,8 @@ public class PartyManagementEventServiceImpl implements PartyManagementEventServ
     private final EventStockMetaDao eventStockMetaDao;
 
     private final List<PartyManagementHandler> handlers;
+
+    private final PaymentProcessingEventService paymentProcessingEventService;
 
     @Override
     public Optional<EventStockMeta> getLastEventId() throws StorageException {
@@ -77,6 +81,12 @@ public class PartyManagementEventServiceImpl implements PartyManagementEventServ
                         }
                     }
                 }
+            } else if (payload.isSetInvoiceChanges()) {
+                MachineEvent machineEvent = new MachineEvent()
+                        .setCreatedAt(event.getCreatedAt())
+                        .setSourceId(event.getSource().getInvoiceId())
+                        .setEventId(event.getSequence());
+                paymentProcessingEventService.processEvent(machineEvent, payload);
             }
             log.info("Event id have been saved, eventId={}, eventCreatedAt={}", event.getId(), event.getCreatedAt());
         }

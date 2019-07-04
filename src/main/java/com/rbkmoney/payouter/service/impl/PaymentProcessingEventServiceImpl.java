@@ -32,7 +32,7 @@ public class PaymentProcessingEventServiceImpl implements PaymentProcessingEvent
                         log.debug("Trying to handle change, change='{}', sourceId='{}', eventId='{}'", change, machineEvent.getSourceId(), machineEvent.getEventId());
                         try {
                             handler.handle(change, machineEvent);
-                            log.info("Change have been handled,  change='{}', sourceId='{}', eventId='{}'", change, machineEvent.getSourceId(), machineEvent.getEventId());
+                            log.info("Change have been handled, change='{}', sourceId='{}', eventId='{}'", change, machineEvent.getSourceId(), machineEvent.getEventId());
                         } catch (DaoException ex) {
                             throw new StorageException(String.format("Failed to save event, change='%s', sourceId='%s', eventId='%d'", change, machineEvent.getSourceId(), machineEvent.getEventId()), ex);
                         }

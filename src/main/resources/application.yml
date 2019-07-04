@@ -82,7 +82,9 @@ kafka:
     concurrency: 1
     max-poll-records: 20
   topics:
-    invoicing: mg-invoice-100-2
+    invoicing:
+      id: mg-invoice-100-2
+      enabled: false
   ssl:
     enabled: false
 
