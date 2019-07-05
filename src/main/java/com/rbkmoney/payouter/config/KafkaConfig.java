@@ -1,11 +1,16 @@
 package com.rbkmoney.payouter.config;
 
+import com.rbkmoney.damsel.payment_processing.EventPayload;
 import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.payouter.config.properties.KafkaSslProperties;
 import com.rbkmoney.payouter.serde.MachineEventDeserializer;
+import com.rbkmoney.sink.common.serialization.BinaryDeserializer;
+import com.rbkmoney.sink.common.serialization.impl.PaymentEventPayloadDeserializer;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.config.SslConfigs;
+import com.rbkmoney.sink.common.parser.impl.MachineEventParser;
+import com.rbkmoney.sink.common.parser.impl.PaymentEventPayloadMachineEventParser;
 import org.apache.kafka.common.security.auth.SecurityProtocol;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -97,6 +102,16 @@ public class KafkaConfig {
 
     public ErrorHandler kafkaErrorHandler() {
         return new SeekToCurrentErrorHandler(-1);
+    }
+
+    @Bean
+    public BinaryDeserializer<EventPayload> paymentEventPayloadDeserializer() {
+        return new PaymentEventPayloadDeserializer();
+    }
+
+    @Bean
+    public MachineEventParser<EventPayload> paymentEventPayloadMachineEventParser(BinaryDeserializer<EventPayload> paymentEventPayloadDeserializer) {
+        return new PaymentEventPayloadMachineEventParser(paymentEventPayloadDeserializer);
     }
 
 }

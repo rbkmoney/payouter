@@ -5,9 +5,9 @@ import com.rbkmoney.damsel.payment_processing.InvoiceChange;
 import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.machinegun.eventsink.SinkEvent;
 import com.rbkmoney.payouter.config.KafkaConfig;
-import com.rbkmoney.payouter.converter.SourceEventParser;
 import com.rbkmoney.payouter.poller.listener.InvoicingKafkaListener;
 import com.rbkmoney.payouter.serde.MachineEventSerializer;
+import com.rbkmoney.sink.common.parser.impl.MachineEventParser;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
@@ -39,11 +39,11 @@ public class InvoiceKafkaListenerTest extends AbstractKafkaTest {
     private String bootstrapServers;
 
     @MockBean
-    SourceEventParser eventParser;
+    private MachineEventParser<EventPayload> parser;
 
     @Test
     public void listenChanges() throws InterruptedException {
-        when(eventParser.parseEvent(any())).thenReturn(EventPayload.invoice_changes(List.of(new InvoiceChange())));
+        when(parser.parse(any())).thenReturn(EventPayload.invoice_changes(List.of(new InvoiceChange())));
 
         SinkEvent sinkEvent = new SinkEvent();
         sinkEvent.setEvent(createMessage());
@@ -52,7 +52,7 @@ public class InvoiceKafkaListenerTest extends AbstractKafkaTest {
 
         waitForTopicSync();
 
-        Mockito.verify(eventParser, Mockito.times(1)).parseEvent(any());
+        Mockito.verify(parser, Mockito.times(1)).parse(any());
     }
 
     private void writeToTopic(SinkEvent sinkEvent) {
