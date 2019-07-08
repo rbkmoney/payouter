@@ -9,8 +9,10 @@ import com.rbkmoney.geck.filter.Filter;
 import com.rbkmoney.geck.filter.PathConditionFilter;
 import com.rbkmoney.geck.filter.condition.IsNullCondition;
 import com.rbkmoney.geck.filter.rule.PathConditionRule;
+import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.payouter.dao.RefundDao;
 import com.rbkmoney.payouter.poller.handler.Handler;
+import com.rbkmoney.payouter.poller.handler.PaymentProcessingHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +21,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 
 @Component
-public class InvoicePaymentRefundSucceededHandler implements Handler<InvoiceChange, Event> {
+public class InvoicePaymentRefundSucceededHandler implements PaymentProcessingHandler {
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -36,10 +38,10 @@ public class InvoicePaymentRefundSucceededHandler implements Handler<InvoiceChan
     }
 
     @Override
-    public void handle(InvoiceChange invoiceChange, Event event) {
-        long eventId = event.getId();
+    public void handle(InvoiceChange invoiceChange, MachineEvent event) {
+        long eventId = event.getEventId();
         LocalDateTime succeededAt = TypeUtil.stringToLocalDateTime(event.getCreatedAt());
-        String invoiceId = event.getSource().getInvoiceId();
+        String invoiceId = event.getSourceId();
 
         InvoicePaymentChange invoicePaymentChange = invoiceChange.getInvoicePaymentChange();
         String paymentId = invoiceChange.getInvoicePaymentChange().getId();
@@ -50,8 +52,8 @@ public class InvoicePaymentRefundSucceededHandler implements Handler<InvoiceChan
         String refundId = invoicePaymentRefundChange.getId();
 
         refundDao.markAsSucceeded(eventId, invoiceId, paymentId, refundId, succeededAt);
-        log.info("Refund have been succeeded, eventId={}, invoiceId={}, paymentId={}, refundId={}",
-                eventId, invoiceId, paymentId, refundId);
+        log.info("Refund have been succeeded, invoiceId={}, paymentId={}, refundId={}",
+                invoiceId, paymentId, refundId);
     }
 
     @Override

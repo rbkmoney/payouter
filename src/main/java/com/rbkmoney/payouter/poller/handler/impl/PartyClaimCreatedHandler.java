@@ -6,14 +6,14 @@ import com.rbkmoney.geck.filter.Filter;
 import com.rbkmoney.geck.filter.PathConditionFilter;
 import com.rbkmoney.geck.filter.condition.IsNullCondition;
 import com.rbkmoney.geck.filter.rule.PathConditionRule;
-import com.rbkmoney.payouter.poller.handler.Handler;
+import com.rbkmoney.payouter.poller.handler.PartyManagementHandler;
 import com.rbkmoney.payouter.service.SchedulerService;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Component
-public class PartyClaimCreatedHandler implements Handler<PartyChange, Event> {
+public class PartyClaimCreatedHandler implements PartyManagementHandler {
 
     private final SchedulerService schedulerService;
 

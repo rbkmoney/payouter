@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>payouter</artifactId>
-    <version>1.0.38-SNAPSHOT</version>
+    <version>1.0.39-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>payouter</name>
@@ -21,7 +21,7 @@
         <project.maintainer>Pavel Popov &lt;p.popov@rbkmoney.com&gt;</project.maintainer>
         <shared.resources.version>0.3.6</shared.resources.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <dockerfile.base.service.tag>bc95d0d6dc13c693acd2b274531a7d604b877bf3</dockerfile.base.service.tag>
+        <dockerfile.base.service.tag>c0d0900ec19c907d866f8360031a836049985110</dockerfile.base.service.tag>
         <dockerfile.registry>${env.REGISTRY}</dockerfile.registry>
         <server.port>8022</server.port>
         <exposed.ports>${server.port}</exposed.ports>
@@ -32,6 +32,7 @@
         <db.port>5432</db.port>
         <db.name>payouter</db.name>
         <damsel.version>1.303-d99319c</damsel.version>
+        <machinegun-proto.version>1.12-ebae56f</machinegun-proto.version>
         <fistful-proto.version>1.14-7bbae46</fistful-proto.version>
         <sonar.jacoco.reportPath>${project.basedir}/../target/jacoco.exec</sonar.jacoco.reportPath>
     </properties>
@@ -119,6 +120,11 @@
             <artifactId>caffeine</artifactId>
             <version>${caffeine.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+            <version>2.2.4.RELEASE</version>
+        </dependency>
 
         <!--RBK libs-->
         <dependency>
@@ -128,8 +134,23 @@
         </dependency>
         <dependency>
             <groupId>com.rbkmoney</groupId>
+            <artifactId>kafka-common-lib</artifactId>
+            <version>0.0.9</version>
+        </dependency>
+        <dependency>
+            <groupId>com.rbkmoney</groupId>
+            <artifactId>sink-common-lib</artifactId>
+            <version>0.0.3</version>
+        </dependency>
+        <dependency>
+            <groupId>com.rbkmoney</groupId>
             <artifactId>damsel</artifactId>
             <version>${damsel.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.rbkmoney</groupId>
+            <artifactId>machinegun-proto</artifactId>
+            <version>${machinegun-proto.version}</version>
         </dependency>
         <dependency>
             <groupId>com.rbkmoney</groupId>
@@ -169,6 +190,12 @@
             <groupId>com.rbkmoney.hg-mock</groupId>
             <artifactId>generator</artifactId>
             <version>0.9.7</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.rbkmoney</groupId>
+            <artifactId>easyway</artifactId>
+            <version>0.1.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

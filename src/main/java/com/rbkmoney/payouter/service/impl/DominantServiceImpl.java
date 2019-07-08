@@ -5,27 +5,20 @@ import com.rbkmoney.damsel.domain_config.Reference;
 import com.rbkmoney.damsel.domain_config.*;
 import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.service.DominantService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.thrift.TException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class DominantServiceImpl implements DominantService {
-
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private final RepositoryClientSrv.Iface dominantClient;
 
     private final RetryTemplate retryTemplate;
-
-    @Autowired
-    public DominantServiceImpl(RepositoryClientSrv.Iface dominantClient, RetryTemplate retryTemplate) {
-        this.dominantClient = dominantClient;
-        this.retryTemplate = retryTemplate;
-    }
 
     @Override
     public BusinessSchedule getBusinessSchedule(BusinessScheduleRef scheduleRef) throws NotFoundException {

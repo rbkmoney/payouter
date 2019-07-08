@@ -12,6 +12,7 @@ import com.rbkmoney.geck.filter.Filter;
 import com.rbkmoney.geck.filter.PathConditionFilter;
 import com.rbkmoney.geck.filter.condition.IsNullCondition;
 import com.rbkmoney.geck.filter.rule.PathConditionRule;
+import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.payouter.dao.InvoiceDao;
 import com.rbkmoney.payouter.dao.PaymentDao;
 import com.rbkmoney.payouter.domain.enums.PaymentStatus;
@@ -19,6 +20,7 @@ import com.rbkmoney.payouter.domain.tables.pojos.Invoice;
 import com.rbkmoney.payouter.domain.tables.pojos.Payment;
 import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.poller.handler.Handler;
+import com.rbkmoney.payouter.poller.handler.PaymentProcessingHandler;
 import com.rbkmoney.payouter.util.CashFlowType;
 import com.rbkmoney.payouter.util.DamselUtil;
 import org.slf4j.Logger;
@@ -35,7 +37,7 @@ import java.util.Map;
 import static com.rbkmoney.payouter.util.CashFlowType.*;
 
 @Component
-public class InvoicePaymentHandler implements Handler<InvoiceChange, Event> {
+public class InvoicePaymentHandler implements PaymentProcessingHandler {
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -55,7 +57,7 @@ public class InvoicePaymentHandler implements Handler<InvoiceChange, Event> {
     }
 
     @Override
-    public void handle(InvoiceChange invoiceChange, Event event) {
+    public void handle(InvoiceChange invoiceChange, MachineEvent event) {
         InvoicePaymentStarted invoicePaymentStarted = invoiceChange
                 .getInvoicePaymentChange()
                 .getPayload()
@@ -64,8 +66,8 @@ public class InvoicePaymentHandler implements Handler<InvoiceChange, Event> {
         Payment payment = new Payment();
         InvoicePayment invoicePayment = invoicePaymentStarted.getPayment();
 
-        payment.setEventId(event.getId());
-        String invoiceId = event.getSource().getInvoiceId();
+        payment.setEventId(event.getEventId());
+        String invoiceId = event.getSourceId();
         payment.setInvoiceId(invoiceId);
 
         Invoice invoice = invoiceDao.get(invoiceId);
@@ -111,7 +113,7 @@ public class InvoicePaymentHandler implements Handler<InvoiceChange, Event> {
         }
 
         paymentDao.save(payment);
-        log.info("Payment have been saved, eventId={}, payment={}", event.getId(), payment);
+        log.info("Payment have been saved, payment={}", payment);
     }
 
     @Override

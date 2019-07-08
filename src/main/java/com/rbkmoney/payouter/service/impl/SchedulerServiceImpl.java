@@ -15,6 +15,8 @@ import com.rbkmoney.payouter.service.PartyManagementService;
 import com.rbkmoney.payouter.service.SchedulerService;
 import com.rbkmoney.payouter.trigger.FreezeTimeCronScheduleBuilder;
 import com.rbkmoney.payouter.util.SchedulerUtil;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
 import org.quartz.impl.calendar.HolidayCalendar;
 import org.slf4j.Logger;
@@ -28,10 +30,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class SchedulerServiceImpl implements SchedulerService {
-
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private final Scheduler scheduler;
 
@@ -40,17 +42,6 @@ public class SchedulerServiceImpl implements SchedulerService {
     private final PartyManagementService partyManagementService;
 
     private final DominantService dominantService;
-
-    @Autowired
-    public SchedulerServiceImpl(Scheduler scheduler,
-                                ShopMetaDao shopMetaDao,
-                                PartyManagementService partyManagementService,
-                                DominantService dominantService) {
-        this.scheduler = scheduler;
-        this.shopMetaDao = shopMetaDao;
-        this.partyManagementService = partyManagementService;
-        this.dominantService = dominantService;
-    }
 
     @Scheduled(fixedDelay = 60 * 1000)
     public void syncJobs() {

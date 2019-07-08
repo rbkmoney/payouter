@@ -8,7 +8,7 @@ import com.rbkmoney.payouter.exception.StorageException;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-public interface EventStockService {
+public interface PartyManagementEventService {
 
     Optional<EventStockMeta> getLastEventId() throws StorageException;
 

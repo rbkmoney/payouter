@@ -6,10 +6,10 @@ import com.rbkmoney.payouter.domain.enums.PayoutSummaryOperationType;
 import com.rbkmoney.payouter.domain.enums.RefundStatus;
 import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
 import com.rbkmoney.payouter.domain.tables.pojos.Refund;
+import com.rbkmoney.payouter.domain.tables.records.RefundRecord;
 import com.rbkmoney.payouter.exception.DaoException;
 import org.jooq.Field;
 import org.jooq.Query;
-import org.jooq.conf.ParamType;
 import org.jooq.impl.DSL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.RowMapper;
@@ -34,8 +34,11 @@ public class RefundDaoImpl extends AbstractGenericDao implements RefundDao {
 
     @Override
     public void save(Refund refund) throws DaoException {
+        RefundRecord refundRecord = getDslContext().newRecord(REFUND, refund);
         Query query = getDslContext().insertInto(REFUND)
-                .set(getDslContext().newRecord(REFUND, refund));
+                .set(refundRecord)
+                .onDuplicateKeyUpdate()
+                .set(refundRecord);
         executeOne(query);
     }
 
@@ -64,9 +67,12 @@ public class RefundDaoImpl extends AbstractGenericDao implements RefundDao {
     public void markAsFailed(long eventId, String invoiceId, String paymentId, String refundId) throws DaoException {
         Query query = getDslContext().update(REFUND)
                 .set(REFUND.STATUS, RefundStatus.FAILED)
-                .where(REFUND.INVOICE_ID.eq(invoiceId)
-                        .and(REFUND.PAYMENT_ID.eq(paymentId)
-                                .and(REFUND.REFUND_ID.eq(refundId))));
+                .where(
+                        REFUND.INVOICE_ID.eq(invoiceId)
+                                .and(REFUND.PAYMENT_ID.eq(paymentId))
+                                .and(REFUND.REFUND_ID.eq(refundId))
+                                .and(REFUND.PAYOUT_ID.isNull())
+                );
         executeOne(query);
     }
 
