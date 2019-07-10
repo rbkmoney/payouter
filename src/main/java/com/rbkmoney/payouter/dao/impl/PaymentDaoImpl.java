@@ -34,6 +34,7 @@ public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao {
     @Override
     public void save(Payment payment) throws DaoException {
         PaymentRecord paymentRecord = getDslContext().newRecord(PAYMENT, payment);
+        paymentRecord.reset(PAYMENT.PAYOUT_ID);
         Query query = getDslContext()
                 .insertInto(PAYMENT)
                 .set(paymentRecord)

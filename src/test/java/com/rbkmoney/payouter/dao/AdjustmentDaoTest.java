@@ -16,10 +16,11 @@ public class AdjustmentDaoTest extends AbstractIntegrationTest {
 
     @Test
     public void testSaveAndGet() throws DaoException {
-        Adjustment adjustment = random(Adjustment.class);
+        Adjustment adjustment = random(Adjustment.class, "payoutId");
+        adjustmentDao.save(adjustment);
 
-        adjustmentDao.save(adjustment);
-        adjustmentDao.save(adjustment);
+        Adjustment secondAdjustment = new Adjustment(adjustment);
+        adjustmentDao.save(secondAdjustment);
 
         assertEquals(adjustment, adjustmentDao.get(adjustment.getInvoiceId(), adjustment.getPaymentId(), adjustment.getAdjustmentId()));
     }

@@ -2,6 +2,7 @@ package com.rbkmoney.payouter.dao.impl;
 
 import com.rbkmoney.payouter.dao.RefundDao;
 import com.rbkmoney.payouter.dao.mapper.RecordRowMapper;
+import com.rbkmoney.payouter.domain.Tables;
 import com.rbkmoney.payouter.domain.enums.PayoutSummaryOperationType;
 import com.rbkmoney.payouter.domain.enums.RefundStatus;
 import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
@@ -35,6 +36,7 @@ public class RefundDaoImpl extends AbstractGenericDao implements RefundDao {
     @Override
     public void save(Refund refund) throws DaoException {
         RefundRecord refundRecord = getDslContext().newRecord(REFUND, refund);
+        refundRecord.reset(Tables.REFUND.PAYOUT_ID);
         Query query = getDslContext().insertInto(REFUND)
                 .set(refundRecord)
                 .onConflict(REFUND.INVOICE_ID, REFUND.PAYMENT_ID, REFUND.REFUND_ID)
