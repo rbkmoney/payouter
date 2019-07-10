@@ -37,7 +37,8 @@ public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao {
         Query query = getDslContext()
                 .insertInto(PAYMENT)
                 .set(paymentRecord)
-                .onDuplicateKeyUpdate()
+                .onConflict(PAYMENT.INVOICE_ID, PAYMENT.PAYMENT_ID)
+                .doUpdate()
                 .set(paymentRecord);
         executeOne(query);
     }

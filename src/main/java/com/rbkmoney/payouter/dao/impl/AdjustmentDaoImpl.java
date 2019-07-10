@@ -33,7 +33,8 @@ public class AdjustmentDaoImpl extends AbstractGenericDao implements AdjustmentD
         AdjustmentRecord adjustmentRecord = getDslContext().newRecord(ADJUSTMENT, adjustment);
         Query query = getDslContext().insertInto(ADJUSTMENT)
                 .set(adjustmentRecord)
-                .onDuplicateKeyUpdate()
+                .onConflict(ADJUSTMENT.INVOICE_ID, ADJUSTMENT.PAYMENT_ID, ADJUSTMENT.ADJUSTMENT_ID)
+                .doUpdate()
                 .set(adjustmentRecord);
         executeOne(query);
     }

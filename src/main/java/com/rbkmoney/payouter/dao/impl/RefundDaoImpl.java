@@ -37,7 +37,8 @@ public class RefundDaoImpl extends AbstractGenericDao implements RefundDao {
         RefundRecord refundRecord = getDslContext().newRecord(REFUND, refund);
         Query query = getDslContext().insertInto(REFUND)
                 .set(refundRecord)
-                .onDuplicateKeyUpdate()
+                .onConflict(REFUND.INVOICE_ID, REFUND.PAYMENT_ID, REFUND.REFUND_ID)
+                .doUpdate()
                 .set(refundRecord);
         executeOne(query);
     }
