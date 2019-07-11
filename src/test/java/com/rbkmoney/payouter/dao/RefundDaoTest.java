@@ -16,10 +16,12 @@ public class RefundDaoTest extends AbstractIntegrationTest {
 
     @Test
     public void testSaveAndGet() throws DaoException {
-        Refund refund = random(Refund.class);
+        Refund refund = random(Refund.class, "payoutId");
+        refundDao.save(refund);
 
-        refundDao.save(refund);
-        refundDao.save(refund);
+        Refund secondRefund = new Refund(refund);
+        secondRefund.setId(null);
+        refundDao.save(secondRefund);
 
         assertEquals(refund, refundDao.get(refund.getInvoiceId(), refund.getPaymentId(), refund.getRefundId()));
     }

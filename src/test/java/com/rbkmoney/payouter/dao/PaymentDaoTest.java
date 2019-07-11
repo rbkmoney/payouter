@@ -20,11 +20,12 @@ public class PaymentDaoTest extends AbstractIntegrationTest {
 
     @Test
     public void testSaveAndGet() throws DaoException {
-        Payment payment = random(Payment.class);
+        Payment payment = random(Payment.class, "payoutId");
+        paymentDao.save(payment);
 
-        paymentDao.save(payment);
-        payment.setPayoutId(null);
-        paymentDao.save(payment);
+        Payment secondPayment = new Payment(payment);
+        secondPayment.setId(null);
+        paymentDao.save(secondPayment);
 
         assertEquals(payment, paymentDao.get(payment.getInvoiceId(), payment.getPaymentId()));
     }
