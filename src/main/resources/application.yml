@@ -11,7 +11,7 @@ spring:
     password: @db.password@
     hikari:
       idle-timeout: 30000
-      maximum-pool-size: 10
+      maximum-pool-size: 30
   flyway:
     schemas: sht
   quartz:
