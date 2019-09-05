@@ -19,13 +19,11 @@ public class ClaimCommitterService implements ClaimCommitterSrv.Iface {
 
         for (ModificationUnit modificationUnit : receivedClaim.getChangeset()) {
             Modification modification = modificationUnit.getModification();
-            if (modification.isSetClaimModfication()) {
-                log.info("Accepting for claim modification not implemented yet!");
-            } else if (modification.isSetPartyModification()) {
+            if (modification.isSetPartyModification()) {
                 PartyModification partyModification = modification.getPartyModification();
                 partyModificationCommitHandler.accept(partyId, partyModification);
             } else {
-                log.info("Unknown modification!");
+                log.info("Received unknown modification '{}' at the accept stage", modification.getSetField().getFieldName());
             }
         }
     }
@@ -34,13 +32,11 @@ public class ClaimCommitterService implements ClaimCommitterSrv.Iface {
     public void commit(String partyId, Claim claim) throws TException {
         for (ModificationUnit modificationUnit : claim.getChangeset()) {
             Modification modification = modificationUnit.getModification();
-            if (modification.isSetClaimModfication()) {
-                log.info("Commit for claim modification not implemented yet!");
-            } else if (modification.isSetPartyModification()) {
+            if (modification.isSetPartyModification()) {
                 PartyModification partyModification = modification.getPartyModification();
                 partyModificationCommitHandler.commit(partyId, partyModification);
             } else {
-                log.info("Unknown modification!");
+                log.info("Received unknown modification '{}' at the commit stage", modification.getSetField().getFieldName());
             }
         }
     }
