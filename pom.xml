@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>payouter</artifactId>
-    <version>1.0.39-SNAPSHOT</version>
+    <version>1.0.40-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>payouter</name>
@@ -25,16 +25,17 @@
         <dockerfile.registry>${env.REGISTRY}</dockerfile.registry>
         <server.port>8022</server.port>
         <exposed.ports>${server.port}</exposed.ports>
-        <db.url>jdbc:postgresql://localhost:5432/payouter</db.url>
         <db.user>postgres</db.user>
         <db.password>postgres</db.password>
         <db.schema>sht</db.schema>
-        <db.port>5432</db.port>
+        <db.port>15432</db.port>
         <db.name>payouter</db.name>
+        <db.url>jdbc:postgresql://localhost:${db.port}/${db.name}</db.url>
         <damsel.version>1.303-d99319c</damsel.version>
         <machinegun-proto.version>1.12-ebae56f</machinegun-proto.version>
         <fistful-proto.version>1.14-7bbae46</fistful-proto.version>
         <sonar.jacoco.reportPath>${project.basedir}/../target/jacoco.exec</sonar.jacoco.reportPath>
+        <claim.management.version>1.6-4a3331c</claim.management.version>
     </properties>
 
     <dependencies>
@@ -171,6 +172,11 @@
             <groupId>com.rbkmoney</groupId>
             <artifactId>spring-boot-starter-metrics-statsd</artifactId>
             <version>1.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.rbkmoney</groupId>
+            <artifactId>claim-management-proto</artifactId>
+            <version>${claim.management.version}</version>
         </dependency>
 
         <!-- Test -->

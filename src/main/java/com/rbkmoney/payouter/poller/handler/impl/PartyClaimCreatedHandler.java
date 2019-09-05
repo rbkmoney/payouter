@@ -26,6 +26,7 @@ public class PartyClaimCreatedHandler implements PartyManagementHandler {
                 new IsNullCondition().not()));
     }
 
+
     @Override
     public void handle(PartyChange change, Event event) {
         ClaimStatusChanged claimStatusChanged = change.getClaimStatusChanged();
