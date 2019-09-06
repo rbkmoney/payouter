@@ -2,9 +2,11 @@ package com.rbkmoney.payouter.service;
 
 import com.rbkmoney.damsel.claim_management.*;
 import com.rbkmoney.damsel.domain.BusinessScheduleRef;
+import com.rbkmoney.eventstock.client.EventPublisher;
 import com.rbkmoney.payouter.AbstractIntegrationTest;
 import com.rbkmoney.payouter.dao.ShopMetaDao;
 import com.rbkmoney.payouter.domain.tables.pojos.ShopMeta;
+import com.rbkmoney.payouter.service.impl.DominantServiceImpl;
 import org.apache.thrift.TException;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +30,10 @@ public class ClaimCommitterServiceTest extends AbstractIntegrationTest {
     private ShopMetaDao shopMetaDao;
 
     @MockBean
-    private SchedulerService schedulerService;
+    private EventPublisher eventPublisher;
+
+    @MockBean
+    private DominantServiceImpl dominantService;
 
     @Test
     public void serviceTest() throws TException {
