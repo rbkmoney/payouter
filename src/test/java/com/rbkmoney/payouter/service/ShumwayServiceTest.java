@@ -1,8 +1,8 @@
 package com.rbkmoney.payouter.service;
 
-import com.rbkmoney.damsel.accounter.AccounterSrv;
-import com.rbkmoney.damsel.accounter.InvalidPostingParams;
 import com.rbkmoney.damsel.domain.*;
+import com.rbkmoney.damsel.shumpune.AccounterSrv;
+import com.rbkmoney.damsel.shumpune.InvalidPostingParams;
 import com.rbkmoney.payouter.AbstractIntegrationTest;
 import com.rbkmoney.payouter.dao.PayoutDao;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
