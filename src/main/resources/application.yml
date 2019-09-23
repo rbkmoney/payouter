@@ -24,7 +24,7 @@ cache:
   maxSize: 100
 service:
   shumway:
-    url: http://localhost:8022/accounter
+    url: http://localhost:8022/shumpune
     networkTimeout: 5000
   partyManagement:
     url: http://hellgate:8022/v1/processing/partymgmt

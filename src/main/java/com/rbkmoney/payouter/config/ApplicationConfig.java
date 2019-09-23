@@ -1,6 +1,6 @@
 package com.rbkmoney.payouter.config;
 
-import com.rbkmoney.damsel.accounter.AccounterSrv;
+import com.rbkmoney.damsel.shumpune.AccounterSrv;
 import com.rbkmoney.damsel.domain_config.RepositoryClientSrv;
 import com.rbkmoney.damsel.message_sender.MessageSenderSrv;
 import com.rbkmoney.damsel.payment_processing.PartyManagementSrv;

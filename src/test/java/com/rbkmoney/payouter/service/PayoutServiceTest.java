@@ -1,7 +1,5 @@
 package com.rbkmoney.payouter.service;
 
-import com.rbkmoney.damsel.accounter.Account;
-import com.rbkmoney.damsel.accounter.PostingPlanLog;
 import com.rbkmoney.damsel.base.*;
 import com.rbkmoney.damsel.domain.Calendar;
 import com.rbkmoney.damsel.domain.*;
@@ -15,6 +13,9 @@ import com.rbkmoney.damsel.payout_processing.GeneratePayoutParams;
 import com.rbkmoney.damsel.payout_processing.PayoutManagementSrv;
 import com.rbkmoney.damsel.payout_processing.ShopParams;
 import com.rbkmoney.damsel.payout_processing.TimeRange;
+import com.rbkmoney.damsel.shumpune.Balance;
+import com.rbkmoney.damsel.shumpune.Clock;
+import com.rbkmoney.damsel.shumpune.LatestClock;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.generation.AdjustmentGenerator;
 import com.rbkmoney.generation.GeneratorConfig;
@@ -106,9 +107,11 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
                 .build(PayoutManagementSrv.Iface.class);
 
         given(shumwayService.hold(any(), any()))
-                .willReturn(new PostingPlanLog(Collections.singletonMap(
-                        1L,
-                        new Account(1, 0, 0, 0, "RUB")))
+                .willReturn(Clock.latest(new LatestClock()));
+
+        given(shumwayService.getBalance(any(), any()))
+                .willReturn(
+                        new Balance(1, 0, 0, 0, Clock.latest(new LatestClock()))
                 );
 
         given(partyManagementClient.checkout(any(), any(), any()))
