@@ -1,8 +1,11 @@
 package com.rbkmoney.payouter.service;
 
 import com.rbkmoney.fistful.*;
+import com.rbkmoney.fistful.admin.DepositParams;
+import com.rbkmoney.fistful.admin.FistfulAdminSrv;
 import com.rbkmoney.fistful.base.Cash;
 import com.rbkmoney.fistful.base.CurrencyRef;
+import com.rbkmoney.fistful.deposit.Deposit;
 import com.rbkmoney.payouter.exception.InvalidStateException;
 import com.rbkmoney.payouter.exception.NotFoundException;
 import org.apache.thrift.TException;
