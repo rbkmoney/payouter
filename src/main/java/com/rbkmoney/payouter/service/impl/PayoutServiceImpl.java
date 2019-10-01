@@ -150,8 +150,8 @@ public class PayoutServiceImpl implements PayoutService {
             eventSinkService.savePayoutCreatedEvent(payout, cashFlowPostings);
             shopMetaDao.updateLastPayoutCreatedAt(shopMeta.getPartyId(), shopMeta.getShopId(), payout.getCreatedAt());
 
-            shumwayService.hold(payoutId, cashFlowPostings);
-            Balance balance = shumwayService.getBalance(payout.getShopAcc(), payoutId);
+            Clock clock = shumwayService.hold(payoutId, cashFlowPostings);
+            Balance balance = shumwayService.getBalance(payout.getShopAcc(), clock, payoutId);
             if (balance == null || balance.getMinAvailableAmount() < 0) {
                 shumwayService.rollback(payoutId);
                 throw new InsufficientFundsException(String.format("Invalid available amount in shop account, balance='%s'", balance));

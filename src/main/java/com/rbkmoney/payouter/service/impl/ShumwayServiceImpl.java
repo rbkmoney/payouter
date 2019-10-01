@@ -1,5 +1,6 @@
 package com.rbkmoney.payouter.service.impl;
 
+import com.google.common.primitives.Longs;
 import com.rbkmoney.damsel.base.InvalidRequest;
 import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.shumpune.*;
@@ -139,17 +140,18 @@ public class ShumwayServiceImpl implements ShumwayService {
     }
 
     @Override
-    public Balance getBalance(Long accountId, String payoutId) {
+    public Balance getBalance(Long accountId, Clock clock, String payoutId) {
+        String clockLog = clock.isSetLatest() ? "Latest" : Longs.fromByteArray(clock.getVector().getState()) + "";
         try {
-            log.debug("Start getBalance operation, payoutId='{}', accountId='{}'", payoutId, accountId);
+            log.debug("Start getBalance operation, payoutId='{}', accountId='{}', clock='{}'", payoutId, accountId, clockLog);
             return retryTemplate.execute(
-                    context -> shumwayClient.getBalanceByID(accountId, Clock.latest(new LatestClock()))
+                    context -> shumwayClient.getBalanceByID(accountId, clock)
             );
         } catch (Exception e) {
-            throw new AccounterException(String.format("Failed to getBalance, payoutId='%s', accountId='%s'", payoutId, accountId), e);
+            throw new AccounterException(String.format("Failed to getBalance, payoutId='%s', accountId='%s', clock='%s'", payoutId, accountId, clockLog), e);
         }
         finally {
-            log.debug("End getBalance operation, payoutId='{}', accountId='{}'", payoutId, accountId);
+            log.debug("End getBalance operation, payoutId='{}', accountId='{}', clock='{}'", payoutId, accountId, clockLog);
         }
     }
 

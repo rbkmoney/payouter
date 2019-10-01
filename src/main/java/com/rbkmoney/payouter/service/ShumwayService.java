@@ -17,7 +17,7 @@ public interface ShumwayService {
 
     void revert(String payoutId);
 
-    Balance getBalance(Long accountId, String payoutId);
+    Balance getBalance(Long accountId, Clock clock, String payoutId);
 
     List<FinalCashFlowPosting> getPostings(String payoutId);
 
