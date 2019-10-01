@@ -109,7 +109,7 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         given(shumwayService.hold(any(), any()))
                 .willReturn(Clock.latest(new LatestClock()));
 
-        given(shumwayService.getBalance(any(), any()))
+        given(shumwayService.getBalance(any(), any(), any()))
                 .willReturn(
                         new Balance(1, 0, 0, 0, Clock.latest(new LatestClock()))
                 );
