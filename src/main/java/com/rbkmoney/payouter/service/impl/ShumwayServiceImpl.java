@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -141,7 +142,7 @@ public class ShumwayServiceImpl implements ShumwayService {
 
     @Override
     public Balance getBalance(Long accountId, Clock clock, String payoutId) {
-        String clockLog = clock.isSetLatest() ? "Latest" : Longs.fromByteArray(clock.getVector().getState()) + "";
+        String clockLog = clock.isSetLatest() ? "Latest" : Arrays.toString(clock.getVector().getState());
         try {
             log.debug("Start getBalance operation, payoutId='{}', accountId='{}', clock='{}'", payoutId, accountId, clockLog);
             return retryTemplate.execute(
