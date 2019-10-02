@@ -1,8 +1,9 @@
 package com.rbkmoney.payouter.service.impl;
 
-import com.rbkmoney.damsel.accounter.*;
+import com.google.common.primitives.Longs;
 import com.rbkmoney.damsel.base.InvalidRequest;
 import com.rbkmoney.damsel.domain.*;
+import com.rbkmoney.damsel.shumpune.*;
 import com.rbkmoney.payouter.dao.CashFlowPostingDao;
 import com.rbkmoney.payouter.domain.enums.AccountType;
 import com.rbkmoney.payouter.domain.tables.pojos.CashFlowPosting;
@@ -12,14 +13,12 @@ import com.rbkmoney.payouter.service.ShumwayService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.thrift.TException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,12 +35,12 @@ public class ShumwayServiceImpl implements ShumwayService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
-    public PostingPlanLog hold(String payoutId, List<FinalCashFlowPosting> finalCashFlowPostings) {
+    public Clock hold(String payoutId, List<FinalCashFlowPosting> finalCashFlowPostings) {
         return hold(payoutId, toPlanId(payoutId), 1L, toCashFlowPostings(payoutId, finalCashFlowPostings));
     }
 
     @Transactional(propagation = Propagation.REQUIRED)
-    public PostingPlanLog hold(String payoutId, String planId, long batchId, List<CashFlowPosting> cashFlowPostings) {
+    public Clock hold(String payoutId, String planId, long batchId, List<CashFlowPosting> cashFlowPostings) {
         log.debug("Trying to hold payout postings, payoutId='{}', cashFlowPostings='{}'", payoutId, cashFlowPostings);
         List<CashFlowPosting> newCashFlowPostings = cashFlowPostings.stream().map(cashFlowPosting -> {
             cashFlowPosting.setPayoutId(payoutId);
@@ -52,15 +51,15 @@ public class ShumwayServiceImpl implements ShumwayService {
 
         try {
             cashFlowPostingDao.save(cashFlowPostings);
-            PostingPlanLog postingPlanLog = hold(planId, toPostingBatch(batchId, newCashFlowPostings));
-            log.info("Payout has been held, payoutId='{}', cashFlowPostings='{}', postingPlanLog='{}'", payoutId, newCashFlowPostings, postingPlanLog);
-            return postingPlanLog;
+            Clock clock = hold(planId, toPostingBatch(batchId, newCashFlowPostings));
+            log.info("Payout has been held, payoutId='{}', cashFlowPostings='{}', clock='{}'", payoutId, newCashFlowPostings, clock);
+            return clock;
         } catch (Exception ex) {
             throw new AccounterException(String.format("Failed to hold payout, payoutId='%s'", payoutId), ex);
         }
     }
 
-    public PostingPlanLog hold(String postingPlanId, PostingBatch postingBatch) throws TException {
+    public Clock hold(String postingPlanId, PostingBatch postingBatch) throws TException {
         try {
             log.debug("Start hold operation, postingPlanId='{}', postingBatch='{}'", postingPlanId, postingBatch);
             return retryTemplate.execute(
@@ -138,6 +137,22 @@ public class ShumwayServiceImpl implements ShumwayService {
             log.info("Payout has been reverted, payoutId={}", payoutId);
         } catch (Exception ex) {
             throw new AccounterException(String.format("Failed to revert payout, payoutId='%s'", payoutId), ex);
+        }
+    }
+
+    @Override
+    public Balance getBalance(Long accountId, Clock clock, String payoutId) {
+        String clockLog = clock.isSetLatest() ? "Latest" : Arrays.toString(clock.getVector().getState());
+        try {
+            log.debug("Start getBalance operation, payoutId='{}', accountId='{}', clock='{}'", payoutId, accountId, clockLog);
+            return retryTemplate.execute(
+                    context -> shumwayClient.getBalanceByID(accountId, clock)
+            );
+        } catch (Exception e) {
+            throw new AccounterException(String.format("Failed to getBalance, payoutId='%s', accountId='%s', clock='%s'", payoutId, accountId, clockLog), e);
+        }
+        finally {
+            log.debug("End getBalance operation, payoutId='{}', accountId='{}', clock='{}'", payoutId, accountId, clockLog);
         }
     }
 

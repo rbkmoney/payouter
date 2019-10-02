@@ -144,6 +144,11 @@
         </dependency>
         <dependency>
             <groupId>com.rbkmoney</groupId>
+            <artifactId>shumpune-proto</artifactId>
+            <version>1.15-4c87f03</version>
+        </dependency>
+        <dependency>
+            <groupId>com.rbkmoney</groupId>
             <artifactId>machinegun-proto</artifactId>
             <version>${machinegun-proto.version}</version>
         </dependency>
