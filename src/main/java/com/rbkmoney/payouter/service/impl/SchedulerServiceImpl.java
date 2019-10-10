@@ -17,6 +17,7 @@ import com.rbkmoney.payouter.trigger.FreezeTimeCronScheduleBuilder;
 import com.rbkmoney.payouter.util.SchedulerUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.core.SchedulerLock;
 import org.quartz.*;
 import org.quartz.impl.calendar.HolidayCalendar;
 import org.slf4j.Logger;
@@ -44,6 +45,7 @@ public class SchedulerServiceImpl implements SchedulerService {
     private final DominantService dominantService;
 
     @Scheduled(fixedDelay = 60 * 1000)
+    @SchedulerLock(name = "SchedulerService_syncJobs_scheduledTask")
     public void syncJobs() {
         try {
             log.info("Starting synchronization of jobs...");

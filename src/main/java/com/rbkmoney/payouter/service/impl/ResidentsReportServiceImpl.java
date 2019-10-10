@@ -16,6 +16,7 @@ import com.rbkmoney.payouter.util.SchedulerUtil;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
+import net.javacrumbs.shedlock.core.SchedulerLock;
 import org.quartz.impl.calendar.HolidayCalendar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,6 +86,7 @@ public class ResidentsReportServiceImpl implements ReportService {
     }
 
     @Scheduled(cron = "${report.residents.cron}", zone = "${report.residents.timezone}")
+    @SchedulerLock(name = "ResidentsReportService_createNewReportsJob_scheduledTask")
     @Transactional(propagation = Propagation.REQUIRED)
     public void createNewReportsJob() throws StorageException {
         log.info("Report job for residents starting");
