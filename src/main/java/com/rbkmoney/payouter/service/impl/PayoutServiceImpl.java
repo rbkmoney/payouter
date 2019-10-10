@@ -4,6 +4,8 @@ import com.rbkmoney.damsel.accounter.Account;
 import com.rbkmoney.damsel.accounter.PostingPlanLog;
 import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.msgpack.Value;
+import com.rbkmoney.damsel.shumpune.Balance;
+import com.rbkmoney.damsel.shumpune.Clock;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.payouter.dao.*;
 import com.rbkmoney.payouter.domain.enums.PayoutAccountType;
@@ -148,11 +150,11 @@ public class PayoutServiceImpl implements PayoutService {
             eventSinkService.savePayoutCreatedEvent(payout, cashFlowPostings);
             shopMetaDao.updateLastPayoutCreatedAt(shopMeta.getPartyId(), shopMeta.getShopId(), payout.getCreatedAt());
 
-            PostingPlanLog postingPlanLog = shumwayService.hold(payoutId, cashFlowPostings);
-            Account account = postingPlanLog.getAffectedAccounts().get(payout.getShopAcc());
-            if (account == null || account.getMinAvailableAmount() < 0) {
+            Clock clock = shumwayService.hold(payoutId, cashFlowPostings);
+            Balance balance = shumwayService.getBalance(payout.getShopAcc(), clock, payoutId);
+            if (balance == null || balance.getMinAvailableAmount() < 0) {
                 shumwayService.rollback(payoutId);
-                throw new InsufficientFundsException(String.format("Invalid available amount in shop account, account='%s'", account));
+                throw new InsufficientFundsException(String.format("Invalid available amount in shop account, balance='%s'", balance));
             }
 
             return payoutId;

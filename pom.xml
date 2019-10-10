@@ -31,9 +31,9 @@
         <db.port>15432</db.port>
         <db.name>payouter</db.name>
         <db.url>jdbc:postgresql://localhost:${db.port}/${db.name}</db.url>
-        <damsel.version>1.303-d99319c</damsel.version>
+        <damsel.version>1.336-b563890</damsel.version>
         <machinegun-proto.version>1.12-ebae56f</machinegun-proto.version>
-        <fistful-proto.version>1.14-7bbae46</fistful-proto.version>
+        <fistful-proto.version>1.37-b3ce731</fistful-proto.version>
         <sonar.jacoco.reportPath>${project.basedir}/../target/jacoco.exec</sonar.jacoco.reportPath>
         <claim.management.version>1.6-4a3331c</claim.management.version>
     </properties>
@@ -97,11 +97,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.rbkmoney.logback</groupId>
-            <artifactId>nop-rolling</artifactId>
-            <version>1.0.1</version>
-        </dependency>
-        <dependency>
             <groupId>net.logstash.logback</groupId>
             <artifactId>logstash-logback-encoder</artifactId>
             <version>5.0</version>
@@ -147,6 +142,11 @@
             <groupId>com.rbkmoney</groupId>
             <artifactId>damsel</artifactId>
             <version>${damsel.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.rbkmoney</groupId>
+            <artifactId>shumpune-proto</artifactId>
+            <version>1.15-4c87f03</version>
         </dependency>
         <dependency>
             <groupId>com.rbkmoney</groupId>

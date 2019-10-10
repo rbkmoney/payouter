@@ -1,10 +1,10 @@
 package com.rbkmoney.payouter.config;
 
-import com.rbkmoney.damsel.accounter.AccounterSrv;
+import com.rbkmoney.damsel.shumpune.AccounterSrv;
 import com.rbkmoney.damsel.domain_config.RepositoryClientSrv;
 import com.rbkmoney.damsel.message_sender.MessageSenderSrv;
 import com.rbkmoney.damsel.payment_processing.PartyManagementSrv;
-import com.rbkmoney.fistful.FistfulAdminSrv;
+import com.rbkmoney.fistful.admin.FistfulAdminSrv;
 import com.rbkmoney.woody.thrift.impl.http.THSpawnClientBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
