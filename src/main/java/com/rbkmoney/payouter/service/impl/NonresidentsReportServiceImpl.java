@@ -109,7 +109,7 @@ public class NonresidentsReportServiceImpl implements ReportService {
     }
 
     @Scheduled(cron = "${report.nonresidents.cron}", zone = "${report.nonresidents.timezone}")
-    @SchedulerLock(name = "NonresidentsReportService_createNewReportsJob_scheduledTask")
+    @SchedulerLock(name = "NonresidentsReportService_createNewReportsJob_scheduledTask", lockAtLeastForString = "PT10S")
     @Transactional(propagation = Propagation.REQUIRED)
     public void createNewReportsJob() throws StorageException {
         log.info("Report job for nonresidents starting");

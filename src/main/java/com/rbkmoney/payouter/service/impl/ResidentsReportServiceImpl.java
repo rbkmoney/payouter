@@ -86,7 +86,7 @@ public class ResidentsReportServiceImpl implements ReportService {
     }
 
     @Scheduled(cron = "${report.residents.cron}", zone = "${report.residents.timezone}")
-    @SchedulerLock(name = "ResidentsReportService_createNewReportsJob_scheduledTask")
+    @SchedulerLock(name = "ResidentsReportService_createNewReportsJob_scheduledTask", lockAtLeastForString = "PT10S")
     @Transactional(propagation = Propagation.REQUIRED)
     public void createNewReportsJob() throws StorageException {
         log.info("Report job for residents starting");

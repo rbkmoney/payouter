@@ -7,7 +7,7 @@ import org.springframework.boot.web.servlet.ServletComponentScan;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @EnableScheduling
-@EnableSchedulerLock(defaultLockAtMostFor = "PT3H")
+@EnableSchedulerLock(defaultLockAtMostFor = "PT20S")
 @ServletComponentScan
 @SpringBootApplication(scanBasePackages = "com.rbkmoney.payouter")
 public class PayouterApplication {

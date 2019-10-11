@@ -46,7 +46,7 @@ public class SchedulerServiceImpl implements SchedulerService {
     private final DominantService dominantService;
 
     @Scheduled(fixedDelay = 60 * 1000)
-    @SchedulerLock(name = "SchedulerService_syncJobs_scheduledTask")
+    @SchedulerLock(name = "SchedulerService_syncJobs_scheduledTask", lockAtLeastForString = "PT10S")
     public void syncJobs() {
         try {
             log.info("Starting synchronization of jobs...");
