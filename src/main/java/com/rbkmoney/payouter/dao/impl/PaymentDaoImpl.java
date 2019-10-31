@@ -8,8 +8,8 @@ import com.rbkmoney.payouter.domain.tables.pojos.Payment;
 import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
 import com.rbkmoney.payouter.domain.tables.records.PaymentRecord;
 import com.rbkmoney.payouter.exception.DaoException;
-import org.jooq.Field;
-import org.jooq.Query;
+import org.jooq.*;
+import org.jooq.conf.ParamType;
 import org.jooq.impl.DSL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.RowMapper;
@@ -62,14 +62,33 @@ public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao {
 
     @Override
     public int includeUnpaid(String payoutId, String partyId, String shopId, LocalDateTime to) throws DaoException {
-        Query query = getDslContext().update(PAYMENT)
-                .set(PAYMENT.PAYOUT_ID, payoutId)
-                .where(PAYMENT.STATUS.eq(PaymentStatus.CAPTURED)
-                        .and(PAYMENT.PARTY_ID.eq(partyId))
-                        .and(PAYMENT.SHOP_ID.eq(shopId))
-                        .and(PAYMENT.CAPTURED_AT.lessThan(to))
-                        .and(PAYMENT.PAYOUT_ID.isNull()));
-        return execute(query);
+        CommonTableExpression<Record1<Long>> paymentPartAlias = DSL.name("payment_part").as(
+                getDslContext()
+                        .select(PAYMENT.ID)
+                        .from(PAYMENT)
+                        .where(
+                                PAYMENT.STATUS.eq(PaymentStatus.CAPTURED)
+                                        .and(PAYMENT.PARTY_ID.eq(partyId))
+                                        .and(PAYMENT.SHOP_ID.eq(shopId))
+                                        .and(PAYMENT.CAPTURED_AT.lessThan(to))
+                                        .and(PAYMENT.PAYOUT_ID.isNull())
+                        )
+                        .orderBy(PAYMENT.ID)
+                        .limit(1000)
+        );
+
+        Query query = getDslContext()
+                .with(paymentPartAlias)
+                .update(PAYMENT).set(PAYMENT.PAYOUT_ID, payoutId)
+                .from(paymentPartAlias)
+                .where(paymentPartAlias.field("id", Long.class).eq(PAYMENT.ID));
+
+        int totalCount = 0;
+        int count;
+        while ((count = execute(query)) > 0) {
+            totalCount += count;
+        }
+        return totalCount;
     }
 
     @Override
@@ -90,8 +109,8 @@ public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao {
                 .set(PAYMENT.STATUS, PaymentStatus.CANCELLED)
                 .where(
                         PAYMENT.INVOICE_ID.eq(invoiceId)
-                        .and(PAYMENT.PAYMENT_ID.eq(paymentId))
-                        .and(PAYMENT.PAYOUT_ID.isNull())
+                                .and(PAYMENT.PAYMENT_ID.eq(paymentId))
+                                .and(PAYMENT.PAYOUT_ID.isNull())
                 );
 
         executeOne(query);
