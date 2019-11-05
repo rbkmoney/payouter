@@ -76,14 +76,13 @@ public class AdjustmentDaoImpl extends AbstractGenericDao implements AdjustmentD
         Query query = getDslContext()
                 .update(ADJUSTMENT)
                 .set(ADJUSTMENT.PAYOUT_ID, payoutId)
-                .from(PAYMENT)
-                .where(ADJUSTMENT.INVOICE_ID.eq(PAYMENT.INVOICE_ID)
-                        .and(ADJUSTMENT.PAYMENT_ID.eq(PAYMENT.PAYMENT_ID))
-                        .and(PAYMENT.PARTY_ID.eq(partyId))
-                        .and(PAYMENT.SHOP_ID.eq(shopId))
-                        .and(PAYMENT.CAPTURED_AT.lessThan(to)))
-                .and(ADJUSTMENT.STATUS.eq(AdjustmentStatus.CAPTURED))
-                .and(ADJUSTMENT.PAYOUT_ID.isNull());
+                .where(
+                        ADJUSTMENT.PARTY_ID.eq(partyId)
+                                .and(ADJUSTMENT.SHOP_ID.eq(shopId))
+                                .and(ADJUSTMENT.CAPTURED_AT.lessThan(to))
+                                .and(ADJUSTMENT.STATUS.eq(AdjustmentStatus.CAPTURED))
+                                .and(ADJUSTMENT.PAYOUT_ID.isNull())
+                );
 
         return execute(query);
     }

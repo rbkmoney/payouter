@@ -84,13 +84,12 @@ public class RefundDaoImpl extends AbstractGenericDao implements RefundDao {
         Query query = getDslContext()
                 .update(REFUND)
                 .set(REFUND.PAYOUT_ID, payoutId)
-                .from(PAYMENT)
-                .where(REFUND.INVOICE_ID.eq(PAYMENT.INVOICE_ID)
-                        .and(REFUND.PAYMENT_ID.eq(PAYMENT.PAYMENT_ID))
-                        .and(REFUND.PAYOUT_ID.isNull())
-                        .and(PAYMENT.PARTY_ID.eq(partyId))
-                        .and(PAYMENT.SHOP_ID.eq(shopId))
-                        .and(REFUND.STATUS.eq(RefundStatus.SUCCEEDED)));
+                .where(
+                        REFUND.PARTY_ID.eq(partyId)
+                                .and(REFUND.SHOP_ID.eq(shopId))
+                                .and(REFUND.PAYOUT_ID.isNull())
+                                .and(REFUND.STATUS.eq(RefundStatus.SUCCEEDED))
+                );
         return execute(query);
     }
 
