@@ -31,10 +31,10 @@
         <db.schema>sht</db.schema>
         <db.port>5432</db.port>
         <db.name>payouter</db.name>
-        <damsel.version>1.336-b563890</damsel.version>
+        <damsel.version>1.367-5227a28</damsel.version>
         <machinegun-proto.version>1.12-ebae56f</machinegun-proto.version>
         <fistful-proto.version>1.37-b3ce731</fistful-proto.version>
-        <sonar.jacoco.reportPath>${project.basedir}/../target/jacoco.exec</sonar.jacoco.reportPath>
+        <sonar.jacoco.reportPath>${project.basedir}/target/jacoco.exec</sonar.jacoco.reportPath>
     </properties>
 
     <dependencies>
