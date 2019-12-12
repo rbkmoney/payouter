@@ -34,7 +34,7 @@
         <damsel.version>1.367-5227a28</damsel.version>
         <machinegun-proto.version>1.12-ebae56f</machinegun-proto.version>
         <fistful-proto.version>1.37-b3ce731</fistful-proto.version>
-        <sonar.jacoco.reportPath>${project.basedir}/../target/jacoco.exec</sonar.jacoco.reportPath>
+        <sonar.jacoco.reportPath>${project.basedir}/target/jacoco.exec</sonar.jacoco.reportPath>
     </properties>
 
     <dependencies>
