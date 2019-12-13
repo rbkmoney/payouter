@@ -14,9 +14,11 @@ import com.rbkmoney.payouter.service.DominantService;
 import com.rbkmoney.payouter.service.PartyManagementService;
 import com.rbkmoney.payouter.service.SchedulerService;
 import com.rbkmoney.payouter.trigger.FreezeTimeCronScheduleBuilder;
+import com.rbkmoney.payouter.trigger.FreezeTimeCronTrigger;
 import com.rbkmoney.payouter.util.SchedulerUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.core.SchedulerLock;
 import org.quartz.*;
 import org.quartz.impl.calendar.HolidayCalendar;
 import org.slf4j.Logger;
@@ -44,6 +46,7 @@ public class SchedulerServiceImpl implements SchedulerService {
     private final DominantService dominantService;
 
     @Scheduled(fixedDelay = 60 * 1000)
+    @SchedulerLock(name = "SchedulerService_syncJobs_scheduledTask", lockAtLeastForString = "PT10S")
     public void syncJobs() {
         try {
             log.info("Starting synchronization of jobs...");
@@ -131,7 +134,7 @@ public class SchedulerServiceImpl implements SchedulerService {
                     .usingJobData(GeneratePayoutJob.SHOP_ID, shopId)
                     .build();
 
-            Set<Trigger> triggers = new HashSet<>();
+            Set<FreezeTimeCronTrigger> triggers = new HashSet<>();
             List<String> cronList = SchedulerUtil.buildCron(schedule.getSchedule(), Optional.ofNullable(calendar.getFirstDayOfWeek()));
             for (int triggerId = 0; triggerId < cronList.size(); triggerId++) {
                 String cron = cronList.get(triggerId);
@@ -152,7 +155,7 @@ public class SchedulerServiceImpl implements SchedulerService {
                             .withSeconds(timeSpan.getSeconds());
                 }
 
-                Trigger trigger = TriggerBuilder.newTrigger()
+                FreezeTimeCronTrigger trigger = TriggerBuilder.newTrigger()
                         .withIdentity(buildTriggerKey(partyId, shopId, calendarRef.getId(), scheduleRef.getId(), triggerId))
                         .withDescription(schedule.getDescription())
                         .forJob(jobDetail)

@@ -4,7 +4,7 @@ import com.opencsv.CSVReader;
 import com.rbkmoney.damsel.base.*;
 import com.rbkmoney.damsel.domain.Calendar;
 import com.rbkmoney.damsel.domain.CalendarHoliday;
-import com.rbkmoney.payouter.trigger.FreezeTimeCronTrigger;
+import com.rbkmoney.payouter.trigger.FreezeTimeCronTriggerImpl;
 import com.rbkmoney.payouter.util.SchedulerUtil;
 import org.junit.Test;
 import org.quartz.CronExpression;
@@ -27,7 +27,7 @@ public class SchedulerUtilTest {
 
     @Test
     public void testEveryDayOnWeekends() throws ParseException, IOException {
-        FreezeTimeCronTrigger trigger = new FreezeTimeCronTrigger();
+        FreezeTimeCronTriggerImpl trigger = new FreezeTimeCronTriggerImpl();
         trigger.setCronExpression(new CronExpression("0 0 20 ? * * *"));
 
         trigger.setStartTime(
@@ -78,7 +78,7 @@ public class SchedulerUtilTest {
 
     @Test
     public void testStartOfWeekOnThirdWorkingDay() throws ParseException, IOException {
-        FreezeTimeCronTrigger trigger = new FreezeTimeCronTrigger();
+        FreezeTimeCronTriggerImpl trigger = new FreezeTimeCronTriggerImpl();
         trigger.setCronExpression(new CronExpression("0 0 0 ? * MON *"));
         trigger.setStartTime(
                 Date.from(
@@ -193,7 +193,7 @@ public class SchedulerUtilTest {
 
     @Test
     public void testStartOfMonthOnThirdWorkingDay() throws ParseException, IOException {
-        FreezeTimeCronTrigger trigger = new FreezeTimeCronTrigger();
+        FreezeTimeCronTriggerImpl trigger = new FreezeTimeCronTriggerImpl();
         trigger.setCronExpression(new CronExpression("0 0 0 1 * ? *"));
         trigger.setStartTime(
                 Date.from(
@@ -292,7 +292,7 @@ public class SchedulerUtilTest {
 
     @Test
     public void testEveryDayOnThirdWorkingDay() throws ParseException, IOException {
-        FreezeTimeCronTrigger trigger = new FreezeTimeCronTrigger();
+        FreezeTimeCronTriggerImpl trigger = new FreezeTimeCronTriggerImpl();
         trigger.setCronExpression(new CronExpression("0 0 0 * * ? *"));
         trigger.withDays(2);
 

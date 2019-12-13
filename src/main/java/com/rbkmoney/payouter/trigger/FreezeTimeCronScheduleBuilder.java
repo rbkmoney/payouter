@@ -4,7 +4,6 @@ import org.quartz.CronExpression;
 import org.quartz.CronTrigger;
 import org.quartz.ScheduleBuilder;
 import org.quartz.Trigger;
-import org.quartz.spi.MutableTrigger;
 
 import java.text.ParseException;
 import java.util.Objects;
@@ -46,8 +45,8 @@ public class FreezeTimeCronScheduleBuilder extends ScheduleBuilder<FreezeTimeCro
     }
 
     @Override
-    public MutableTrigger build() {
-        FreezeTimeCronTrigger freezeTimeCronTrigger = new FreezeTimeCronTrigger();
+    public FreezeTimeCronTriggerImpl build() {
+        FreezeTimeCronTriggerImpl freezeTimeCronTrigger = new FreezeTimeCronTriggerImpl();
         freezeTimeCronTrigger.setCronExpression(cronExpression);
         freezeTimeCronTrigger.setTimeZone(cronExpression.getTimeZone());
         freezeTimeCronTrigger.setMisfireInstruction(misfireInstruction);

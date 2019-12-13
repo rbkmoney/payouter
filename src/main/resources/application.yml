@@ -16,6 +16,25 @@ spring:
     schemas: sht
   quartz:
     job-store-type: jdbc
+    properties:
+      org:
+        quartz:
+          jobStore:
+            class: org.quartz.impl.jdbcjobstore.JobStoreTX
+            driverDelegateClass: org.quartz.impl.jdbcjobstore.PostgreSQLDelegate
+            isClustered: true
+            misfireThreshold: 60000
+            useProperties: true
+          plugin:
+            shutdownHook:
+              class: org.quartz.plugins.management.ShutdownHookPlugin
+              cleanShutdown: false
+          scheduler:
+            instanceId: AUTO
+            instanceName: payouter-scheduler
+          threadPool:
+            makeThreadsDaemons: true
+            threadNamePrefix: Scheduler
     jdbc:
       initialize-schema: always
 retry-policy:

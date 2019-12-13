@@ -5,14 +5,13 @@ import com.rbkmoney.payouter.exception.InvalidStateException;
 import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.exception.StorageException;
 import com.rbkmoney.payouter.service.PayoutService;
-import com.rbkmoney.payouter.trigger.FreezeTimeCronTrigger;
+import com.rbkmoney.payouter.trigger.FreezeTimeCronTriggerImpl;
 import com.rbkmoney.woody.api.flow.WFlow;
 import com.rbkmoney.woody.api.flow.error.WRuntimeException;
 import org.quartz.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.NestedRuntimeException;
 import org.springframework.stereotype.Component;
 
@@ -34,7 +33,7 @@ public class GeneratePayoutJob implements Job {
     @Override
     public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
         JobDetail jobDetail = jobExecutionContext.getJobDetail();
-        FreezeTimeCronTrigger trigger = (FreezeTimeCronTrigger) jobExecutionContext.getTrigger();
+        FreezeTimeCronTriggerImpl trigger = (FreezeTimeCronTriggerImpl) jobExecutionContext.getTrigger();
 
         JobDataMap jobDataMap = jobDetail.getJobDataMap();
         String partyId = jobDataMap.getString(PARTY_ID);

@@ -8,6 +8,7 @@ import com.rbkmoney.payouter.exception.DaoException;
 import com.rbkmoney.payouter.exception.ReportException;
 import com.rbkmoney.payouter.exception.StorageException;
 import com.rbkmoney.payouter.service.ReportSendService;
+import net.javacrumbs.shedlock.core.SchedulerLock;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +46,7 @@ public class ReportSendServiceImpl implements ReportSendService {
     @Override
     @Transactional
     @Scheduled(fixedDelay = 5000)
+    @SchedulerLock(name = "ReportSendService_sendUnsentReports_scheduledTask", lockAtLeastForString = "PT4S", lockAtMostForString = "PT4S")
     public void sendUnsentReports() {
         List<Report> reports = reportDao.getForSend();
         reports.forEach(report -> sendReport(report));
