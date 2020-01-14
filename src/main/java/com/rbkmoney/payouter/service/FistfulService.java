@@ -1,6 +1,8 @@
 package com.rbkmoney.payouter.service;
 
 import com.rbkmoney.fistful.*;
+import com.rbkmoney.fistful.admin.DepositAmountInvalid;
+import com.rbkmoney.fistful.admin.DepositCurrencyInvalid;
 import com.rbkmoney.fistful.admin.DepositParams;
 import com.rbkmoney.fistful.admin.FistfulAdminSrv;
 import com.rbkmoney.fistful.base.Cash;
