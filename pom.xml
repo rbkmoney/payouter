@@ -31,11 +31,10 @@
         <db.port>15432</db.port>
         <db.name>payouter</db.name>
         <db.url>jdbc:postgresql://localhost:${db.port}/${db.name}</db.url>
-        <damsel.version>1.336-b563890</damsel.version>
+        <damsel.version>1.384-7dd9035</damsel.version>
         <machinegun-proto.version>1.12-ebae56f</machinegun-proto.version>
         <fistful-proto.version>1.37-b3ce731</fistful-proto.version>
         <sonar.jacoco.reportPath>${project.basedir}/../target/jacoco.exec</sonar.jacoco.reportPath>
-        <claim.management.version>1.6-4a3331c</claim.management.version>
     </properties>
 
     <dependencies>
@@ -172,11 +171,6 @@
             <groupId>com.rbkmoney</groupId>
             <artifactId>spring-boot-starter-metrics-statsd</artifactId>
             <version>1.1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.rbkmoney</groupId>
-            <artifactId>claim-management-proto</artifactId>
-            <version>${claim.management.version}</version>
         </dependency>
 
         <!-- Test -->
