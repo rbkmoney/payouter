@@ -47,6 +47,7 @@ public class PartyModificationCommitHandler implements CommitHandler<ScheduleMod
                 BusinessSchedule businessSchedule = dominantService.getBusinessSchedule(schedule);
                 SchedulerUtil.buildCron(businessSchedule.getSchedule());
             } catch (IllegalArgumentException | NotFoundException ex) {
+                log.warn("Invalid business schedule", ex);
                 throw new InvalidChangesetException("Invalid business schedule", ex);
             }
         }

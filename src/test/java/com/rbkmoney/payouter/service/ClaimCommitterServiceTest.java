@@ -1,73 +1,73 @@
 package com.rbkmoney.payouter.service;
 
+import com.rbkmoney.damsel.base.*;
 import com.rbkmoney.damsel.claim_management.*;
-import com.rbkmoney.damsel.domain.BusinessScheduleRef;
-import com.rbkmoney.eventstock.client.EventPublisher;
-import com.rbkmoney.payouter.AbstractIntegrationTest;
-import com.rbkmoney.payouter.dao.ShopMetaDao;
-import com.rbkmoney.payouter.domain.tables.pojos.ShopMeta;
+import com.rbkmoney.damsel.domain.*;
+import com.rbkmoney.payouter.handler.PartyModificationCommitHandler;
+import com.rbkmoney.payouter.service.impl.ClaimCommitterService;
 import com.rbkmoney.payouter.service.impl.DominantServiceImpl;
 import org.apache.thrift.TException;
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.junit4.SpringRunner;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class ClaimCommitterServiceTest extends AbstractIntegrationTest {
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = {PartyModificationCommitHandler.class, ClaimCommitterService.class})
+public class ClaimCommitterServiceTest {
 
     @Autowired
     private ClaimCommitterSrv.Iface claimCommitterService;
 
     @MockBean
-    private ShopMetaDao shopMetaDao;
-
-    @MockBean
-    private EventPublisher eventPublisher;
-
-    @MockBean
     private DominantServiceImpl dominantService;
 
+    @MockBean
+    private SchedulerService schedulerService;
+
+    private final String partyId = "party_id";
+
+    private final String shopId = "shop_id";
+
+    private final BusinessScheduleRef businessScheduleRef = new BusinessScheduleRef().setId(1);
+
+    @Before
+    public void setup() {
+        when(dominantService.getBusinessSchedule(any())).thenReturn(buildPayoutScheduleObject());
+    }
+
     @Test
-    public void serviceTest() throws TException {
-        when(shopMetaDao.get(any(String.class), any(String.class))).thenReturn(getTestShopMeta());
-        boolean isError = false;
-        try {
-            claimCommitterService.accept("1", getTestScheduleModificationClaim(new BusinessScheduleRef().setId(1)));
-        } catch (PartyNotFound | InvalidChangeset ex) {
-            isError = true;
-        }
-        assertFalse("Error occurred during accepting", isError);
+    public void testAccept() throws TException {
+            claimCommitterService.accept(partyId, getTestScheduleModificationClaim(partyId, shopId, new BusinessScheduleRef().setId(1)));
+            claimCommitterService.accept(partyId, getTestScheduleModificationClaim(partyId, shopId, null));
 
-        try {
-            claimCommitterService.accept("1", getTestScheduleModificationClaim(new BusinessScheduleRef().setId(2)));
-        } catch (PartyNotFound | InvalidChangeset ex) {
-            isError = true;
-        }
-        assertTrue("Exception didn't threw during accepting", isError);
+            verify(dominantService).getBusinessSchedule(eq(businessScheduleRef));
     }
 
-    private static ShopMeta getTestShopMeta() {
-        ShopMeta shopMeta = new ShopMeta();
-        shopMeta.setShopId("ShopId-1");
-        shopMeta.setWtime(LocalDateTime.parse("2021-09-04T19:01:02.407796"));
-        shopMeta.setPartyId("1");
-        shopMeta.setCalendarId(1);
-        shopMeta.setLastPayoutCreatedAt(LocalDateTime.parse("2021-09-04T19:01:02.407796"));
-        shopMeta.setSchedulerId(1);
-        return shopMeta;
+    @Test
+    public void testCommit() throws TException {
+        claimCommitterService.commit(partyId, getTestScheduleModificationClaim(partyId, shopId, businessScheduleRef));
+        claimCommitterService.commit(partyId, getTestScheduleModificationClaim(partyId, shopId, null));
+
+        verify(schedulerService).registerJob(eq(partyId), eq(shopId), eq(businessScheduleRef));
+        verify(schedulerService).deregisterJob(eq(partyId), eq(shopId));
     }
 
-    private static Claim getTestScheduleModificationClaim(BusinessScheduleRef businessScheduleRef) {
+    private static Claim getTestScheduleModificationClaim(String partyId, String shopId, BusinessScheduleRef businessScheduleRef) {
         Claim claim = new Claim();
         claim.setId(1L);
+        claim.setPartyId(partyId);
         List<ModificationUnit> modificationUnitList = new ArrayList<>();
         ModificationUnit modificationUnit = new ModificationUnit();
         modificationUnit.setModificationId(1L);
@@ -75,7 +75,7 @@ public class ClaimCommitterServiceTest extends AbstractIntegrationTest {
 
         PartyModification partyModification = new PartyModification();
         ShopModificationUnit shopModificationUnit = new ShopModificationUnit();
-        shopModificationUnit.setId("ShopId-1");
+        shopModificationUnit.setId(shopId);
 
         ShopModification shopModification = new ShopModification();
         ScheduleModification scheduleModification = new ScheduleModification();
@@ -90,6 +90,26 @@ public class ClaimCommitterServiceTest extends AbstractIntegrationTest {
         modificationUnitList.add(modificationUnit);
         claim.setChangeset(modificationUnitList);
         return claim;
+    }
+
+    private BusinessSchedule buildPayoutScheduleObject() {
+        ScheduleEvery nth5 = new ScheduleEvery();
+        nth5.setNth((byte) 5);
+
+        BusinessSchedule payoutSchedule = new BusinessSchedule();
+        payoutSchedule.setName("schedule");
+        payoutSchedule.setSchedule(new Schedule(
+                ScheduleYear.every(new ScheduleEvery()),
+                ScheduleMonth.every(new ScheduleEvery()),
+                ScheduleFragment.every(new ScheduleEvery()),
+                ScheduleDayOfWeek.every(new ScheduleEvery()),
+                ScheduleFragment.every(new ScheduleEvery()),
+                ScheduleFragment.every(new ScheduleEvery()),
+                ScheduleFragment.every(new ScheduleEvery(nth5))
+        ));
+        payoutSchedule.setPolicy(new PayoutCompilationPolicy(new TimeSpan()));
+
+        return payoutSchedule;
     }
 
 }
