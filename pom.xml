@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>payouter</artifactId>
-    <version>1.0.39-SNAPSHOT</version>
+    <version>1.0.40-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>payouter</name>
@@ -25,13 +25,13 @@
         <dockerfile.registry>${env.REGISTRY}</dockerfile.registry>
         <server.port>8022</server.port>
         <exposed.ports>${server.port}</exposed.ports>
-        <db.url>jdbc:postgresql://localhost:5432/payouter</db.url>
         <db.user>postgres</db.user>
         <db.password>postgres</db.password>
         <db.schema>sht</db.schema>
-        <db.port>5432</db.port>
+        <db.port>15432</db.port>
         <db.name>payouter</db.name>
-        <damsel.version>1.367-5227a28</damsel.version>
+        <db.url>jdbc:postgresql://localhost:${db.port}/${db.name}</db.url>
+        <damsel.version>1.384-7dd9035</damsel.version>
         <machinegun-proto.version>1.12-ebae56f</machinegun-proto.version>
         <fistful-proto.version>1.37-b3ce731</fistful-proto.version>
         <sonar.jacoco.reportPath>${project.basedir}/target/jacoco.exec</sonar.jacoco.reportPath>
