@@ -98,7 +98,7 @@ public class SchedulerServiceImpl implements SchedulerService {
                         String.format("Calendar not found, partyId='%s', shopId='%s', contractId='%s'", partyId, shop.getId(), shop.getContractId())
                 );
             }
-
+            deregisterJob(partyId, shopId);
             CalendarRef calendarRef = paymentInstitution.getCalendar();
             shopMetaDao.save(partyId, shopId, calendarRef.getId(), scheduleRef.getId());
 
@@ -132,7 +132,7 @@ public class SchedulerServiceImpl implements SchedulerService {
                     .build();
 
             Set<Trigger> triggers = new HashSet<>();
-            List<String> cronList = SchedulerUtil.buildCron(schedule.getSchedule(), Optional.ofNullable(calendar.getFirstDayOfWeek()));
+            List<String> cronList = SchedulerUtil.buildCron(schedule.getSchedule(), calendar.getFirstDayOfWeek());
             for (int triggerId = 0; triggerId < cronList.size(); triggerId++) {
                 String cron = cronList.get(triggerId);
 
@@ -166,7 +166,7 @@ public class SchedulerServiceImpl implements SchedulerService {
         } catch (DaoException ex) {
             throw new StorageException(
                     String.format("failed to create job on storage, partyId='%s', shopId='%s', calendarRef='%s', scheduleRef='%s'",
-                            partyId, shopId, calendarRef, scheduleRef, ex));
+                            partyId, shopId, calendarRef, scheduleRef), ex);
         } catch (NotFoundException | SchedulerException ex) {
             throw new ScheduleProcessingException(
                     String.format("Failed to create job, partyId='%s', shopId='%s', calendarRef='%s', scheduleRef='%s'",
@@ -178,20 +178,22 @@ public class SchedulerServiceImpl implements SchedulerService {
     @Transactional(propagation = Propagation.REQUIRED)
     public void deregisterJob(String partyId, String shopId) throws NotFoundException, ScheduleProcessingException, StorageException {
         try {
-            log.info("Trying to deregister job, partyId='{}', shopId='{}'", partyId, shopId);
             ShopMeta shopMeta = shopMetaDao.get(partyId, shopId);
-            shopMetaDao.disableShop(partyId, shopId);
-            if (shopMeta.getCalendarId() != null && shopMeta.getSchedulerId() != null) {
-                JobKey jobKey = buildJobKey(partyId, shopId, shopMeta.getCalendarId(), shopMeta.getSchedulerId());
-                List<TriggerKey> triggerKeys = scheduler.getTriggersOfJob(jobKey).stream()
-                        .map(trigger -> trigger.getKey())
-                        .collect(Collectors.toList());
+            if (shopMeta != null) {
+                log.info("Trying to deregister job, partyId='{}', shopId='{}'", partyId, shopId);
+                shopMetaDao.disableShop(partyId, shopId);
+                if (shopMeta.getCalendarId() != null && shopMeta.getSchedulerId() != null) {
+                    JobKey jobKey = buildJobKey(partyId, shopId, shopMeta.getCalendarId(), shopMeta.getSchedulerId());
+                    List<TriggerKey> triggerKeys = scheduler.getTriggersOfJob(jobKey).stream()
+                            .map(Trigger::getKey)
+                            .collect(Collectors.toList());
 
-                scheduler.unscheduleJobs(triggerKeys);
-                scheduler.deleteJob(jobKey);
+                    scheduler.unscheduleJobs(triggerKeys);
+                    scheduler.deleteJob(jobKey);
+                    log.info("Job have been successfully disabled, partyId='{}', shopId='{}', scheduleId='{}', calendarId='{}'",
+                            partyId, shopId, shopMeta.getSchedulerId(), shopMeta.getCalendarId());
+                }
             }
-            log.info("Job have been successfully disabled, partyId='{}', shopId='{}', scheduleId='{}', calendarId='{}'",
-                    partyId, shopId, shopMeta.getSchedulerId(), shopMeta.getCalendarId());
         } catch (DaoException ex) {
             throw new StorageException(
                     String.format("Failed to disable job on storage, partyId='%s', shopId='%s'",

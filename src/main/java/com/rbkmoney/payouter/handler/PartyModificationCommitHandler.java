@@ -1,80 +1,55 @@
 package com.rbkmoney.payouter.handler;
 
 import com.rbkmoney.damsel.claim_management.*;
-import com.rbkmoney.damsel.domain.BusinessScheduleRef;
-import com.rbkmoney.payouter.dao.ShopMetaDao;
-import com.rbkmoney.payouter.domain.tables.pojos.ShopMeta;
+import com.rbkmoney.damsel.domain.*;
+import com.rbkmoney.payouter.exception.InvalidChangesetException;
 import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.service.DominantService;
 import com.rbkmoney.payouter.service.SchedulerService;
+import com.rbkmoney.payouter.util.SchedulerUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.thrift.TException;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class PartyModificationCommitHandler implements CommitHandler<PartyModification> {
-
-    private final ShopMetaDao shopMetaDao;
+public class PartyModificationCommitHandler implements CommitHandler<ScheduleModification> {
 
     private final SchedulerService schedulerService;
 
     private final DominantService dominantService;
 
     @Override
-    public void accept(String partyId, PartyModification partyModification) throws PartyNotFound, InvalidChangeset, TException {
-
-        if (partyModification.isSetShopModification()) {
-            ShopModificationUnit shopModificationUnit = partyModification.getShopModification();
-            String shopId = shopModificationUnit.getId();
-            ShopModification shopModification = shopModificationUnit.getModification();
-            if (shopModification.isSetPayoutScheduleModification()) {
-                ScheduleModification payoutScheduleModification = shopModification.getPayoutScheduleModification();
-                BusinessScheduleRef schedule = payoutScheduleModification.getSchedule();
-                checkSchedule(schedule);
-
-                ShopMeta shopMeta = shopMetaDao.get(partyId, shopId);
-                if (shopMeta == null) {
-                    shopMetaDao.save(partyId, shopId, schedule.getId());
-                } else if (shopMeta.getSchedulerId() == null || !shopMeta.getSchedulerId().equals(schedule.getId())) {
-                    throw new InvalidChangeset();
-                }
-            } else {
-                log.info("Accepting for '{}' party modification not implemented yet!", shopModification.getSetField().getFieldName());
-            }
-        } else {
-            log.info("Accepting for '{}' modification not implemented yet!", partyModification.getSetField().getFieldName());
+    public void accept(String partyId, String shopId, ScheduleModification scheduleModification) {
+        log.info("Trying to accept payout schedule modification, partyId='{}', scheduleModification='{}'", partyId, scheduleModification);
+        if (scheduleModification.isSetSchedule()) {
+            BusinessScheduleRef schedule = scheduleModification.getSchedule();
+            checkSchedule(schedule);
         }
+        log.info("Payout schedule modification have been accepted, partyId='{}', scheduleModification='{}'", partyId, scheduleModification);
     }
 
     @Override
-    public void commit(String partyId, PartyModification partyModification) throws TException {
-        if (partyModification.isSetShopModification()) {
-            ShopModificationUnit shopModificationUnit = partyModification.getShopModification();
-            String shopId = shopModificationUnit.getId();
-            ShopModification shopModification = shopModificationUnit.getModification();
-
-            if (shopModification.isSetPayoutScheduleModification()) {
-                BusinessScheduleRef schedule = shopModification.getPayoutScheduleModification().getSchedule();
-                schedulerService.registerJob(partyId, shopId, schedule);
-            } else {
-                log.info("Accepting for '{}' patry modification not implemented yet!", shopModification.getSetField().getFieldName());
-            }
+    public void commit(String partyId, String shopId, ScheduleModification scheduleModification) {
+        log.info("Trying to commit schedule modification, partyId='{}', scheduleModification='{}'", partyId, scheduleModification);
+        if (scheduleModification.isSetSchedule()) {
+            schedulerService.registerJob(partyId, shopId, scheduleModification.getSchedule());
         } else {
-            log.info("Accepting for '{}' modification not implemented yet!", partyModification.getSetField().getFieldName());
+            schedulerService.deregisterJob(partyId, shopId);
         }
+        log.info("Schedule modification have been committed, partyId='{}', scheduleModification='{}'", partyId, scheduleModification);
     }
 
-    private void checkSchedule(BusinessScheduleRef schedule) throws InvalidChangeset {
-        if (schedule == null) {
-            throw new InvalidChangeset();
-        }
-        try {
-            dominantService.getBusinessSchedule(schedule);
-        } catch (NotFoundException ex) {
-            throw new InvalidChangeset();
+    private void checkSchedule(BusinessScheduleRef schedule) {
+        if (schedule != null) {
+            try {
+                BusinessSchedule businessSchedule = dominantService.getBusinessSchedule(schedule);
+                SchedulerUtil.buildCron(businessSchedule.getSchedule());
+            } catch (IllegalArgumentException | NotFoundException ex) {
+                log.warn("Invalid business schedule", ex);
+                throw new InvalidChangesetException("Invalid business schedule", ex);
+            }
         }
     }
 

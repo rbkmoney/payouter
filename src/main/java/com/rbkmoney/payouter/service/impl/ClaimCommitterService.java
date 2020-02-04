@@ -1,29 +1,40 @@
 package com.rbkmoney.payouter.service.impl;
 
 import com.rbkmoney.damsel.claim_management.*;
+import com.rbkmoney.payouter.exception.InvalidChangesetException;
 import com.rbkmoney.payouter.handler.CommitHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.thrift.TException;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class ClaimCommitterService implements ClaimCommitterSrv.Iface {
 
-    private final CommitHandler<PartyModification> partyModificationCommitHandler;
+    private final CommitHandler<ScheduleModification> partyModificationCommitHandler;
 
     @Override
     public void accept(String partyId, Claim receivedClaim) throws PartyNotFound, InvalidChangeset, TException {
-
         for (ModificationUnit modificationUnit : receivedClaim.getChangeset()) {
             Modification modification = modificationUnit.getModification();
             if (modification.isSetPartyModification()) {
                 PartyModification partyModification = modification.getPartyModification();
-                partyModificationCommitHandler.accept(partyId, partyModification);
-            } else {
-                log.info("Received unknown modification '{}' at the accept stage", modification.getSetField().getFieldName());
+                if (partyModification.isSetShopModification()) {
+                    ShopModificationUnit shopModificationUnit = partyModification.getShopModification();
+                    String shopId = shopModificationUnit.getId();
+                    ShopModification shopModification = shopModificationUnit.getModification();
+                    if (shopModification.isSetPayoutScheduleModification()) {
+                        try {
+                            partyModificationCommitHandler.accept(partyId, shopId, shopModification.getPayoutScheduleModification());
+                        } catch (InvalidChangesetException ex) {
+                            throw new InvalidChangeset(ex.getMessage(), Collections.singletonList(modification));
+                        }
+                    }
+                }
             }
         }
     }
@@ -34,9 +45,14 @@ public class ClaimCommitterService implements ClaimCommitterSrv.Iface {
             Modification modification = modificationUnit.getModification();
             if (modification.isSetPartyModification()) {
                 PartyModification partyModification = modification.getPartyModification();
-                partyModificationCommitHandler.commit(partyId, partyModification);
-            } else {
-                log.info("Received unknown modification '{}' at the commit stage", modification.getSetField().getFieldName());
+                if (partyModification.isSetShopModification()) {
+                    ShopModificationUnit shopModificationUnit = partyModification.getShopModification();
+                    String shopId = shopModificationUnit.getId();
+                    ShopModification shopModification = shopModificationUnit.getModification();
+                    if (shopModification.isSetPayoutScheduleModification()) {
+                        partyModificationCommitHandler.commit(partyId, shopId, shopModification.getPayoutScheduleModification());
+                    }
+                }
             }
         }
     }

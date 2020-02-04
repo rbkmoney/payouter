@@ -27,8 +27,12 @@ import static com.cronutils.model.field.expression.FieldExpressionFactory.on;
 
 public class SchedulerUtil {
 
-    public static List<String> buildCron(Schedule schedule, Optional<DayOfWeek> firstDayOfWeek) {
-        WeekDay weekDay = firstDayOfWeek
+    public static List<String> buildCron(Schedule schedule) {
+        return buildCron(schedule, null);
+    }
+
+    public static List<String> buildCron(Schedule schedule, DayOfWeek firstDayOfWeek) {
+        WeekDay weekDay = Optional.ofNullable(firstDayOfWeek)
                 .map(dayOfWeek -> new WeekDay(dayOfWeek.getValue(), false))
                 .orElse(ConstantsMapper.JAVA8);
 
