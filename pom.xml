@@ -33,7 +33,7 @@
         <db.name>payouter</db.name>
         <damsel.version>1.367-5227a28</damsel.version>
         <machinegun-proto.version>1.12-ebae56f</machinegun-proto.version>
-        <fistful-proto.version>1.46-afd8b8b</fistful-proto.version>
+        <fistful-proto.version>1.57-c43acb5</fistful-proto.version>
         <sonar.jacoco.reportPath>${project.basedir}/target/jacoco.exec</sonar.jacoco.reportPath>
     </properties>
 
