@@ -281,7 +281,7 @@ public class PayoutServiceImpl implements PayoutService {
             int paymentCount = paymentDao.includeUnpaid(payoutId, partyId, shopId, toTime);
             int refundCount = refundDao.includeUnpaid(payoutId, partyId, shopId);
             int adjustmentCount = adjustmentDao.includeUnpaid(payoutId, partyId, shopId, toTime);
-            int payoutCount = payoutDao.includeUnpaid(payoutId, partyId, shopId);
+            int payoutCount = payoutDao.includeUnpaid(payoutId, partyId, shopId, toTime);
             log.info("Operations have been included in payout, payoutId='{}' (paymentCount='{}', refundCount='{}', adjustmentCount='{}', payoutCount='{}')", payoutId, paymentCount, refundCount, adjustmentCount, payoutCount);
         } catch (DaoException ex) {
             throw new StorageException(String.format("Failed to include operations in payout, payoutId='%s'", payoutId), ex);
