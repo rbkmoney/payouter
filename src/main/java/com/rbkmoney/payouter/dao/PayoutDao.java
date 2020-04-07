@@ -29,7 +29,7 @@ public interface PayoutDao extends GenericDao {
 
     long saveRangeData(String payoutId, String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime) throws DaoException;
 
-    int includeUnpaid(String payoutId, String partyId, String shopId) throws DaoException;
+    int includeUnpaid(String payoutId, String partyId, String shopId, LocalDateTime to) throws DaoException;
 
     int excludeFromPayout(String payoutId) throws DaoException;
 
