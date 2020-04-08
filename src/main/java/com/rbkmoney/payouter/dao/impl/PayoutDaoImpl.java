@@ -114,14 +114,13 @@ public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
     }
 
     @Override
-    public int includeUnpaid(String payoutId, String partyId, String shopId, LocalDateTime to) throws DaoException {
+    public int includeUnpaid(String payoutId, String partyId, String shopId) throws DaoException {
         Query query = getDslContext().update(PAYOUT)
                 .set(PAYOUT.PAYOUT_REF, payoutId)
                 .where(PAYOUT.STATUS.eq(PayoutStatus.CONFIRMED)
                         .and(PAYOUT.PARTY_ID.eq(partyId))
                         .and(PAYOUT.SHOP_ID.eq(shopId))
                         .and(PAYOUT.TYPE.eq(PayoutType.wallet))
-                        .and(PAYOUT.CREATED_AT.lessThan(to))
                         .and(PAYOUT.PAYOUT_REF.isNull()));
         return execute(query);
     }
