@@ -1,6 +1,5 @@
 package com.rbkmoney.payouter.config;
 
-import com.rbkmoney.woody.api.flow.error.WRuntimeException;
 import com.rbkmoney.woody.api.flow.error.WUnavailableResultException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

@@ -4,10 +4,20 @@ import com.rbkmoney.easyway.EnvironmentProperties;
 import com.rbkmoney.easyway.TestContainers;
 import com.rbkmoney.easyway.TestContainersBuilder;
 import com.rbkmoney.easyway.TestContainersParameters;
+import com.rbkmoney.machinegun.eventsink.MachineEvent;
+import com.rbkmoney.machinegun.eventsink.SinkEvent;
 import com.rbkmoney.payouter.PayouterApplication;
+import com.rbkmoney.payouter.serde.MachineEventSerializer;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.Producer;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.ApplicationContextInitializer;
@@ -16,17 +26,23 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Properties;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
+@Slf4j
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @ContextConfiguration(classes = PayouterApplication.class, initializers = AbstractKafkaTest.Initializer.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public abstract class AbstractKafkaTest {
 
+    @Value("${kafka.bootstrap-servers}")
+    private String bootstrapServers;
 
     private static TestContainers testContainers = TestContainersBuilder.builderWithTestContainers(getTestContainersParametersSupplier())
             .addKafkaTestContainer()
@@ -63,6 +79,45 @@ public abstract class AbstractKafkaTest {
     }
 
     private static Consumer<EnvironmentProperties> getEnvironmentPropertiesConsumer() {
-        return environmentProperties -> environmentProperties.put("kafka.topics.invoice.enabled", "true");
+        return environmentProperties -> {
+            environmentProperties.put("kafka.topics.invoice.enabled", "true");
+            environmentProperties.put("kafka.topics.party-management.enabled", "true");
+        };
+    }
+
+    public Producer<String, SinkEvent> createProducer() {
+        Properties props = new Properties();
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        props.put(ProducerConfig.CLIENT_ID_CONFIG, "client_id");
+        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, MachineEventSerializer.class);
+        return new KafkaProducer<>(props);
+    }
+
+    public void writeToTopic(String topic, SinkEvent sinkEvent) {
+        Producer<String, SinkEvent> producer = createProducer();
+        ProducerRecord<String, SinkEvent> producerRecord = new ProducerRecord<>(topic, "", sinkEvent);
+        try {
+            producer.send(producerRecord).get();
+        } catch (Exception e) {
+            log.error("KafkaAbstractTest initialize e: ", e);
+        }
+        producer.close();
+    }
+
+    public void waitForTopicSync() throws InterruptedException {
+        Thread.sleep(5000L);
+    }
+
+    public static MachineEvent createTestMachineEvent() {
+        MachineEvent message = new MachineEvent();
+        com.rbkmoney.machinegun.msgpack.Value data = new com.rbkmoney.machinegun.msgpack.Value();
+        data.setBin(new byte[0]);
+        message.setCreatedAt(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
+        message.setEventId(1L);
+        message.setSourceNs("sad");
+        message.setSourceId("sda");
+        message.setData(data);
+        return message;
     }
 }

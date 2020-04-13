@@ -6,31 +6,28 @@ import com.rbkmoney.geck.filter.Filter;
 import com.rbkmoney.geck.filter.PathConditionFilter;
 import com.rbkmoney.geck.filter.condition.IsNullCondition;
 import com.rbkmoney.geck.filter.rule.PathConditionRule;
+import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.payouter.poller.handler.PartyManagementHandler;
 import com.rbkmoney.payouter.service.SchedulerService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Component
+@RequiredArgsConstructor
 public class PartyClaimCreatedHandler implements PartyManagementHandler {
 
     private final SchedulerService schedulerService;
 
-    private final Filter filter;
-
-    public PartyClaimCreatedHandler(SchedulerService schedulerService) {
-        this.schedulerService = schedulerService;
-        this.filter = new PathConditionFilter(new PathConditionRule(
-                "claim_status_changed.status.accepted",
-                new IsNullCondition().not()));
-    }
-
+    private final Filter filter = new PathConditionFilter(new PathConditionRule(
+            "claim_status_changed.status.accepted",
+            new IsNullCondition().not()));
 
     @Override
-    public void handle(PartyChange change, Event event) {
+    public void handle(PartyChange change, MachineEvent event) {
         ClaimStatusChanged claimStatusChanged = change.getClaimStatusChanged();
-        String partyId = event.getSource().getPartyId();
+        String partyId = event.getSourceId();
         List<ClaimEffect> claimEffects = claimStatusChanged
                 .getStatus()
                 .getAccepted()

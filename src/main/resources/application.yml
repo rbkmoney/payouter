@@ -79,12 +79,16 @@ kafka:
     group-id: payouter-group-1
     enable-auto-commit: false
     auto-offset-reset: earliest
-    concurrency: 1
     max-poll-records: 20
   topics:
     invoice:
       id: mg-invoice-100-2
       enabled: false
+      concurrency: 1
+    party-management:
+      id: mg-events-party
+      enabled: false
+      concurrency: 1
   ssl:
     enabled: false
 

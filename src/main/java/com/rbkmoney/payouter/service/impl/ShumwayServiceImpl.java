@@ -1,6 +1,5 @@
 package com.rbkmoney.payouter.service.impl;
 
-import com.google.common.primitives.Longs;
 import com.rbkmoney.damsel.base.InvalidRequest;
 import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.shumpune.*;
