@@ -11,8 +11,6 @@ import com.rbkmoney.payouter.service.PartyManagementEventService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -24,7 +22,6 @@ public class PartyManagementEventServiceImpl implements PartyManagementEventServ
     private final List<PartyManagementHandler> handlers;
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void processPayloadEvent(MachineEvent event, PartyEventData eventPayload)
             throws StorageException, NotFoundException {
         long eventId = event.getEventId();

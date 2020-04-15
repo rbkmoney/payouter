@@ -8,7 +8,6 @@ import com.rbkmoney.payouter.poller.listener.InvoicingKafkaListener;
 import com.rbkmoney.sink.common.parser.impl.MachineEventParser;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
@@ -16,6 +15,8 @@ import org.springframework.test.context.ContextConfiguration;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @Slf4j
@@ -29,16 +30,15 @@ public class InvoiceKafkaListenerTest extends AbstractKafkaTest {
     private MachineEventParser<EventPayload> parser;
 
     @Test
-    public void listenChanges() throws InterruptedException {
+    public void listenChanges() {
         when(parser.parse(any())).thenReturn(EventPayload.invoice_changes(List.of(new InvoiceChange())));
 
         SinkEvent sinkEvent = new SinkEvent();
         sinkEvent.setEvent(createTestMachineEvent());
 
         writeToTopic(topic, sinkEvent);
-        waitForTopicSync();
 
-        Mockito.verify(parser, Mockito.times(1)).parse(any());
+        verify(parser, timeout(KAFKA_SYNC_TIME).times(1)).parse(any());
     }
 
 }

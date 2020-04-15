@@ -44,10 +44,13 @@ public abstract class AbstractKafkaTest {
     @Value("${kafka.bootstrap-servers}")
     private String bootstrapServers;
 
-    private static TestContainers testContainers = TestContainersBuilder.builderWithTestContainers(getTestContainersParametersSupplier())
-            .addKafkaTestContainer()
-            .addPostgresqlTestContainer()
-            .build();
+    public static final long KAFKA_SYNC_TIME = 5000L;
+
+    private static TestContainers testContainers =
+            TestContainersBuilder.builderWithTestContainers(getTestContainersParametersSupplier())
+                    .addKafkaTestContainer()
+                    .addPostgresqlTestContainer()
+                    .build();
 
     @BeforeClass
     public static void beforeClass() {
@@ -85,7 +88,7 @@ public abstract class AbstractKafkaTest {
         };
     }
 
-    public Producer<String, SinkEvent> createProducer() {
+    private Producer<String, SinkEvent> createProducer() {
         Properties props = new Properties();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(ProducerConfig.CLIENT_ID_CONFIG, "client_id");
@@ -103,10 +106,6 @@ public abstract class AbstractKafkaTest {
             log.error("KafkaAbstractTest initialize e: ", e);
         }
         producer.close();
-    }
-
-    public void waitForTopicSync() throws InterruptedException {
-        Thread.sleep(5000L);
     }
 
     public static MachineEvent createTestMachineEvent() {

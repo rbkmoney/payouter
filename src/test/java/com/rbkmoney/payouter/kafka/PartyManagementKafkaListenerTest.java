@@ -30,16 +30,15 @@ public class PartyManagementKafkaListenerTest extends AbstractKafkaTest {
     private MachineEventParser<PartyEventData> partyEventDataParser;
 
     @Test
-    public void listenChanges() throws InterruptedException {
+    public void listenChanges() {
         when(partyEventDataParser.parse(any())).thenReturn(new PartyEventData());
 
         SinkEvent sinkEvent = new SinkEvent();
         sinkEvent.setEvent(createTestMachineEvent());
 
         writeToTopic(topic, sinkEvent);
-        waitForTopicSync();
 
-        verify(partyManagementEventService, times(1))
+        verify(partyManagementEventService, timeout(KAFKA_SYNC_TIME).times(1))
                 .processPayloadEvent(any(MachineEvent.class), any(PartyEventData.class));
     }
 

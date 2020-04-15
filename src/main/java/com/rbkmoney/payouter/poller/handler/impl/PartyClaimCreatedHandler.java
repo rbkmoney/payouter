@@ -11,6 +11,8 @@ import com.rbkmoney.payouter.poller.handler.PartyManagementHandler;
 import com.rbkmoney.payouter.service.SchedulerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -25,6 +27,7 @@ public class PartyClaimCreatedHandler implements PartyManagementHandler {
             new IsNullCondition().not()));
 
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handle(PartyChange change, MachineEvent event) {
         ClaimStatusChanged claimStatusChanged = change.getClaimStatusChanged();
         String partyId = event.getSourceId();
