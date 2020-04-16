@@ -1,6 +1,7 @@
 package com.rbkmoney.payouter.config;
 
 import com.rbkmoney.damsel.payment_processing.EventPayload;
+import com.rbkmoney.kafka.common.exception.handler.SeekToCurrentWithSleepBatchErrorHandler;
 import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.payouter.config.properties.KafkaSslProperties;
 import com.rbkmoney.payouter.serde.MachineEventDeserializer;
@@ -45,8 +46,10 @@ public class KafkaConfig {
 
     @Value("${kafka.bootstrap-servers}")
     private String bootstrapServers;
-    @Value("${kafka.consumer.concurrency}")
-    private int concurrency;
+    @Value("${kafka.topics.invoice.concurrency}")
+    private int invoiceConcurrency;
+    @Value("${kafka.topics.party-management.concurrency}")
+    private int partyConcurrency;
 
     @Value("${retry-policy.maxAttempts}")
     int maxAttempts;
@@ -91,12 +94,33 @@ public class KafkaConfig {
             ConsumerFactory<String, MachineEvent> consumerFactory,
             RetryTemplate retryTemplate
     ) {
-        ConcurrentKafkaListenerContainerFactory<String, MachineEvent> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        ConcurrentKafkaListenerContainerFactory<String, MachineEvent> factory =
+                createGeneralKafkaListenerFactory(consumerFactory);
+        factory.setErrorHandler(kafkaErrorHandler());
+        factory.setConcurrency(invoiceConcurrency);
+        return factory;
+    }
+
+    @Bean
+    public KafkaListenerContainerFactory<ConcurrentMessageListenerContainer<String, MachineEvent>> partyManagementListenerContainerFactory(
+            ConsumerFactory<String, MachineEvent> consumerFactory
+    ) {
+        ConcurrentKafkaListenerContainerFactory<String, MachineEvent> factory =
+                createGeneralKafkaListenerFactory(consumerFactory);
+        factory.setBatchListener(true);
+        factory.setBatchErrorHandler(new SeekToCurrentWithSleepBatchErrorHandler());
+        factory.setConcurrency(partyConcurrency);
+        return factory;
+    }
+
+    private static ConcurrentKafkaListenerContainerFactory<String, MachineEvent> createGeneralKafkaListenerFactory(
+            ConsumerFactory<String, MachineEvent> consumerFactory
+    ) {
+        ConcurrentKafkaListenerContainerFactory<String, MachineEvent> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory);
         factory.getContainerProperties().setAckOnError(false);
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
-        factory.setErrorHandler(kafkaErrorHandler());
-        factory.setConcurrency(concurrency);
         return factory;
     }
 

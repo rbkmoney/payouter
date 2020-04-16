@@ -49,6 +49,7 @@ import java.util.*;
 import java.util.concurrent.Callable;
 
 import static com.rbkmoney.payouter.domain.enums.PayoutStatus.*;
+import static com.rbkmoney.payouter.service.data.TestPayloadData.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -147,8 +148,11 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
 
     @Test
     public void testCreatePayoutWithScheduler() {
-        partyManagementEventService.processStockEvent(
-                buildStockEvent(buildScheduleEvent(partyId, shopId))
+        MachineEvent testMachineEvent = createTestMachineEvent();
+        testMachineEvent.setSourceId(partyId);
+        partyManagementEventService.processPayloadEvent(
+                testMachineEvent,
+                createTestPartyEventData(1, 1, shopId, CREATED, 1, true)
         );
         addCapturedPayment();
 
@@ -189,13 +193,17 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
 
     @Test
     public void testRegisterAndDeregisterScheduler() throws SchedulerException {
-        partyManagementEventService.processStockEvent(
-                buildStockEvent(buildScheduleEvent(partyId, shopId))
+        MachineEvent testMachineEvent = createTestMachineEvent();
+        testMachineEvent.setSourceId(partyId);
+        partyManagementEventService.processPayloadEvent(
+                testMachineEvent,
+                createTestPartyEventData(1, 1, shopId, CREATED, 1, true)
         );
         assertTrue(!scheduler.getJobKeys(GroupMatcher.anyGroup()).isEmpty());
         assertTrue(!scheduler.getTriggerKeys(GroupMatcher.anyGroup()).isEmpty());
-        partyManagementEventService.processStockEvent(
-                buildStockEvent(buildScheduleEvent(partyId, shopId, null))
+        partyManagementEventService.processPayloadEvent(
+                testMachineEvent,
+                createTestPartyEventData(1, 1, shopId, CHANGED, 1, false)
         );
         assertTrue(scheduler.getJobKeys(GroupMatcher.anyGroup()).isEmpty());
         assertTrue(scheduler.getTriggerKeys(GroupMatcher.anyGroup()).isEmpty());

@@ -1,7 +1,10 @@
 package com.rbkmoney.payouter.config;
 
 import com.rbkmoney.damsel.payment_processing.EventPayload;
+import com.rbkmoney.damsel.payment_processing.PartyEventData;
 import com.rbkmoney.payouter.poller.listener.InvoicingKafkaListener;
+import com.rbkmoney.payouter.poller.listener.PartyManagementKafkaListener;
+import com.rbkmoney.payouter.service.PartyManagementEventService;
 import com.rbkmoney.payouter.service.PaymentProcessingEventService;
 import com.rbkmoney.sink.common.parser.impl.MachineEventParser;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -18,6 +21,13 @@ public class KafkaConsumerBeanEnableConfig {
     public InvoicingKafkaListener paymentEventsKafkaListener(PaymentProcessingEventService paymentProcessingEventService,
                                                              MachineEventParser<EventPayload> parser) {
         return new InvoicingKafkaListener(paymentProcessingEventService, parser);
+    }
+
+    @Bean
+    @ConditionalOnProperty(value = "kafka.topics.party-management.enabled", havingValue = "true")
+    public PartyManagementKafkaListener partyEventsKafkaListener(PartyManagementEventService partyManagementEventService,
+                                                                     MachineEventParser<PartyEventData> parser) {
+        return new PartyManagementKafkaListener(partyManagementEventService, parser);
     }
 
 }
