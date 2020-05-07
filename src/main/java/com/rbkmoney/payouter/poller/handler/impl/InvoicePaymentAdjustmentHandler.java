@@ -85,17 +85,19 @@ public class InvoicePaymentAdjustmentHandler implements PaymentProcessingHandler
         adjustment.setReason(invoicePaymentAdjustment.getReason());
 
         Map<CashFlowType, Long> oldCashFlowInverse = DamselUtil.parseInverseCashFlow(invoicePaymentAdjustment.getOldCashFlowInverse());
-        adjustment.setPaymentAmount(oldCashFlowInverse.getOrDefault(AMOUNT, 0L));
-        adjustment.setPaymentFee(oldCashFlowInverse.getOrDefault(FEE, 0L));
-        adjustment.setPaymentGuaranteeDeposit(oldCashFlowInverse.getOrDefault(GUARANTEE_DEPOSIT, 0L));
-
+        Long paymentAmount = oldCashFlowInverse.getOrDefault(AMOUNT, 0L);
+        Long paymentFee = oldCashFlowInverse.getOrDefault(FEE, 0L);
+        Long paymentGuaranteeDeposit = oldCashFlowInverse.getOrDefault(GUARANTEE_DEPOSIT, 0L);
 
         Map<CashFlowType, Long> newCashFlow = DamselUtil.parseCashFlow(invoicePaymentAdjustment.getNewCashFlow());
-        adjustment.setNewAmount(newCashFlow.getOrDefault(AMOUNT, 0L));
-        adjustment.setNewFee(newCashFlow.getOrDefault(FEE, 0L));
-        adjustment.setNewProviderFee(newCashFlow.getOrDefault(PROVIDER_FEE, 0L));
-        adjustment.setNewExternalFee(newCashFlow.getOrDefault(EXTERNAL_FEE, 0L));
-        adjustment.setNewGuaranteeDeposit(newCashFlow.getOrDefault(GUARANTEE_DEPOSIT, 0L));
+        Long newAmount = newCashFlow.getOrDefault(AMOUNT, 0L);
+        Long newFee = newCashFlow.getOrDefault(FEE, 0L);
+        Long newGuaranteeDeposit = newCashFlow.getOrDefault(GUARANTEE_DEPOSIT, 0L);
+
+        Long amount = (newAmount - newFee - newGuaranteeDeposit) -
+                (paymentAmount - paymentFee - paymentGuaranteeDeposit);
+
+        adjustment.setAmount(amount);
 
         adjustmentDao.save(adjustment);
         log.info("Adjustment have been saved, adjustment={}", adjustment);
