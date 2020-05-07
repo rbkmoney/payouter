@@ -1,7 +1,5 @@
 package com.rbkmoney.payouter.service.impl;
 
-import com.rbkmoney.damsel.accounter.Account;
-import com.rbkmoney.damsel.accounter.PostingPlanLog;
 import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.msgpack.Value;
 import com.rbkmoney.damsel.shumpune.Balance;
@@ -45,6 +43,8 @@ public class PayoutServiceImpl implements PayoutService {
     private final AdjustmentDao adjustmentDao;
 
     private final PayoutDao payoutDao;
+
+    private final ChargebackDao chargebackDao;
 
     private final ShumwayService shumwayService;
 
@@ -282,7 +282,9 @@ public class PayoutServiceImpl implements PayoutService {
             int refundCount = refundDao.includeUnpaid(payoutId, partyId, shopId);
             int adjustmentCount = adjustmentDao.includeUnpaid(payoutId, partyId, shopId, toTime);
             int payoutCount = payoutDao.includeUnpaid(payoutId, partyId, shopId);
-            log.info("Operations have been included in payout, payoutId='{}' (paymentCount='{}', refundCount='{}', adjustmentCount='{}', payoutCount='{}')", payoutId, paymentCount, refundCount, adjustmentCount, payoutCount);
+            int chargebackCount = chargebackDao.includeUnpaid(payoutId, partyId, shopId);
+            log.info("Operations have been included in payout, payoutId='{}' (paymentCount='{}', refundCount='{}', adjustmentCount='{}', payoutCount='{}', chargebackCount='{}')",
+                    payoutId, paymentCount, refundCount, adjustmentCount, payoutCount, chargebackCount);
         } catch (DaoException ex) {
             throw new StorageException(String.format("Failed to include operations in payout, payoutId='%s'", payoutId), ex);
         }
@@ -297,7 +299,9 @@ public class PayoutServiceImpl implements PayoutService {
             int refundCount = refundDao.excludeFromPayout(payoutId);
             int adjustmentCount = adjustmentDao.excludeFromPayout(payoutId);
             int payoutCount = payoutDao.excludeFromPayout(payoutId);
-            log.info("Operations have been excluded from payout, payoutId='{}' (paymentCount='{}', refundCount='{}', adjustmentCount='{}', payoutCount='{}')", payoutId, paymentCount, refundCount, adjustmentCount, payoutCount);
+            int chargebackCount = chargebackDao.excludeFromPayout(payoutId);
+            log.info("Operations have been excluded from payout, payoutId='{}' (paymentCount='{}', refundCount='{}', adjustmentCount='{}', payoutCount='{}', chargebackCount='{}')",
+                    payoutId, paymentCount, refundCount, adjustmentCount, payoutCount, chargebackCount);
         } catch (DaoException ex) {
             throw new StorageException(String.format("Failed to exclude operations from payout, payoutId='%s'", payoutId), ex);
         }
@@ -507,6 +511,9 @@ public class PayoutServiceImpl implements PayoutService {
                     summary -> payoutSummaries.add(summary)
             );
             Optional.ofNullable(payoutDao.getSummary(payoutId)).ifPresent(
+                    summary -> payoutSummaries.add(summary)
+            );
+            Optional.ofNullable(chargebackDao.getSummary(payoutId)).ifPresent(
                     summary -> payoutSummaries.add(summary)
             );
 

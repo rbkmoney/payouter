@@ -40,7 +40,17 @@ public class PayoutSummaryDaoTest extends AbstractIntegrationTest {
         e.setFromTime(LocalDateTime.now());
         e.setToTime(LocalDateTime.now());
         payoutSummaries.add(e);
+        e = new PayoutSummary();
+        e.setPayoutId(payoutId);
+        e.setAmount(153L);
+        e.setFee(16L);
+        e.setCashFlowType(PayoutSummaryOperationType.chargeback);
+        e.setCurrencyCode("RUB");
+        e.setCount(64);
+        e.setFromTime(LocalDateTime.now());
+        e.setToTime(LocalDateTime.now());
+        payoutSummaries.add(e);
         payoutSummaryDao.save(payoutSummaries);
-        Assert.assertEquals(2, payoutSummaryDao.get(payoutId).size());
+        Assert.assertEquals(3, payoutSummaryDao.get(payoutId).size());
     }
 }
