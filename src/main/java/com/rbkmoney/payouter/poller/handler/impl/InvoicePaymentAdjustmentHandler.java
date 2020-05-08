@@ -84,19 +84,9 @@ public class InvoicePaymentAdjustmentHandler implements PaymentProcessingHandler
         adjustment.setDomainRevision(invoicePaymentAdjustment.getDomainRevision());
         adjustment.setReason(invoicePaymentAdjustment.getReason());
 
-        Map<CashFlowType, Long> oldCashFlowInverse = DamselUtil.parseInverseCashFlow(invoicePaymentAdjustment.getOldCashFlowInverse());
-        Long paymentAmount = oldCashFlowInverse.getOrDefault(AMOUNT, 0L);
-        Long paymentFee = oldCashFlowInverse.getOrDefault(FEE, 0L);
-        Long paymentGuaranteeDeposit = oldCashFlowInverse.getOrDefault(GUARANTEE_DEPOSIT, 0L);
-
-        Map<CashFlowType, Long> newCashFlow = DamselUtil.parseCashFlow(invoicePaymentAdjustment.getNewCashFlow());
-        Long newAmount = newCashFlow.getOrDefault(AMOUNT, 0L);
-        Long newFee = newCashFlow.getOrDefault(FEE, 0L);
-        Long newGuaranteeDeposit = newCashFlow.getOrDefault(GUARANTEE_DEPOSIT, 0L);
-
-        Long amount = (newAmount - newFee - newGuaranteeDeposit) -
-                (paymentAmount - paymentFee - paymentGuaranteeDeposit);
-
+        Long oldAmount= DamselUtil.computeAdjustmentAmount(invoicePaymentAdjustment.getOldCashFlowInverse());
+        Long newAmount = DamselUtil.computeAdjustmentAmount(invoicePaymentAdjustment.getNewCashFlow());
+        Long amount = oldAmount + newAmount;
         adjustment.setAmount(amount);
 
         adjustmentDao.save(adjustment);

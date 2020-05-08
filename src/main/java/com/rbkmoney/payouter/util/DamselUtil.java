@@ -28,6 +28,25 @@ public class DamselUtil {
     public final static ObjectMapper objectMapper = new ObjectMapper();
     public final static JsonProcessor jsonProcessor = new JsonProcessor();
 
+    public static Long computeAdjustmentAmount(List<FinalCashFlowPosting> finalCashFlow) {
+        long amountSource = computeAmount(finalCashFlow, FinalCashFlowPosting::getSource);
+        long amountDest = computeAmount(finalCashFlow, FinalCashFlowPosting::getDestination);
+        return amountDest - amountSource;
+    }
+
+    private static long computeAmount(List<FinalCashFlowPosting> finalCashFlow,
+                                      Function<FinalCashFlowPosting, FinalCashFlowAccount> func) {
+        return finalCashFlow.stream()
+                .filter(f -> isMerchantSettlement(func.apply(f).getAccountType()))
+                .mapToLong(cashFlow -> cashFlow.getVolume().getAmount())
+                .sum();
+    }
+
+    private static boolean isMerchantSettlement(CashFlowAccount cashFlowAccount){
+        return cashFlowAccount.isSetMerchant() &&
+                cashFlowAccount.getMerchant() == MerchantCashFlowAccount.settlement;
+    }
+
     public static Map<CashFlowType, Long> parseInverseCashFlow(List<FinalCashFlowPosting> finalCashFlow) {
         return parseCashFlow(
                 finalCashFlow,
