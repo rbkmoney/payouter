@@ -42,7 +42,7 @@ public class DamselUtil {
                 .sum();
     }
 
-    private static boolean isMerchantSettlement(CashFlowAccount cashFlowAccount){
+    private static boolean isMerchantSettlement(CashFlowAccount cashFlowAccount) {
         return cashFlowAccount.isSetMerchant() &&
                 cashFlowAccount.getMerchant() == MerchantCashFlowAccount.settlement;
     }
