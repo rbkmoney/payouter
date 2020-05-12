@@ -84,7 +84,7 @@ public class InvoicePaymentAdjustmentHandler implements PaymentProcessingHandler
         adjustment.setDomainRevision(invoicePaymentAdjustment.getDomainRevision());
         adjustment.setReason(invoicePaymentAdjustment.getReason());
 
-        Long oldAmount= DamselUtil.computeAdjustmentAmount(invoicePaymentAdjustment.getOldCashFlowInverse());
+        Long oldAmount = DamselUtil.computeAdjustmentAmount(invoicePaymentAdjustment.getOldCashFlowInverse());
         Long newAmount = DamselUtil.computeAdjustmentAmount(invoicePaymentAdjustment.getNewCashFlow());
         Long amount = oldAmount + newAmount;
         adjustment.setAmount(amount);
