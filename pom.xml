@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>payouter</artifactId>
-    <version>1.0.41-SNAPSHOT</version>
+    <version>1.0.42-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>payouter</name>
@@ -28,7 +28,7 @@
         <db.user>postgres</db.user>
         <db.password>postgres</db.password>
         <db.schema>sht</db.schema>
-        <db.port>15432</db.port>
+        <db.port>5432</db.port>
         <db.name>payouter</db.name>
         <db.url>jdbc:postgresql://localhost:${db.port}/${db.name}</db.url>
         <damsel.version>1.384-7dd9035</damsel.version>

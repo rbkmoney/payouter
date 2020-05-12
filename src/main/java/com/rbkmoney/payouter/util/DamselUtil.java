@@ -25,33 +25,32 @@ import java.util.stream.Collectors;
 
 public class DamselUtil {
 
-    public final static ObjectMapper objectMapper = new ObjectMapper();
-    public final static JsonProcessor jsonProcessor = new JsonProcessor();
+    private final static ObjectMapper objectMapper = new ObjectMapper();
+    private final static JsonProcessor jsonProcessor = new JsonProcessor();
 
-    public static Map<CashFlowType, Long> parseInverseCashFlow(List<FinalCashFlowPosting> finalCashFlow) {
-        return parseCashFlow(
-                finalCashFlow,
-                cashFlowPosting -> CashFlowType.getCashFlowType(
-                        cashFlowPosting.getDestination().getAccountType(),
-                        cashFlowPosting.getSource().getAccountType()
-                )
-        );
+    public static Long computeMerchantAmount(List<FinalCashFlowPosting> finalCashFlow) {
+        long amountSource = computeAmount(finalCashFlow, FinalCashFlowPosting::getSource);
+        long amountDest = computeAmount(finalCashFlow, FinalCashFlowPosting::getDestination);
+        return amountDest - amountSource;
+    }
+
+    private static long computeAmount(List<FinalCashFlowPosting> finalCashFlow,
+                                      Function<FinalCashFlowPosting, FinalCashFlowAccount> func) {
+        return finalCashFlow.stream()
+                .filter(f -> isMerchantSettlement(func.apply(f).getAccountType()))
+                .mapToLong(cashFlow -> cashFlow.getVolume().getAmount())
+                .sum();
+    }
+
+    private static boolean isMerchantSettlement(CashFlowAccount cashFlowAccount) {
+        return cashFlowAccount.isSetMerchant() &&
+                cashFlowAccount.getMerchant() == MerchantCashFlowAccount.settlement;
     }
 
     public static Map<CashFlowType, Long> parseCashFlow(List<FinalCashFlowPosting> finalCashFlow) {
-        return parseCashFlow(finalCashFlow, CashFlowType::getCashFlowType);
-    }
-
-    public static Map<CashFlowType, Long> parseCashFlow(List<FinalCashFlowPosting> finalCashFlow, Function<FinalCashFlowPosting, CashFlowType> classifier) {
-        Map<CashFlowType, Long> collect = finalCashFlow.stream()
-                .collect(
-                        Collectors.groupingBy(
-                                classifier,
-                                Collectors.summingLong(cashFlow -> cashFlow.getVolume().getAmount()
-                                )
-                        )
-                );
-        return collect;
+        return finalCashFlow.stream().collect(
+                Collectors.groupingBy(CashFlowType::getCashFlowType,
+                        Collectors.summingLong(cashFlow -> cashFlow.getVolume().getAmount())));
     }
 
     public static <T extends TBase> T jsonToTBase(JsonNode jsonNode, Class<T> type) throws IOException {
@@ -62,23 +61,6 @@ public class DamselUtil {
         PayoutCreated payoutCreated = new PayoutCreated();
         payoutCreated.setPayout(toDamselPayout(payoutEvent));
         return payoutCreated;
-    }
-
-    public static PayoutSearchStatus toDamselPayoutSearchStatus(com.rbkmoney.payouter.domain.tables.pojos.Payout payout) {
-        com.rbkmoney.payouter.domain.enums.PayoutStatus recordStatus = payout.getStatus();
-
-        switch (recordStatus) {
-            case UNPAID:
-                return PayoutSearchStatus.unpaid;
-            case PAID:
-                return PayoutSearchStatus.paid;
-            case CONFIRMED:
-                return PayoutSearchStatus.confirmed;
-            case CANCELLED:
-                return PayoutSearchStatus.cancelled;
-            default:
-                throw new NotFoundException(String.format("Payout status not found, status = '%s'", recordStatus));
-        }
     }
 
     public static PayoutEvent toPayoutEvent(Payout payout, List<FinalCashFlowPosting> cashFlowPostings) {
