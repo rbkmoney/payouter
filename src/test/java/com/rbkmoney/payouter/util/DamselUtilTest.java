@@ -4,11 +4,9 @@ import com.rbkmoney.damsel.domain.*;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 public class DamselUtilTest {
 
@@ -119,9 +117,9 @@ public class DamselUtilTest {
                         .setVolume(new Cash().setAmount(14505))
         );
 
-        long paymentAmount = DamselUtil.computeAdjustmentAmount(paymentCashFlow);
-        long oldAmount = DamselUtil.computeAdjustmentAmount(oldCashFlow);
-        long newAmount = DamselUtil.computeAdjustmentAmount(newCashFlow);
+        long paymentAmount = DamselUtil.computeMerchantAmount(paymentCashFlow);
+        long oldAmount = DamselUtil.computeMerchantAmount(oldCashFlow);
+        long newAmount = DamselUtil.computeMerchantAmount(newCashFlow);
 
         assertEquals(paymentAmount, -oldAmount);
         assertEquals(2418, newAmount + oldAmount);
@@ -169,9 +167,9 @@ public class DamselUtilTest {
 
         List<FinalCashFlowPosting> newCashFlow = new ArrayList<>();
 
-        long paymentAmount = DamselUtil.computeAdjustmentAmount(paymentCashFlow);
-        long oldAmount = DamselUtil.computeAdjustmentAmount(oldCashFlow);
-        long newAmount = DamselUtil.computeAdjustmentAmount(newCashFlow);
+        long paymentAmount = DamselUtil.computeMerchantAmount(paymentCashFlow);
+        long oldAmount = DamselUtil.computeMerchantAmount(oldCashFlow);
+        long newAmount = DamselUtil.computeMerchantAmount(newCashFlow);
 
         assertEquals(0, newAmount);
         assertEquals(-paymentAmount, newAmount + oldAmount);
@@ -216,9 +214,9 @@ public class DamselUtilTest {
                         .setVolume(new Cash().setAmount(16923))
         );
 
-        long paymentAmount = DamselUtil.computeAdjustmentAmount(paymentCashFlow);
-        long oldAmount = DamselUtil.computeAdjustmentAmount(oldCashFlow);
-        long newAmount = DamselUtil.computeAdjustmentAmount(newCashFlow);
+        long paymentAmount = DamselUtil.computeMerchantAmount(paymentCashFlow);
+        long oldAmount = DamselUtil.computeMerchantAmount(oldCashFlow);
+        long newAmount = DamselUtil.computeMerchantAmount(newCashFlow);
 
         assertEquals(paymentAmount, newAmount + oldAmount);
     }

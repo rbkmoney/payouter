@@ -1,7 +1,6 @@
 package com.rbkmoney.payouter.poller.handler.impl;
 
 import com.rbkmoney.damsel.domain.InvoicePaymentAdjustment;
-import com.rbkmoney.damsel.payment_processing.Event;
 import com.rbkmoney.damsel.payment_processing.InvoiceChange;
 import com.rbkmoney.damsel.payment_processing.InvoicePaymentAdjustmentChange;
 import com.rbkmoney.damsel.payment_processing.InvoicePaymentChange;
@@ -17,18 +16,12 @@ import com.rbkmoney.payouter.domain.enums.AdjustmentStatus;
 import com.rbkmoney.payouter.domain.tables.pojos.Adjustment;
 import com.rbkmoney.payouter.domain.tables.pojos.Payment;
 import com.rbkmoney.payouter.exception.NotFoundException;
-import com.rbkmoney.payouter.poller.handler.Handler;
 import com.rbkmoney.payouter.poller.handler.PaymentProcessingHandler;
-import com.rbkmoney.payouter.util.CashFlowType;
 import com.rbkmoney.payouter.util.DamselUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.util.Map;
-
-import static com.rbkmoney.payouter.util.CashFlowType.*;
 
 @Component
 public class InvoicePaymentAdjustmentHandler implements PaymentProcessingHandler {
@@ -84,8 +77,8 @@ public class InvoicePaymentAdjustmentHandler implements PaymentProcessingHandler
         adjustment.setDomainRevision(invoicePaymentAdjustment.getDomainRevision());
         adjustment.setReason(invoicePaymentAdjustment.getReason());
 
-        Long oldAmount = DamselUtil.computeAdjustmentAmount(invoicePaymentAdjustment.getOldCashFlowInverse());
-        Long newAmount = DamselUtil.computeAdjustmentAmount(invoicePaymentAdjustment.getNewCashFlow());
+        Long oldAmount = DamselUtil.computeMerchantAmount(invoicePaymentAdjustment.getOldCashFlowInverse());
+        Long newAmount = DamselUtil.computeMerchantAmount(invoicePaymentAdjustment.getNewCashFlow());
         Long amount = oldAmount + newAmount;
         adjustment.setAmount(amount);
 
