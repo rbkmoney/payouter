@@ -13,15 +13,10 @@ import com.rbkmoney.payouter.dao.ChargebackDao;
 import com.rbkmoney.payouter.domain.tables.pojos.Chargeback;
 import com.rbkmoney.payouter.exception.NotFoundException;
 import com.rbkmoney.payouter.poller.handler.PaymentProcessingHandler;
-import com.rbkmoney.payouter.util.CashFlowType;
 import com.rbkmoney.payouter.util.DamselUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-
-import java.util.Map;
-
-import static com.rbkmoney.payouter.util.CashFlowType.FEE;
 
 @Slf4j
 @Component
@@ -54,8 +49,8 @@ public class InvoicePaymentChargebackCashFlowChangedHandler implements PaymentPr
                     invoiceId, paymentId, chargebackId));
         }
 
-        Map<CashFlowType, Long> cashFlow = DamselUtil.parseCashFlow(invoicePaymentChargebackCashFlowChanged.getCashFlow());
-        chargeback.setFee(cashFlow.getOrDefault(FEE, 0L));
+        Long merchantAmount = DamselUtil.computeMerchantAmount(invoicePaymentChargebackCashFlowChanged.getCashFlow());
+        chargeback.setAmount(Math.abs(merchantAmount));
 
         chargebackDao.save(chargeback);
 

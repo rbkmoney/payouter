@@ -1,7 +1,6 @@
 package com.rbkmoney.payouter.dao;
 
 import com.rbkmoney.payouter.domain.tables.pojos.Chargeback;
-import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
 import com.rbkmoney.payouter.exception.DaoException;
 
 import java.time.LocalDateTime;
@@ -21,7 +20,5 @@ public interface ChargebackDao extends GenericDao {
     int includeUnpaid(String payoutId, String partyId, String shopId) throws DaoException;
 
     int excludeFromPayout(String payoutId) throws DaoException;
-
-    PayoutSummary getSummary(String payoutId) throws DaoException;
 
 }

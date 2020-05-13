@@ -513,9 +513,6 @@ public class PayoutServiceImpl implements PayoutService {
             Optional.ofNullable(payoutDao.getSummary(payoutId)).ifPresent(
                     summary -> payoutSummaries.add(summary)
             );
-            Optional.ofNullable(chargebackDao.getSummary(payoutId)).ifPresent(
-                    summary -> payoutSummaries.add(summary)
-            );
 
             payoutSummaryService.save(payoutSummaries);
         } catch (DaoException ex) {

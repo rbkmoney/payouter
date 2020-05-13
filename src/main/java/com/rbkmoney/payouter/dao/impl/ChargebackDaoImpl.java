@@ -3,14 +3,10 @@ package com.rbkmoney.payouter.dao.impl;
 import com.rbkmoney.payouter.dao.ChargebackDao;
 import com.rbkmoney.payouter.dao.mapper.RecordRowMapper;
 import com.rbkmoney.payouter.domain.enums.ChargebackStatus;
-import com.rbkmoney.payouter.domain.enums.PayoutSummaryOperationType;
 import com.rbkmoney.payouter.domain.tables.pojos.Chargeback;
-import com.rbkmoney.payouter.domain.tables.pojos.PayoutSummary;
 import com.rbkmoney.payouter.domain.tables.records.ChargebackRecord;
 import com.rbkmoney.payouter.exception.DaoException;
-import org.jooq.Field;
 import org.jooq.Query;
-import org.jooq.impl.DSL;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
 
@@ -111,38 +107,4 @@ public class ChargebackDaoImpl extends AbstractGenericDao implements ChargebackD
         return execute(query);
     }
 
-    @Override
-    public PayoutSummary getSummary(String payoutId) throws DaoException {
-        Field currencyCodeField = CHARGEBACK.CURRENCY_CODE;
-        Field amountField = DSL.sum(CHARGEBACK.AMOUNT).as("amount");
-        Field feeField = DSL.sum(CHARGEBACK.FEE).as("fee");
-        Field countField = DSL.count().as("count");
-        Field fromTimeField = DSL.min(CHARGEBACK.SUCCEEDED_AT).as("from_time");
-        Field toTimeField = DSL.max(CHARGEBACK.SUCCEEDED_AT).as("to_time");
-
-
-        Query query = getDslContext()
-                .select(
-                        currencyCodeField,
-                        amountField,
-                        feeField,
-                        countField,
-                        fromTimeField,
-                        toTimeField
-                ).from(CHARGEBACK)
-                .where(CHARGEBACK.PAYOUT_ID.eq(payoutId))
-                .groupBy(currencyCodeField);
-        return fetchOne(query, (resultSet, i) -> {
-            PayoutSummary payoutSummary = new PayoutSummary();
-            payoutSummary.setPayoutId(payoutId);
-            payoutSummary.setAmount(resultSet.getLong(amountField.getName()));
-            payoutSummary.setFee(resultSet.getLong(feeField.getName()));
-            payoutSummary.setCount(resultSet.getInt(countField.getName()));
-            payoutSummary.setFromTime(resultSet.getObject(fromTimeField.getName(), LocalDateTime.class));
-            payoutSummary.setToTime(resultSet.getObject(toTimeField.getName(), LocalDateTime.class));
-            payoutSummary.setCurrencyCode(resultSet.getString(currencyCodeField.getName()));
-            payoutSummary.setCashFlowType(PayoutSummaryOperationType.chargeback);
-            return payoutSummary;
-        });
-    }
 }

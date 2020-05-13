@@ -144,7 +144,7 @@ public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
                 .from(REFUND).where(REFUND.PAYOUT_ID.eq(payoutId)).asField();
 
         Field<Long> chargebackAmount = getDslContext()
-                .select(DSL.coalesce(DSL.sum(CHARGEBACK.AMOUNT.plus(CHARGEBACK.FEE)), 0L))
+                .select(DSL.coalesce(DSL.sum(CHARGEBACK.AMOUNT), 0L))
                 .from(CHARGEBACK).where(CHARGEBACK.PAYOUT_ID.eq(payoutId)).asField();
 
         Field<Long> adjustmentAmount = getDslContext()
