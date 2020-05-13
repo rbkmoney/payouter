@@ -1,7 +1,6 @@
 package com.rbkmoney.payouter.poller.handler.impl;
 
 import com.rbkmoney.damsel.domain.InvoicePaymentAdjustment;
-import com.rbkmoney.damsel.payment_processing.Event;
 import com.rbkmoney.damsel.payment_processing.InvoiceChange;
 import com.rbkmoney.damsel.payment_processing.InvoicePaymentAdjustmentChange;
 import com.rbkmoney.damsel.payment_processing.InvoicePaymentChange;
@@ -17,18 +16,12 @@ import com.rbkmoney.payouter.domain.enums.AdjustmentStatus;
 import com.rbkmoney.payouter.domain.tables.pojos.Adjustment;
 import com.rbkmoney.payouter.domain.tables.pojos.Payment;
 import com.rbkmoney.payouter.exception.NotFoundException;
-import com.rbkmoney.payouter.poller.handler.Handler;
 import com.rbkmoney.payouter.poller.handler.PaymentProcessingHandler;
-import com.rbkmoney.payouter.util.CashFlowType;
 import com.rbkmoney.payouter.util.DamselUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.util.Map;
-
-import static com.rbkmoney.payouter.util.CashFlowType.*;
 
 @Component
 public class InvoicePaymentAdjustmentHandler implements PaymentProcessingHandler {
@@ -84,18 +77,10 @@ public class InvoicePaymentAdjustmentHandler implements PaymentProcessingHandler
         adjustment.setDomainRevision(invoicePaymentAdjustment.getDomainRevision());
         adjustment.setReason(invoicePaymentAdjustment.getReason());
 
-        Map<CashFlowType, Long> oldCashFlowInverse = DamselUtil.parseInverseCashFlow(invoicePaymentAdjustment.getOldCashFlowInverse());
-        adjustment.setPaymentAmount(oldCashFlowInverse.getOrDefault(AMOUNT, 0L));
-        adjustment.setPaymentFee(oldCashFlowInverse.getOrDefault(FEE, 0L));
-        adjustment.setPaymentGuaranteeDeposit(oldCashFlowInverse.getOrDefault(GUARANTEE_DEPOSIT, 0L));
-
-
-        Map<CashFlowType, Long> newCashFlow = DamselUtil.parseCashFlow(invoicePaymentAdjustment.getNewCashFlow());
-        adjustment.setNewAmount(newCashFlow.getOrDefault(AMOUNT, 0L));
-        adjustment.setNewFee(newCashFlow.getOrDefault(FEE, 0L));
-        adjustment.setNewProviderFee(newCashFlow.getOrDefault(PROVIDER_FEE, 0L));
-        adjustment.setNewExternalFee(newCashFlow.getOrDefault(EXTERNAL_FEE, 0L));
-        adjustment.setNewGuaranteeDeposit(newCashFlow.getOrDefault(GUARANTEE_DEPOSIT, 0L));
+        Long oldAmount = DamselUtil.computeMerchantAmount(invoicePaymentAdjustment.getOldCashFlowInverse());
+        Long newAmount = DamselUtil.computeMerchantAmount(invoicePaymentAdjustment.getNewCashFlow());
+        Long amount = oldAmount + newAmount;
+        adjustment.setAmount(amount);
 
         adjustmentDao.save(adjustment);
         log.info("Adjustment have been saved, adjustment={}", adjustment);
