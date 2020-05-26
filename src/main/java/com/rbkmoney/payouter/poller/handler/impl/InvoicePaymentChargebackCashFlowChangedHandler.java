@@ -50,7 +50,7 @@ public class InvoicePaymentChargebackCashFlowChangedHandler implements PaymentPr
         }
 
         long merchantAmount = DamselUtil.computeMerchantAmount(invoicePaymentChargebackCashFlowChanged.getCashFlow());
-        long amount = -Math.abs(merchantAmount);
+        long amount = Math.negateExact(merchantAmount);
         chargeback.setAmount(amount);
 
         chargebackDao.save(chargeback);
