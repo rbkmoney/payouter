@@ -27,6 +27,7 @@ import com.rbkmoney.payouter.dao.PaymentDao;
 import com.rbkmoney.payouter.dao.PayoutDao;
 import com.rbkmoney.payouter.domain.tables.pojos.Payment;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
+import com.rbkmoney.payouter.service.data.TestData;
 import com.rbkmoney.woody.api.flow.WFlow;
 import com.rbkmoney.woody.thrift.impl.http.THSpawnClientBuilder;
 import org.apache.thrift.TException;
@@ -143,7 +144,7 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
     @After
     public void cleanUp() {
         JdbcTestUtils.deleteFromTables(jdbcTemplate,
-                "sht.payout", "sht.payment", "sht.adjustment", "sht.refund");
+                "sht.payout", "sht.payment", "sht.adjustment", "sht.refund", "sht.chargeback");
     }
 
     @Test
@@ -256,6 +257,32 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
 
         Payout payout = payoutDao.get(payoutId);
         assertEquals(Long.valueOf(9000L), payout.getAmount());
+        assertEquals(PAID, payout.getStatus());
+        assertEquals(partyId, payout.getPartyId());
+
+        assertEquals(payout, payoutService.getByIds(Collections.singleton(payoutId)).get(0));
+    }
+
+    @Test
+    public void createPayoutWithChargeback() throws Exception {
+        addCapturedPayment("chargeback-id");
+        addCapturedChargeback("chargeback-id");
+
+        GeneratePayoutParams generatePayoutParams = new GeneratePayoutParams();
+        ShopParams shopParams = new ShopParams();
+        shopParams.setPartyId(partyId);
+        shopParams.setShopId(shopId);
+        generatePayoutParams.setShopParams(shopParams);
+        generatePayoutParams.setTimeRange(new TimeRange("2015-06-17T00:00:00Z", "2018-06-17T00:00:00Z"));
+
+        List<String> payoutIds = callService(() -> client.generatePayouts(generatePayoutParams));
+        assertEquals(1, payoutIds.size());
+        String payoutId = payoutIds.get(0);
+
+        payoutService.pay(payoutId);
+
+        Payout payout = payoutDao.get(payoutId);
+        assertEquals(Long.valueOf(9500L), payout.getAmount());
         assertEquals(PAID, payout.getStatus());
         assertEquals(partyId, payout.getPartyId());
 
@@ -531,6 +558,26 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
                 machineEvent,
                 refundCaptured.getPayload()
         );
+    }
+
+    public void addCapturedChargeback(String invoiceId) {
+        GeneratorConfig generatorConfig = new GeneratorConfig();
+        generatorConfig.setInvoiceId(invoiceId);
+
+        Event chargebackCreated = TestData.createChargebackCreated();
+        Event chargebackCaptured = TestData.createChargebackCaptured();
+
+        MachineEvent machineEvent = new MachineEvent().setSourceId(invoiceId).setCreatedAt(chargebackCreated.getCreatedAt());
+
+        paymentProcessingEventService.processEvent(
+                machineEvent,
+                chargebackCreated.getPayload()
+        );
+        paymentProcessingEventService.processEvent(
+                machineEvent,
+                chargebackCreated.getPayload()
+        );
+
     }
 
     public void addCapturedPayment() {

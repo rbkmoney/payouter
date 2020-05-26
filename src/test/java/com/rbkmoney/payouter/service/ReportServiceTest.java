@@ -85,10 +85,11 @@ public class ReportServiceTest extends AbstractIntegrationTest {
                 }).collect(Collectors.toList());
         payouts.forEach(payout -> {
             payoutDao.save(payout);
-            List<PayoutSummary> cfds = randomListOf(2, PayoutSummary.class);
+            List<PayoutSummary> cfds = randomListOf(3, PayoutSummary.class);
             cfds.forEach(cfd -> cfd.setPayoutId(payout.getPayoutId()));
             cfds.get(0).setCashFlowType(PayoutSummaryOperationType.payment);
             cfds.get(1).setCashFlowType(PayoutSummaryOperationType.refund);
+            cfds.get(2).setCashFlowType(PayoutSummaryOperationType.chargeback);
             payoutSummaryDao.save(cfds);
             payoutDao.saveRangeData(payout.getPayoutId(), payout.getPartyId(), payout.getShopId(), LocalDateTime.now(), LocalDateTime.now());
         });
@@ -138,10 +139,11 @@ public class ReportServiceTest extends AbstractIntegrationTest {
                 }).collect(Collectors.toList());
         payouts.forEach(payout -> {
             payoutDao.save(payout);
-            List<PayoutSummary> cfds = randomListOf(2, PayoutSummary.class);
+            List<PayoutSummary> cfds = randomListOf(3, PayoutSummary.class);
             cfds.forEach(cfd -> cfd.setPayoutId(payout.getPayoutId()));
             cfds.get(0).setCashFlowType(PayoutSummaryOperationType.payment);
             cfds.get(1).setCashFlowType(PayoutSummaryOperationType.refund);
+            cfds.get(2).setCashFlowType(PayoutSummaryOperationType.chargeback);
             payoutSummaryDao.save(cfds);
             payoutDao.saveRangeData(payout.getPayoutId(), payout.getPartyId(), payout.getShopId(), LocalDateTime.now(), LocalDateTime.now());
         });
@@ -172,10 +174,11 @@ public class ReportServiceTest extends AbstractIntegrationTest {
                 }).collect(Collectors.toList());
         payouts.forEach(payout -> {
             payoutDao.save(payout);
-            List<PayoutSummary> cfds = randomListOf(2, PayoutSummary.class);
+            List<PayoutSummary> cfds = randomListOf(3, PayoutSummary.class);
             cfds.forEach(cfd -> cfd.setPayoutId(payout.getPayoutId()));
             cfds.get(0).setCashFlowType(PayoutSummaryOperationType.payment);
             cfds.get(1).setCashFlowType(PayoutSummaryOperationType.refund);
+            cfds.get(2).setCashFlowType(PayoutSummaryOperationType.chargeback);
             payoutSummaryDao.save(cfds);
             payoutDao.saveRangeData(payout.getPayoutId(), payout.getPartyId(), payout.getShopId(), LocalDateTime.now(), LocalDateTime.now());
         });

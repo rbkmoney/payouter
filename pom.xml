@@ -31,7 +31,7 @@
         <db.port>5432</db.port>
         <db.name>payouter</db.name>
         <db.url>jdbc:postgresql://localhost:${db.port}/${db.name}</db.url>
-        <damsel.version>1.384-7dd9035</damsel.version>
+        <damsel.version>1.403-9383078</damsel.version>
         <machinegun-proto.version>1.12-ebae56f</machinegun-proto.version>
         <fistful-proto.version>1.62-509c8d3</fistful-proto.version>
         <sonar.jacoco.reportPath>${project.basedir}/target/jacoco.exec</sonar.jacoco.reportPath>
