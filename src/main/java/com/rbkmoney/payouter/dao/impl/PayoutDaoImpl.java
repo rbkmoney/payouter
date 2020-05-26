@@ -158,7 +158,7 @@ public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
         Query query = getDslContext().select(
                 paymentAmount
                         .plus(adjustmentAmount)
-                        .plus(chargebackAmount)
+                        .minus(chargebackAmount)
                         .minus(refundAmount)
                         .minus(payoutAmount)
         );
