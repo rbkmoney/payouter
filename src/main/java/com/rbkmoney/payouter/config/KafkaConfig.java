@@ -5,13 +5,13 @@ import com.rbkmoney.kafka.common.exception.handler.SeekToCurrentWithSleepBatchEr
 import com.rbkmoney.machinegun.eventsink.MachineEvent;
 import com.rbkmoney.payouter.config.properties.KafkaSslProperties;
 import com.rbkmoney.payouter.serde.MachineEventDeserializer;
+import com.rbkmoney.sink.common.parser.impl.MachineEventParser;
+import com.rbkmoney.sink.common.parser.impl.PaymentEventPayloadMachineEventParser;
 import com.rbkmoney.sink.common.serialization.BinaryDeserializer;
 import com.rbkmoney.sink.common.serialization.impl.PaymentEventPayloadDeserializer;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.config.SslConfigs;
-import com.rbkmoney.sink.common.parser.impl.MachineEventParser;
-import com.rbkmoney.sink.common.parser.impl.PaymentEventPayloadMachineEventParser;
 import org.apache.kafka.common.security.auth.SecurityProtocol;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,8 +22,10 @@ import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.config.KafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
-import org.springframework.kafka.listener.*;
-import org.springframework.retry.support.RetryTemplate;
+import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
+import org.springframework.kafka.listener.ContainerProperties;
+import org.springframework.kafka.listener.ErrorHandler;
+import org.springframework.kafka.listener.SeekToCurrentErrorHandler;
 
 import java.io.File;
 import java.util.HashMap;
@@ -91,11 +93,8 @@ public class KafkaConfig {
 
     @Bean
     public KafkaListenerContainerFactory<ConcurrentMessageListenerContainer<String, MachineEvent>> kafkaListenerContainerFactory(
-            ConsumerFactory<String, MachineEvent> consumerFactory,
-            RetryTemplate retryTemplate
-    ) {
-        ConcurrentKafkaListenerContainerFactory<String, MachineEvent> factory =
-                createGeneralKafkaListenerFactory(consumerFactory);
+            ConsumerFactory<String, MachineEvent> consumerFactory) {
+        ConcurrentKafkaListenerContainerFactory<String, MachineEvent> factory = createGeneralKafkaListenerFactory(consumerFactory);
         factory.setErrorHandler(kafkaErrorHandler());
         factory.setConcurrency(invoiceConcurrency);
         return factory;
@@ -103,10 +102,8 @@ public class KafkaConfig {
 
     @Bean
     public KafkaListenerContainerFactory<ConcurrentMessageListenerContainer<String, MachineEvent>> partyManagementListenerContainerFactory(
-            ConsumerFactory<String, MachineEvent> consumerFactory
-    ) {
-        ConcurrentKafkaListenerContainerFactory<String, MachineEvent> factory =
-                createGeneralKafkaListenerFactory(consumerFactory);
+            ConsumerFactory<String, MachineEvent> consumerFactory) {
+        ConcurrentKafkaListenerContainerFactory<String, MachineEvent> factory = createGeneralKafkaListenerFactory(consumerFactory);
         factory.setBatchListener(true);
         factory.setBatchErrorHandler(new SeekToCurrentWithSleepBatchErrorHandler());
         factory.setConcurrency(partyConcurrency);
@@ -114,10 +111,8 @@ public class KafkaConfig {
     }
 
     private static ConcurrentKafkaListenerContainerFactory<String, MachineEvent> createGeneralKafkaListenerFactory(
-            ConsumerFactory<String, MachineEvent> consumerFactory
-    ) {
-        ConcurrentKafkaListenerContainerFactory<String, MachineEvent> factory =
-                new ConcurrentKafkaListenerContainerFactory<>();
+            ConsumerFactory<String, MachineEvent> consumerFactory) {
+        ConcurrentKafkaListenerContainerFactory<String, MachineEvent> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory);
         factory.getContainerProperties().setAckOnError(false);
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
@@ -125,7 +120,7 @@ public class KafkaConfig {
     }
 
     public ErrorHandler kafkaErrorHandler() {
-        return new SeekToCurrentErrorHandler(-1);
+        return new SeekToCurrentErrorHandler();
     }
 
     @Bean
