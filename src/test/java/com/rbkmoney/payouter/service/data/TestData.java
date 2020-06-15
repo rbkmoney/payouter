@@ -1,5 +1,6 @@
 package com.rbkmoney.payouter.service.data;
 
+import com.rbkmoney.damsel.domain.InvoicePaymentChargeback;
 import com.rbkmoney.damsel.domain.InvoicePaymentChargebackPending;
 import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.payment_processing.*;
@@ -15,7 +16,7 @@ import java.time.Instant;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TestData {
 
-    private static GeneratorConfig config = new GeneratorConfig();
+    private static final GeneratorConfig CONFIG = new GeneratorConfig();
 
     public static Event createChargebackCreated() {
         InvoicePaymentChargebackChangePayload invoicePaymentChargebackChangePayload = new InvoicePaymentChargebackChangePayload();
@@ -27,7 +28,7 @@ public class TestData {
         invoicePaymentChangePayload.setInvoicePaymentChargebackChange(invoicePaymentChargebackChange);
         InvoicePaymentChange invoicePaymentChange = new InvoicePaymentChange();
         invoicePaymentChange.setPayload(invoicePaymentChangePayload);
-        invoicePaymentChange.setId(config.paymentId);
+        invoicePaymentChange.setId(CONFIG.paymentId);
         InvoiceChange invoiceChange = new InvoiceChange();
         invoiceChange.setInvoicePaymentChange(invoicePaymentChange);
 
