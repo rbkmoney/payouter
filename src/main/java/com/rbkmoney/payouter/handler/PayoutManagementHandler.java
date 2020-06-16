@@ -7,16 +7,16 @@ import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.payouter.domain.enums.PayoutAccountType;
 import com.rbkmoney.payouter.domain.enums.PayoutType;
 import com.rbkmoney.payouter.domain.tables.pojos.Payout;
+import com.rbkmoney.payouter.domain.tables.pojos.PayoutEvent;
 import com.rbkmoney.payouter.exception.InsufficientFundsException;
 import com.rbkmoney.payouter.exception.InvalidStateException;
 import com.rbkmoney.payouter.exception.NotFoundException;
-import com.rbkmoney.payouter.service.PayoutService;
-import com.rbkmoney.payouter.service.PayoutSummaryService;
-import com.rbkmoney.payouter.service.ReportService;
-import com.rbkmoney.payouter.service.ShumwayService;
+import com.rbkmoney.payouter.mapper.EventMapper;
+import com.rbkmoney.payouter.service.*;
 import com.rbkmoney.payouter.service.impl.NonresidentsReportServiceImpl;
 import com.rbkmoney.payouter.service.impl.ResidentsReportServiceImpl;
 import com.rbkmoney.payouter.util.DamselUtil;
+import com.rbkmoney.payouter.validator.EventRangeValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.thrift.TException;
@@ -44,6 +44,9 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
     private final PayoutSummaryService payoutSummaryService;
     private final ResidentsReportServiceImpl residentsReportService;
     private final NonresidentsReportServiceImpl nonresidentsReportService;
+    private final EventSinkService eventSinkService;
+    private final EventRangeValidator eventRangeValidator;
+    private final EventMapper eventMapper;
 
     @Override
     public com.rbkmoney.damsel.payout_processing.Payout createPayout(PayoutParams params) throws TException {
@@ -80,9 +83,11 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
     }
 
     @Override
-    public List<Event> getEvents(String s, EventRange eventRange) throws PayoutNotFound, EventNotFound, InvalidRequest, TException {
-        // TODO [a.romanov]: impl
-        throw new UnsupportedOperationException();
+    public List<Event> getEvents(String payoutId, EventRange eventRange) throws TException {
+        Optional<Long> after = eventRangeValidator.validateAndExtractAfter(eventRange);
+        List<PayoutEvent> events = eventSinkService.getEvents(payoutId, after, eventRange.getLimit());
+
+        return eventMapper.toDamselEvents(events);
     }
 
     @Override
