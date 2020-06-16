@@ -14,7 +14,7 @@ public interface EventSinkService {
 
     PayoutEvent getEvent(long eventId) throws StorageException;
 
-    List<PayoutEvent> getEvents(String payoutId, int limit) throws StorageException;
+    List<PayoutEvent> getEvents(String payoutId, Optional<Long> after, int limit) throws StorageException;
 
     List<PayoutEvent> getEvents(Optional<Long> after, int limit) throws StorageException;
 

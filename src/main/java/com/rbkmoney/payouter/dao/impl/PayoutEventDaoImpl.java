@@ -47,9 +47,15 @@ public class PayoutEventDaoImpl extends AbstractGenericDao implements PayoutEven
     }
 
     @Override
-    public List<PayoutEvent> getEvents(String payoutId, int limit) throws DaoException {
+    public List<PayoutEvent> getEvents(String payoutId, Optional<Long> after, int limit) throws DaoException {
+        List<Condition> conditions = new ArrayList<>();
+        conditions.add(PAYOUT_EVENT.PAYOUT_ID.eq(payoutId));
+        if (after.isPresent()) {
+            conditions.add(PAYOUT_EVENT.EVENT_ID.gt(after.get()));
+        }
+
         Query query = getDslContext().selectFrom(PAYOUT_EVENT)
-                .where(PAYOUT_EVENT.PAYOUT_ID.eq(payoutId))
+                .where(conditions)
                 .orderBy(PAYOUT_EVENT.EVENT_ID)
                 .limit(limit);
 
