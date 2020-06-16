@@ -12,7 +12,7 @@ public interface PayoutEventDao extends GenericDao {
 
     PayoutEvent getEvent(long eventId) throws DaoException;
 
-    List<PayoutEvent> getEvents(String payoutId, int limit) throws DaoException;
+    List<PayoutEvent> getEvents(String payoutId, Optional<Long> after, int limit) throws DaoException;
 
     List<PayoutEvent> getEvents(Optional<Long> after, int limit) throws DaoException;
 

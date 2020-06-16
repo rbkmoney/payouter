@@ -46,11 +46,11 @@ public class EventSinkServiceImpl implements EventSinkService {
     }
 
     @Override
-    public List<PayoutEvent> getEvents(String payoutId, int limit) throws StorageException {
+    public List<PayoutEvent> getEvents(String payoutId, Optional<Long> after, int limit) throws StorageException {
         try {
-            return payoutEventDao.getEvents(payoutId, limit);
+            return payoutEventDao.getEvents(payoutId, after, limit);
         } catch (DaoException ex) {
-            throw new StorageException(String.format("Failed to get payout event range, payoutId=%s, limit=%d", payoutId, limit), ex);
+            throw new StorageException(String.format("Failed to get payout event range, payoutId=%s, after=%s, limit=%d", payoutId, after, limit), ex);
         }
     }
 

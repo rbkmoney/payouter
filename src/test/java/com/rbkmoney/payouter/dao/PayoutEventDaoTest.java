@@ -52,8 +52,8 @@ public class PayoutEventDaoTest extends AbstractIntegrationTest {
 
         assertEquals(1000L, (long) payoutEventDao.getLastEventId());
 
-        assertEquals(500, payoutEventDao.getEvents("id", 1000).size());
-        assertEquals(10, payoutEventDao.getEvents("id", 10).size());
+        assertEquals(500, payoutEventDao.getEvents("id", Optional.empty(), 1000).size());
+        assertEquals(10, payoutEventDao.getEvents("id", Optional.empty(), 10).size());
     }
 
     private List<PayoutEvent> generateEvents() {
