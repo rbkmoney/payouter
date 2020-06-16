@@ -11,9 +11,6 @@ import com.rbkmoney.payouter.service.EventSinkService;
 import com.rbkmoney.payouter.util.DamselUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,6 +46,15 @@ public class EventSinkServiceImpl implements EventSinkService {
     }
 
     @Override
+    public List<PayoutEvent> getEvents(String payoutId, int limit) throws StorageException {
+        try {
+            return payoutEventDao.getEvents(payoutId, limit);
+        } catch (DaoException ex) {
+            throw new StorageException(String.format("Failed to get payout event range, payoutId=%s, limit=%d", payoutId, limit), ex);
+        }
+    }
+
+    @Override
     public List<PayoutEvent> getEvents(Optional<Long> after, int limit) throws StorageException {
         try {
             return payoutEventDao.getEvents(after, limit);
@@ -64,7 +70,8 @@ public class EventSinkServiceImpl implements EventSinkService {
         try {
             payoutEvent.setEventCreatedAt(LocalDateTime.now(ZoneOffset.UTC));
             long eventId = payoutEventDao.saveEvent(payoutEvent);
-            log.info("Payout event has been successfully saved, payoutId='{}', eventId='{}', eventType='{}'", payoutEvent.getPayoutId(), eventId, payoutEvent.getEventType());
+            log.info("Payout event has been successfully saved, payoutId='{}', eventId='{}', eventType='{}'",
+                    payoutEvent.getPayoutId(), eventId, payoutEvent.getEventType());
         } catch (DaoException ex) {
             throw new StorageException(String.format("Failed to save payout event, payoutId=%s", payoutEvent.getPayoutId()), ex);
         }
