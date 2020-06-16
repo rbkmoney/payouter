@@ -10,10 +10,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static io.github.benas.randombeans.api.EnhancedRandom.randomStreamOf;
+import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -21,7 +21,7 @@ import static org.junit.Assert.assertTrue;
 public class PayoutEventDaoTest extends AbstractIntegrationTest {
 
     @Autowired
-    PayoutEventDao payoutEventDao;
+    private PayoutEventDao payoutEventDao;
 
     @Test
     public void insertAndGetTest() {
@@ -35,17 +35,7 @@ public class PayoutEventDaoTest extends AbstractIntegrationTest {
 
     @Test
     public void getEventsAfterTest() {
-        List<PayoutEvent> expectedPayoutEvents = randomStreamOf(1000, PayoutEvent.class)
-                .map(new Function<PayoutEvent, PayoutEvent>() {
-                    AtomicLong atomicLong = new AtomicLong();
-
-                    @Override
-                    public PayoutEvent apply(PayoutEvent payoutEvent) {
-                        payoutEvent.setEventId(atomicLong.incrementAndGet());
-                        return payoutEvent;
-                    }
-                }).collect(Collectors.toList());
-
+        List<PayoutEvent> expectedPayoutEvents = generateEvents();
         expectedPayoutEvents.forEach(payoutEventDao::saveEvent);
 
         assertEquals(1000L, (long) payoutEventDao.getLastEventId());
@@ -55,7 +45,32 @@ public class PayoutEventDaoTest extends AbstractIntegrationTest {
         checkPartOfEvents(expectedPayoutEvents, payoutEventDao.getEvents(Optional.empty(), 0), 0);
     }
 
-    public void checkPartOfEvents(List<PayoutEvent> expectedPayoutEvents, List<PayoutEvent> partOfActualPayoutEvents, int expectedCount) {
+    @Test
+    public void getEventsByPayoutIdTest() {
+        List<PayoutEvent> expectedPayoutEvents = generateEvents();
+        expectedPayoutEvents.forEach(payoutEventDao::saveEvent);
+
+        assertEquals(1000L, (long) payoutEventDao.getLastEventId());
+
+        assertEquals(500, payoutEventDao.getEvents("id", 1000).size());
+        assertEquals(10, payoutEventDao.getEvents("id", 10).size());
+    }
+
+    private List<PayoutEvent> generateEvents() {
+        return randomStreamOf(1000, PayoutEvent.class)
+                .map(new Function<PayoutEvent, PayoutEvent>() {
+                    AtomicLong atomicLong = new AtomicLong();
+
+                    @Override
+                    public PayoutEvent apply(PayoutEvent payoutEvent) {
+                        payoutEvent.setEventId(atomicLong.incrementAndGet());
+                        payoutEvent.setPayoutId(atomicLong.get() % 2 == 0 ? "id" : "_");
+                        return payoutEvent;
+                    }
+                }).collect(toList());
+    }
+
+    private void checkPartOfEvents(List<PayoutEvent> expectedPayoutEvents, List<PayoutEvent> partOfActualPayoutEvents, int expectedCount) {
         assertEquals(expectedCount, partOfActualPayoutEvents.size());
         assertTrue(expectedPayoutEvents.containsAll(partOfActualPayoutEvents));
     }
