@@ -13,6 +13,7 @@ spring:
       idle-timeout: 30000
       maximum-pool-size: 30
   flyway:
+    table: schema_version
     schemas: sht
   quartz:
     job-store-type: jdbc
