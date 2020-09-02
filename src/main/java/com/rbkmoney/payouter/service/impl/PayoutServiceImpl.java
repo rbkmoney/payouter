@@ -385,7 +385,16 @@ public class PayoutServiceImpl implements PayoutService {
         if (contract.isSetPaymentInstitution()) {
             payout.setPaymentInstitutionId(contract.getPaymentInstitution().getId());
         }
-        LegalEntity legalEntity = contract.getContractor().getLegalEntity();
+
+        Contractor contractor = party.getContractors().values().stream()
+                .filter(
+                        contractorValue -> contractorValue.getId().equals(contract.getContractorId())
+                )
+                .map(PartyContractor::getContractor)
+                .findFirst()
+                .orElseThrow(() -> new NotFoundException(String.format("Contractor not found, partyId='%s', contractorId='%s'", partyId, contract.getContractorId())));
+
+        LegalEntity legalEntity = contractor.getLegalEntity();
         if (legalEntity.isSetInternationalLegalEntity()) {
             InternationalLegalEntity internationalLegalEntity = legalEntity.getInternationalLegalEntity();
             payout.setAccountLegalName(internationalLegalEntity.getLegalName());

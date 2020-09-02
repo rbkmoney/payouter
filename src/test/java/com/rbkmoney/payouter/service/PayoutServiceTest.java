@@ -665,7 +665,24 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         party.setContactInfo(new PartyContactInfo("me@party.com"));
         party.setShops(buildShops(shopId, contractId, payoutToolId));
         party.setContracts(buildContracts(contractId, payoutToolId));
+        party.setContractors(buildContractors(contractId));
         return party;
+    }
+
+    private Map<String, PartyContractor> buildContractors(String contractId) {
+        return Map.of(
+                contractId,
+                new PartyContractor()
+                        .setId(contractId)
+                        .setContractor(
+                                Contractor.legal_entity(
+                                        LegalEntity.international_legal_entity(new InternationalLegalEntity(
+                                                "kek",
+                                                "711-2880 Nulla St. Mankato Mississippi 96522"
+                                        ))
+                                )
+                        )
+        );
     }
 
     private VersionedObject buildPayoutScheduleObject(BusinessScheduleRef payoutScheduleRef) {
@@ -736,6 +753,7 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         Map<String, Contract> contracts = new HashMap<>();
         Contract contract = new Contract();
         contract.setId(contractId);
+        contract.setContractorId(contractId);
         contract.setLegalAgreement(new LegalAgreement(
                 TypeUtil.temporalToString(Instant.now()),
                 "12/12")
@@ -750,14 +768,6 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
                         PayoutToolInfo.international_bank_account(internationalBankAccount)
                 )
         ));
-        contract.setContractor(
-                Contractor.legal_entity(
-                        LegalEntity.international_legal_entity(new InternationalLegalEntity(
-                                "kek",
-                                "711-2880 Nulla St. Mankato Mississippi 96522"
-                        ))
-                )
-        );
         contracts.put(contractId, contract);
         return contracts;
     }

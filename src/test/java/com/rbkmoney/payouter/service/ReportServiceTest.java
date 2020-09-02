@@ -1,6 +1,5 @@
 package com.rbkmoney.payouter.service;
 
-import com.google.common.collect.ImmutableMap;
 import com.rbkmoney.damsel.base.Month;
 import com.rbkmoney.damsel.domain.Calendar;
 import com.rbkmoney.damsel.domain.*;
@@ -112,14 +111,14 @@ public class ReportServiceTest extends AbstractIntegrationTest {
     @Test
     public void testWhenCurrentDayIsAHoliday() throws TException {
         LocalDateTime localDateTime = LocalDate.now().atStartOfDay();
-        Map<Integer, Set<CalendarHoliday>> holiday = ImmutableMap.<Integer, Set<CalendarHoliday>>builder()
-                .put(
+        Map<Integer, Set<CalendarHoliday>> holiday = Map.of(
                         localDateTime.getYear(),
                         new HashSet<>(
                                 Arrays.asList(
                                         new CalendarHoliday("", (byte) localDateTime.getDayOfMonth(), Month.findByValue(localDateTime.getMonthValue()))
                                 )
-                        )).build();
+                        )
+        );
         given(dominantClient.checkoutObject(any(), eq(Reference.calendar(new CalendarRef(1)))))
                 .willReturn(
                         new VersionedObject(

@@ -1,6 +1,7 @@
 package com.rbkmoney.payouter.scheduler;
 
 import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvValidationException;
 import com.rbkmoney.damsel.base.*;
 import com.rbkmoney.damsel.domain.Calendar;
 import com.rbkmoney.damsel.domain.CalendarHoliday;
@@ -671,6 +672,8 @@ public class SchedulerUtilTest {
                 years.put(year, calendarHolidays);
             }
             calendar.setHolidays(years);
+        } catch (CsvValidationException e) {
+            throw new RuntimeException(e);
         }
         return calendar;
     }
