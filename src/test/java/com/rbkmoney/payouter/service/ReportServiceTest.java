@@ -117,7 +117,8 @@ public class ReportServiceTest extends AbstractIntegrationTest {
                                 Arrays.asList(
                                         new CalendarHoliday("", (byte) localDateTime.getDayOfMonth(), Month.findByValue(localDateTime.getMonthValue()))
                                 )
-                        );
+                        )
+        );
         given(dominantClient.checkoutObject(any(), eq(Reference.calendar(new CalendarRef(1)))))
                 .willReturn(
                         new VersionedObject(
