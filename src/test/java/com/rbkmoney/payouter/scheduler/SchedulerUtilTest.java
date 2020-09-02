@@ -673,7 +673,7 @@ public class SchedulerUtilTest {
             }
             calendar.setHolidays(years);
         } catch (CsvValidationException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
         return calendar;
     }
