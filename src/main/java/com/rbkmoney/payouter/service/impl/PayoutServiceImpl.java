@@ -392,7 +392,7 @@ public class PayoutServiceImpl implements PayoutService {
                 )
                 .map(PartyContractor::getContractor)
                 .findFirst()
-                .orElseThrow(() -> new NotFoundException(String.format("Contractor not found, partyId='%s', contractorId='%s'", partyId, contract.getContractorId())));
+                .orElse(contract.getContractor());
 
         LegalEntity legalEntity = contractor.getLegalEntity();
         if (legalEntity.isSetInternationalLegalEntity()) {
