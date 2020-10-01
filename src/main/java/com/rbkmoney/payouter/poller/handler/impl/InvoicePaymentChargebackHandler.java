@@ -62,7 +62,6 @@ public class InvoicePaymentChargebackHandler implements PaymentProcessingHandler
         }
 
         Chargeback chargeback = new Chargeback();
-        chargeback.setId(eventId);
         chargeback.setEventId(eventId);
         chargeback.setPartyId(payment.getPartyId());
         chargeback.setShopId(payment.getShopId());
