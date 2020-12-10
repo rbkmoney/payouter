@@ -31,7 +31,7 @@
         <db.port>5432</db.port>
         <db.name>payouter</db.name>
         <db.url>jdbc:postgresql://localhost:${db.port}/${db.name}</db.url>
-        <damsel.version>1.461-e369307</damsel.version>
+        <damsel.version>1.466-060478e</damsel.version>
         <machinegun-proto.version>1.18-d814d69</machinegun-proto.version>
         <fistful-proto.version>1.62-509c8d3</fistful-proto.version>
         <kafka.common.lib.ver>0.1.5</kafka.common.lib.ver>
