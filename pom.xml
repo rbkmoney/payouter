@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>payouter</artifactId>
-    <version>1.0.43-SNAPSHOT</version>
+    <version>1.0.44-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>payouter</name>
@@ -13,7 +13,7 @@
     <parent>
         <groupId>com.rbkmoney</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.3.4.RELEASE</version>
+        <version>2.3.8</version>
         <relativePath/>
     </parent>
 
@@ -24,14 +24,15 @@
         <dockerfile.base.service.tag>57e26d8ee999d7b0b50248c22afc63e6f926d276</dockerfile.base.service.tag>
         <dockerfile.registry>${env.REGISTRY}</dockerfile.registry>
         <server.port>8022</server.port>
-        <exposed.ports>${server.port}</exposed.ports>
+        <management.port>8023</management.port>
+        <exposed.ports>${server.port} ${management.port}</exposed.ports>
         <db.user>postgres</db.user>
         <db.password>postgres</db.password>
         <db.schema>sht</db.schema>
         <db.port>5432</db.port>
         <db.name>payouter</db.name>
         <db.url>jdbc:postgresql://localhost:${db.port}/${db.name}</db.url>
-        <damsel.version>1.466-060478e</damsel.version>
+        <damsel.version>1.475-bde841f</damsel.version>
         <machinegun-proto.version>1.18-d814d69</machinegun-proto.version>
         <fistful-proto.version>1.62-509c8d3</fistful-proto.version>
         <kafka.common.lib.ver>0.1.5</kafka.common.lib.ver>
@@ -168,8 +169,8 @@
         </dependency>
         <dependency>
             <groupId>com.rbkmoney</groupId>
-            <artifactId>spring-boot-starter-metrics-statsd</artifactId>
-            <version>1.1.2</version>
+            <artifactId>custom-metrics-spring-boot-starter</artifactId>
+            <version>1.2.0</version>
         </dependency>
 
         <!-- Test -->

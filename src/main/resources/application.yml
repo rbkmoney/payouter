@@ -1,5 +1,28 @@
 server:
-  port: @server.port@
+  port: '@server.port@'
+management:
+  security:
+    flag: false
+  server:
+    port: @management.port@
+  metrics:
+    export:
+      statsd:
+        flavor: etsy
+        enabled: false
+      prometheus:
+        enabled: false
+  endpoint:
+    health:
+      show-details: always
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
 spring:
   application:
     name: @project.name@
@@ -92,7 +115,3 @@ kafka:
       concurrency: 1
   ssl:
     enabled: false
-
-management.metrics.export.statsd.flavor: etsy
-
-
