@@ -90,7 +90,8 @@ public class ReportServiceTest extends AbstractIntegrationTest {
             cfds.get(1).setCashFlowType(PayoutSummaryOperationType.refund);
             cfds.get(2).setCashFlowType(PayoutSummaryOperationType.chargeback);
             payoutSummaryDao.save(cfds);
-            payoutDao.saveRangeData(payout.getPayoutId(), payout.getPartyId(), payout.getShopId(), LocalDateTime.now(), LocalDateTime.now());
+            payoutDao.saveRangeData(payout.getPayoutId(), payout.getPartyId(), payout.getShopId(),
+                    LocalDateTime.now(), LocalDateTime.now());
         });
 
         Report report = reportDao.get(residentsReportService.generateAndSave(payouts));
@@ -99,7 +100,8 @@ public class ReportServiceTest extends AbstractIntegrationTest {
         doAnswer(answer -> {
             countDownLatch.countDown();
             Message message = answer.getArgument(0);
-            assertTrue(Arrays.equals(report.getContent().getBytes(report.getEncoding()), message.getMessageMail().getAttachments().get(0).getData()));
+            assertTrue(Arrays.equals(report.getContent().getBytes(report.getEncoding()),
+                    message.getMessageMail().getAttachments().get(0).getData()));
             return null;
         }).when(dudoser).send(any());
 
@@ -112,12 +114,13 @@ public class ReportServiceTest extends AbstractIntegrationTest {
     public void testWhenCurrentDayIsAHoliday() throws TException {
         LocalDateTime localDateTime = LocalDate.now().atStartOfDay();
         Map<Integer, Set<CalendarHoliday>> holiday = Map.of(
-                        localDateTime.getYear(),
-                        new HashSet<>(
-                                Arrays.asList(
-                                        new CalendarHoliday("", (byte) localDateTime.getDayOfMonth(), Month.findByValue(localDateTime.getMonthValue()))
-                                )
+                localDateTime.getYear(),
+                new HashSet<>(
+                        Arrays.asList(
+                                new CalendarHoliday("", (byte) localDateTime.getDayOfMonth(),
+                                        Month.findByValue(localDateTime.getMonthValue()))
                         )
+                )
         );
         given(dominantClient.checkoutObject(any(), eq(Reference.calendar(new CalendarRef(1)))))
                 .willReturn(
@@ -144,7 +147,8 @@ public class ReportServiceTest extends AbstractIntegrationTest {
             cfds.get(1).setCashFlowType(PayoutSummaryOperationType.refund);
             cfds.get(2).setCashFlowType(PayoutSummaryOperationType.chargeback);
             payoutSummaryDao.save(cfds);
-            payoutDao.saveRangeData(payout.getPayoutId(), payout.getPartyId(), payout.getShopId(), LocalDateTime.now(), LocalDateTime.now());
+            payoutDao.saveRangeData(payout.getPayoutId(), payout.getPartyId(), payout.getShopId(),
+                    LocalDateTime.now(), LocalDateTime.now());
         });
 
         residentsReportService.createNewReportsJob();
@@ -179,7 +183,8 @@ public class ReportServiceTest extends AbstractIntegrationTest {
             cfds.get(1).setCashFlowType(PayoutSummaryOperationType.refund);
             cfds.get(2).setCashFlowType(PayoutSummaryOperationType.chargeback);
             payoutSummaryDao.save(cfds);
-            payoutDao.saveRangeData(payout.getPayoutId(), payout.getPartyId(), payout.getShopId(), LocalDateTime.now(), LocalDateTime.now());
+            payoutDao.saveRangeData(payout.getPayoutId(), payout.getPartyId(), payout.getShopId(),
+                    LocalDateTime.now(), LocalDateTime.now());
         });
 
         nonresidentsReportService.createNewReportsJob();

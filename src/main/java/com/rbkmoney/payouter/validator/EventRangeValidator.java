@@ -28,7 +28,9 @@ public class EventRangeValidator {
 
         if (after.isPresent()) {
             PayoutEvent payoutEvent = eventSinkService.getEvent(after.get());
-            if (payoutEvent == null) throw new EventNotFound();
+            if (payoutEvent == null) {
+                throw new EventNotFound();
+            }
         }
 
         return after;

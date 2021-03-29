@@ -23,23 +23,29 @@ public class PaymentProcessingEventServiceImpl implements PaymentProcessingEvent
     private final List<PaymentProcessingHandler> handlers;
 
     @Override
-    public void processEvent(MachineEvent machineEvent, EventPayload eventPayload) throws StorageException, NotFoundException {
-            if(eventPayload.isSetInvoiceChanges()) {
-                log.info("Trying to save event, sourceId={}, eventId={}, eventCreatedAt={}", machineEvent.getSourceId(), machineEvent.getEventId(), machineEvent.getCreatedAt());
-                for (InvoiceChange change : eventPayload.getInvoiceChanges()) {
-                    PaymentProcessingHandler handler = getHandler(change);
-                    if (handler != null) {
-                        log.debug("Trying to handle change, change='{}', sourceId='{}', eventId='{}'", change, machineEvent.getSourceId(), machineEvent.getEventId());
-                        try {
-                            handler.handle(change, machineEvent);
-                            log.info("Change have been handled, change='{}', sourceId='{}', eventId='{}'", change, machineEvent.getSourceId(), machineEvent.getEventId());
-                        } catch (DaoException ex) {
-                            throw new StorageException(String.format("Failed to save event, change='%s', sourceId='%s', eventId='%d'", change, machineEvent.getSourceId(), machineEvent.getEventId()), ex);
-                        }
+    public void processEvent(MachineEvent machineEvent, EventPayload eventPayload)
+            throws StorageException, NotFoundException {
+        if (eventPayload.isSetInvoiceChanges()) {
+            log.info("Trying to save event, sourceId={}, eventId={}, eventCreatedAt={}",
+                    machineEvent.getSourceId(), machineEvent.getEventId(), machineEvent.getCreatedAt());
+            for (InvoiceChange change : eventPayload.getInvoiceChanges()) {
+                PaymentProcessingHandler handler = getHandler(change);
+                if (handler != null) {
+                    log.debug("Trying to handle change, change='{}', sourceId='{}', eventId='{}'",
+                            change, machineEvent.getSourceId(), machineEvent.getEventId());
+                    try {
+                        handler.handle(change, machineEvent);
+                        log.info("Change have been handled, change='{}', sourceId='{}', eventId='{}'",
+                                change, machineEvent.getSourceId(), machineEvent.getEventId());
+                    } catch (DaoException ex) {
+                        throw new StorageException(
+                                String.format("Failed to save event, change='%s', sourceId='%s', eventId='%d'",
+                                        change, machineEvent.getSourceId(), machineEvent.getEventId()), ex);
                     }
                 }
             }
         }
+    }
 
     private PaymentProcessingHandler getHandler(InvoiceChange change) {
         for (PaymentProcessingHandler handler : handlers) {

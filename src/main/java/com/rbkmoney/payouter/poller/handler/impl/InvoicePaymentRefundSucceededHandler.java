@@ -33,7 +33,8 @@ public class InvoicePaymentRefundSucceededHandler implements PaymentProcessingHa
     public InvoicePaymentRefundSucceededHandler(RefundDao refundDao) {
         this.refundDao = refundDao;
         this.filter = new PathConditionFilter(new PathConditionRule(
-                "invoice_payment_change.payload.invoice_payment_refund_change.payload.invoice_payment_refund_status_changed.status.succeeded",
+                "invoice_payment_change.payload.invoice_payment_refund_change.payload" +
+                        ".invoice_payment_refund_status_changed.status.succeeded",
                 new IsNullCondition().not()));
     }
 

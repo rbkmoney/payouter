@@ -38,11 +38,13 @@ public class FistfulService {
         this.defaultSourceId = defaultSourceId;
     }
 
-    public Deposit createDeposit(String payoutId, String walletId, long amount, String currencyCode) throws NotFoundException, InvalidStateException {
+    public Deposit createDeposit(String payoutId, String walletId, long amount, String currencyCode)
+            throws NotFoundException, InvalidStateException {
         return createDeposit(payoutId, defaultSourceId, walletId, amount, currencyCode);
     }
 
-    public Deposit createDeposit(String payoutId, String sourceId, String walletId, long amount, String currencyCode) throws NotFoundException, InvalidStateException {
+    public Deposit createDeposit(String payoutId, String sourceId, String walletId, long amount, String currencyCode)
+            throws NotFoundException, InvalidStateException {
         DepositParams depositParams = new DepositParams();
         depositParams.setId(toDepositId(payoutId));
         depositParams.setSource(sourceId);

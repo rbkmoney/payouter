@@ -30,12 +30,16 @@ public class PayoutSummaryDaoImpl extends AbstractGenericDao implements PayoutSu
 
     @Override
     public void save(List<PayoutSummary> payoutSummaries) throws DaoException {
-        if (payoutSummaries.isEmpty()) return;
+        if (payoutSummaries.isEmpty()) {
+            return;
+        }
         InsertSetMoreStep<PayoutSummaryRecord> query = getDslContext()
                 .insertInto(PAYOUT_SUMMARY)
                 .set(getDslContext().newRecord(PAYOUT_SUMMARY, payoutSummaries.get(0)));
 
-        payoutSummaries.stream().skip(1).forEach(cfd -> query.newRecord().set(getDslContext().newRecord(PAYOUT_SUMMARY, cfd)));
+        payoutSummaries.stream()
+                .skip(1)
+                .forEach(cfd -> query.newRecord().set(getDslContext().newRecord(PAYOUT_SUMMARY, cfd)));
         execute(query);
     }
 

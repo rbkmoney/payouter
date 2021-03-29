@@ -589,7 +589,7 @@ public class SchedulerUtilTest {
     }
 
     @Test
-    public void testDOWMapToQuartzFormat() {
+    public void testDayOfWeekMapToQuartzFormat() {
         Schedule schedule = new Schedule(
                 ScheduleYear.every(new ScheduleEvery()),
                 ScheduleMonth.every(new ScheduleEvery()),
@@ -617,19 +617,30 @@ public class SchedulerUtilTest {
         assertEquals(calendar.getName(), holidayCalendar.getDescription());
         assertEquals(calendar.getTimezone(), holidayCalendar.getTimeZone().getID());
 
-        assertFalse(holidayCalendar.isTimeIncluded(LocalDate.of(2017, 11, 3).atTime(21, 00).toInstant(ZoneOffset.UTC).toEpochMilli()));
-        assertFalse(holidayCalendar.isTimeIncluded(LocalDate.of(2017, 11, 4).atStartOfDay(ZoneId.of("Europe/Moscow")).toInstant().toEpochMilli()));
+        assertFalse(holidayCalendar.isTimeIncluded(LocalDate.of(2017, 11, 3)
+                .atTime(21, 00).toInstant(ZoneOffset.UTC).toEpochMilli()));
+        assertFalse(holidayCalendar.isTimeIncluded(LocalDate.of(2017, 11, 4)
+                .atStartOfDay(ZoneId.of("Europe/Moscow")).toInstant().toEpochMilli()));
 
-        assertTrue(holidayCalendar.isTimeIncluded(LocalDate.of(2017, 12, 29).atStartOfDay(ZoneId.of("Europe/Moscow")).toInstant().toEpochMilli()));
-        assertTrue(holidayCalendar.isTimeIncluded(LocalDate.of(2018, 04, 27).atStartOfDay(ZoneId.of("Europe/Moscow")).toInstant().toEpochMilli()));
-        assertTrue(holidayCalendar.isTimeIncluded(LocalDate.of(2018, 04, 28).atStartOfDay(ZoneId.of("Europe/Moscow")).toInstant().toEpochMilli()));
-        assertTrue(holidayCalendar.isTimeIncluded(LocalDate.of(2018, 06, 9).atStartOfDay(ZoneId.of("Europe/Moscow")).toInstant().toEpochMilli()));
-        assertTrue(holidayCalendar.isTimeIncluded(LocalDate.of(2018, 06, 8).atStartOfDay(ZoneId.of("Europe/Moscow")).toInstant().toEpochMilli()));
+        assertTrue(holidayCalendar.isTimeIncluded(LocalDate.of(2017, 12, 29)
+                .atStartOfDay(ZoneId.of("Europe/Moscow")).toInstant().toEpochMilli()));
+        assertTrue(holidayCalendar.isTimeIncluded(LocalDate.of(2018, 04, 27)
+                .atStartOfDay(ZoneId.of("Europe/Moscow")).toInstant().toEpochMilli()));
+        assertTrue(holidayCalendar.isTimeIncluded(LocalDate.of(2018, 04, 28)
+                .atStartOfDay(ZoneId.of("Europe/Moscow")).toInstant().toEpochMilli()));
+        assertTrue(holidayCalendar.isTimeIncluded(LocalDate.of(2018, 06, 9)
+                .atStartOfDay(ZoneId.of("Europe/Moscow")).toInstant().toEpochMilli()));
+        assertTrue(holidayCalendar.isTimeIncluded(LocalDate.of(2018, 06, 8)
+                .atStartOfDay(ZoneId.of("Europe/Moscow")).toInstant().toEpochMilli()));
 
-        assertFalse(holidayCalendar.isTimeIncluded(LocalDate.of(2017, 12, 30).atStartOfDay(ZoneId.of("Europe/Moscow")).toInstant().toEpochMilli()));
-        assertFalse(holidayCalendar.isTimeIncluded(LocalDate.of(2017, 12, 31).atStartOfDay(ZoneId.of("Europe/Moscow")).toInstant().toEpochMilli()));
-        assertFalse(holidayCalendar.isTimeIncluded(LocalDate.of(2018, 06, 11).atStartOfDay(ZoneId.of("Europe/Moscow")).toInstant().toEpochMilli()));
-        assertFalse(holidayCalendar.isTimeIncluded(LocalDate.of(2018, 06, 12).atStartOfDay(ZoneId.of("Europe/Moscow")).toInstant().toEpochMilli()));
+        assertFalse(holidayCalendar.isTimeIncluded(LocalDate.of(2017, 12, 30)
+                .atStartOfDay(ZoneId.of("Europe/Moscow")).toInstant().toEpochMilli()));
+        assertFalse(holidayCalendar.isTimeIncluded(LocalDate.of(2017, 12, 31)
+                .atStartOfDay(ZoneId.of("Europe/Moscow")).toInstant().toEpochMilli()));
+        assertFalse(holidayCalendar.isTimeIncluded(LocalDate.of(2018, 06, 11)
+                .atStartOfDay(ZoneId.of("Europe/Moscow")).toInstant().toEpochMilli()));
+        assertFalse(holidayCalendar.isTimeIncluded(LocalDate.of(2018, 06, 12)
+                .atStartOfDay(ZoneId.of("Europe/Moscow")).toInstant().toEpochMilli()));
 
         for (Map.Entry<Integer, Set<CalendarHoliday>> holidays : calendar.getHolidays().entrySet()) {
             for (CalendarHoliday calendarHoliday : holidays.getValue()) {

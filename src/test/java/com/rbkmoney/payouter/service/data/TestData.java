@@ -19,7 +19,7 @@ public class TestData {
     private static final GeneratorConfig CONFIG = new GeneratorConfig();
 
     public static Event createChargebackCreated() {
-        InvoicePaymentChargebackChangePayload invoicePaymentChargebackChangePayload = new InvoicePaymentChargebackChangePayload();
+        var invoicePaymentChargebackChangePayload = new InvoicePaymentChargebackChangePayload();
         invoicePaymentChargebackChangePayload.setInvoicePaymentChargebackCreated(buildChargebackCreated());
         InvoicePaymentChargebackChange invoicePaymentChargebackChange = new InvoicePaymentChargebackChange();
         invoicePaymentChargebackChange.setId("testId");
@@ -36,7 +36,7 @@ public class TestData {
     }
 
     public static Event createChargebackCaptured() {
-        InvoicePaymentChargebackChangePayload invoicePaymentChargebackChangePayload = new InvoicePaymentChargebackChangePayload();
+        var invoicePaymentChargebackChangePayload = new InvoicePaymentChargebackChangePayload();
         invoicePaymentChargebackChangePayload.setInvoicePaymentChargebackStatusChanged(buildChargebackStatus());
         InvoicePaymentChargebackChange invoicePaymentChargebackChange = new InvoicePaymentChargebackChange();
         invoicePaymentChargebackChange.setId("testId");
@@ -83,7 +83,7 @@ public class TestData {
     }
 
     private static InvoicePaymentChargebackStatusChanged buildChargebackStatus() {
-        InvoicePaymentChargebackStatusChanged invoicePaymentChargebackStatusChanged = new InvoicePaymentChargebackStatusChanged();
+        var invoicePaymentChargebackStatusChanged = new InvoicePaymentChargebackStatusChanged();
         InvoicePaymentChargebackStatus invoicePaymentChargebackStatus = new InvoicePaymentChargebackStatus();
         invoicePaymentChargebackStatus.setAccepted(new InvoicePaymentChargebackAccepted());
         invoicePaymentChargebackStatusChanged.setStatus(invoicePaymentChargebackStatus);

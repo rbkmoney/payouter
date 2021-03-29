@@ -51,11 +51,11 @@ public final class TestPayloadData {
                                                                 String shopEffect,
                                                                 int scheduleId,
                                                                 boolean isSetSchedule) {
-        List<PartyChange> partyChanges = new ArrayList<>();
+        List<PartyChange> changes = new ArrayList<>();
         for (int i = 0; i < changesCount; i++) {
-            partyChanges.add(createTestPartyChange(totalSuccessInChange, shopId, shopEffect, scheduleId, isSetSchedule));
+            changes.add(createTestPartyChange(totalSuccessInChange, shopId, shopEffect, scheduleId, isSetSchedule));
         }
-        return partyChanges;
+        return changes;
     }
 
     private static PartyChange createTestPartyChange(int totalSuccessInChange,
@@ -63,7 +63,6 @@ public final class TestPayloadData {
                                                      String shopEffect,
                                                      int scheduleId,
                                                      boolean isSetSchedule) {
-        PartyChange partyChange = new PartyChange();
         ClaimStatusChanged claimStatusChanged = new ClaimStatusChanged();
         claimStatusChanged.setId(random(Long.class));
         ClaimStatus status = new ClaimStatus();
@@ -77,6 +76,7 @@ public final class TestPayloadData {
         accepted.setEffects(claimEffectList);
         status.setAccepted(accepted);
         claimStatusChanged.setStatus(status);
+        PartyChange partyChange = new PartyChange();
         partyChange.setClaimStatusChanged(claimStatusChanged);
         return partyChange;
     }

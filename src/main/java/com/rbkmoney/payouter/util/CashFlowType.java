@@ -70,7 +70,8 @@ public enum CashFlowType {
     }
 
     public static CashFlowType getCashFlowType(FinalCashFlowPosting cashFlowPosting) {
-        return getCashFlowType(cashFlowPosting.getSource().getAccountType(), cashFlowPosting.getDestination().getAccountType());
+        return getCashFlowType(cashFlowPosting.getSource().getAccountType(),
+                cashFlowPosting.getDestination().getAccountType());
     }
 
     public static CashFlowType getCashFlowType(CashFlowAccount source, CashFlowAccount destination) {

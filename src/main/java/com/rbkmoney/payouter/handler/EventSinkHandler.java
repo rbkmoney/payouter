@@ -34,7 +34,9 @@ public class EventSinkHandler implements EventSinkSrv.Iface {
     @Override
     public long getLastEventID() throws TException {
         Long lastEventId = eventSinkService.getLastEventId();
-        if (lastEventId == null) throw new NoLastEvent();
+        if (lastEventId == null) {
+            throw new NoLastEvent();
+        }
 
         return lastEventId;
     }

@@ -53,7 +53,8 @@ public class ReportSendServiceImpl implements ReportSendService {
     @Override
     @Transactional
     public void sendReport(Report report) {
-        log.info("Try to send report, reportId='{}', subject='{}', mailFrom='{}', mailTo='{}'", report.getId(), report.getSubject(), mailFrom, mailTo);
+        log.info("Try to send report, reportId='{}', subject='{}', mailFrom='{}', mailTo='{}'",
+                report.getId(), report.getSubject(), mailFrom, mailTo);
         MessageMail messageMail = new MessageMail();
         messageMail.setMailBody(new MailBody(report.getDescription()));
         messageMail.setFromEmail(mailFrom);
@@ -74,11 +75,15 @@ public class ReportSendServiceImpl implements ReportSendService {
         try {
             reportDao.changeStatus(report.getId(), ReportStatus.SENT, LocalDateTime.now(ZoneOffset.UTC));
             dudoserClient.send(message);
-            log.info("Report have been sent, reportId='{}', subject='{}', mailFrom='{}', mailTo='{}'", report.getId(), report.getSubject(), mailFrom, mailTo);
+            log.info("Report have been sent, reportId='{}', subject='{}', mailFrom='{}', mailTo='{}'",
+                    report.getId(), report.getSubject(), mailFrom, mailTo);
         } catch (DaoException ex) {
-            throw new StorageException(String.format("Failed to change report status to 'READY', reportId='%d'", report.getId()));
+            throw new StorageException(
+                    String.format("Failed to change report status to 'READY', reportId='%d'", report.getId()));
         } catch (TException ex) {
-            throw new ReportException(String.format("Couldn't send report, reportId='%d', mailFrom='%s', mailTo='%s'", report.getId(), mailFrom, mailTo), ex);
+            throw new ReportException(
+                    String.format("Couldn't send report, reportId='%d', mailFrom='%s', mailTo='%s'",
+                            report.getId(), mailFrom, mailTo), ex);
         }
     }
 }

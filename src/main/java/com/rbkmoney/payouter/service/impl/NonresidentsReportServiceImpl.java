@@ -42,9 +42,9 @@ import static com.opencsv.CSVWriter.*;
 @Service
 public class NonresidentsReportServiceImpl implements ReportService {
 
-    public final static DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
-    protected final static String[] headerRow = {
+    private static final String[] headerRow = {
             "Id участника",
             "Id магазина",
             "Наименование юридического лица",
@@ -99,7 +99,11 @@ public class NonresidentsReportServiceImpl implements ReportService {
     private int calendarId;
 
     @Autowired
-    public NonresidentsReportServiceImpl(ReportDao reportDao, PaymentDao paymentDao, NonResidentsMailContentServiceImpl nonResidentsMailContentService, PayoutService payoutService, DominantService dominantService) {
+    public NonresidentsReportServiceImpl(ReportDao reportDao,
+                                         PaymentDao paymentDao,
+                                         NonResidentsMailContentServiceImpl nonResidentsMailContentService,
+                                         PayoutService payoutService,
+                                         DominantService dominantService) {
         this.reportDao = reportDao;
         this.paymentDao = paymentDao;
         this.nonResidentsMailContentService = nonResidentsMailContentService;
@@ -112,9 +116,10 @@ public class NonresidentsReportServiceImpl implements ReportService {
     public void createNewReportsJob() throws StorageException {
         log.info("Report job for nonresidents starting");
         try {
-            HolidayCalendar holidayCalendar = SchedulerUtil.buildCalendar(dominantService.getCalendar(new CalendarRef(calendarId)));
+            var holidayCalendar = SchedulerUtil.buildCalendar(dominantService.getCalendar(new CalendarRef(calendarId)));
             if (holidayCalendar.isTimeIncluded(Instant.now().toEpochMilli())) {
-                Map<Optional<Integer>, List<Payout>> groupedPayoutsMap = payoutService.getUnpaidPayoutsByAccountType(PayoutAccountType.international_payout_account)
+                var groupedPayoutsMap =
+                        payoutService.getUnpaidPayoutsByAccountType(PayoutAccountType.international_payout_account)
                         .stream().collect(Collectors.groupingBy(p -> Optional.ofNullable(p.getPaymentInstitutionId())));
 
                 groupedPayoutsMap.values().forEach(payouts -> {
@@ -156,14 +161,16 @@ public class NonresidentsReportServiceImpl implements ReportService {
         List<String> payoutIds = payouts.stream().map(p -> p.getPayoutId()).collect(Collectors.toList());
         Report report = new Report();
         report.setName(prefix + "_" + createdAtFormatted + extension);
-        report.setSubject(String.format("Выплаты для нерезидентов, сгенерированные %s (%d)", createdAtFormatted, payouts.get(0).getPaymentInstitutionId()));
+        report.setSubject(String.format("Выплаты для нерезидентов, сгенерированные %s (%d)",
+                createdAtFormatted, payouts.get(0).getPaymentInstitutionId()));
         report.setDescription(nonResidentsMailContentService.generateContent(payouts));
         report.setPayoutIds(String.join(",", payoutIds));
         report.setStatus(ReportStatus.READY);
         report.setContent(reportContent);
         report.setEncoding(encoding);
         report.setCreatedAt(createdAt);
-        log.info("Report for nonresidents have been successfully generated, report='{}', payouts='{}'", report, payouts);
+        log.info("Report for nonresidents have been successfully generated, " +
+                "report='{}', payouts='{}'", report, payouts);
 
         return save(report);
     }
@@ -204,10 +211,12 @@ public class NonresidentsReportServiceImpl implements ReportService {
         log.info("Trying to save report for nonresidents, payoutIds='{}'", report.getPayoutIds());
         try {
             long reportId = reportDao.save(report);
-            log.info("Report for nonresidents have been successfully saved, reportId='{}', payoutIds='{}'", reportId, report.getPayoutIds());
+            log.info("Report for nonresidents have been successfully saved, " +
+                    "reportId='{}', payoutIds='{}'", reportId, report.getPayoutIds());
             return reportId;
         } catch (DaoException ex) {
-            throw new StorageException(String.format("Failed to save report for nonresidents, payoutIds='%s'", report.getPayoutIds()), ex);
+            throw new StorageException(
+                    String.format("Failed to save report for nonresidents, payoutIds='%s'", report.getPayoutIds()), ex);
         }
     }
 }

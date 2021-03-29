@@ -51,20 +51,20 @@ public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
     }
 
     @Override
+    public List<Payout> get(List<String> payoutIds) throws DaoException {
+        Query query = getDslContext().selectFrom(PAYOUT)
+                .where(PAYOUT.PAYOUT_ID.in(payoutIds));
+
+        return fetch(query, payoutRowMapper);
+    }
+
+    @Override
     public Payout getExclusive(String payoutId) throws DaoException {
         Query query = getDslContext().selectFrom(PAYOUT)
                 .where(PAYOUT.PAYOUT_ID.eq(payoutId))
                 .forUpdate();
 
         return fetchOne(query, payoutRowMapper);
-    }
-
-    @Override
-    public List<Payout> get(List<String> payoutIds) throws DaoException {
-        Query query = getDslContext().selectFrom(PAYOUT)
-                .where(PAYOUT.PAYOUT_ID.in(payoutIds));
-
-        return fetch(query, payoutRowMapper);
     }
 
     @Override
@@ -97,7 +97,8 @@ public class PayoutDaoImpl extends AbstractGenericDao implements PayoutDao {
     }
 
     @Override
-    public long saveRangeData(String payoutId, String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime) throws DaoException {
+    public long saveRangeData(String payoutId, String partyId, String shopId,
+                              LocalDateTime fromTime, LocalDateTime toTime) throws DaoException {
         Query query = getDslContext()
                 .insertInto(PAYOUT_RANGE_DATA)
                 .set(PAYOUT_RANGE_DATA.PARTY_ID, partyId)

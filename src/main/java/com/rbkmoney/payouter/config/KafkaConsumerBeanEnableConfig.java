@@ -18,16 +18,16 @@ public class KafkaConsumerBeanEnableConfig {
 
     @Bean
     @ConditionalOnProperty(value = "kafka.topics.invoice.enabled", havingValue = "true")
-    public InvoicingKafkaListener paymentEventsKafkaListener(PaymentProcessingEventService paymentProcessingEventService,
+    public InvoicingKafkaListener paymentEventsKafkaListener(PaymentProcessingEventService paymentEventService,
                                                              MachineEventParser<EventPayload> parser) {
-        return new InvoicingKafkaListener(paymentProcessingEventService, parser);
+        return new InvoicingKafkaListener(paymentEventService, parser);
     }
 
     @Bean
     @ConditionalOnProperty(value = "kafka.topics.party-management.enabled", havingValue = "true")
-    public PartyManagementKafkaListener partyEventsKafkaListener(PartyManagementEventService partyManagementEventService,
+    public PartyManagementKafkaListener partyEventsKafkaListener(PartyManagementEventService partyEventService,
                                                                      MachineEventParser<PartyEventData> parser) {
-        return new PartyManagementKafkaListener(partyManagementEventService, parser);
+        return new PartyManagementKafkaListener(partyEventService, parser);
     }
 
 }

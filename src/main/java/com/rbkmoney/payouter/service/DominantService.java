@@ -9,13 +9,16 @@ public interface DominantService {
 
     BusinessSchedule getBusinessSchedule(BusinessScheduleRef scheduleRef, long domainRevision) throws NotFoundException;
 
-    BusinessSchedule getBusinessSchedule(BusinessScheduleRef scheduleRef, Reference revisionReference) throws NotFoundException;
+    BusinessSchedule getBusinessSchedule(BusinessScheduleRef scheduleRef, Reference revisionReference)
+            throws NotFoundException;
 
     PaymentInstitution getPaymentInstitution(PaymentInstitutionRef paymentInstitutionRef) throws NotFoundException;
 
-    PaymentInstitution getPaymentInstitution(PaymentInstitutionRef paymentInstitutionRef, long domainRevision) throws NotFoundException;
+    PaymentInstitution getPaymentInstitution(PaymentInstitutionRef paymentInstitutionRef, long domainRevision)
+            throws NotFoundException;
 
-    PaymentInstitution getPaymentInstitution(PaymentInstitutionRef paymentInstitutionRef, Reference revisionReference) throws NotFoundException;
+    PaymentInstitution getPaymentInstitution(PaymentInstitutionRef paymentInstitutionRef, Reference revisionReference)
+            throws NotFoundException;
 
     Calendar getCalendar(CalendarRef calendarRef) throws NotFoundException;
 

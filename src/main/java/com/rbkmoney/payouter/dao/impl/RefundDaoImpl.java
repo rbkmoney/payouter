@@ -56,7 +56,8 @@ public class RefundDaoImpl extends AbstractGenericDao implements RefundDao {
     }
 
     @Override
-    public void markAsSucceeded(long eventId, String invoiceId, String paymentId, String refundId, LocalDateTime succeededAt) throws DaoException {
+    public void markAsSucceeded(long eventId, String invoiceId, String paymentId, String refundId,
+                                LocalDateTime succeededAt) throws DaoException {
         Query query = getDslContext().update(REFUND)
                 .set(REFUND.STATUS, RefundStatus.SUCCEEDED)
                 .set(REFUND.SUCCEEDED_AT, succeededAt)

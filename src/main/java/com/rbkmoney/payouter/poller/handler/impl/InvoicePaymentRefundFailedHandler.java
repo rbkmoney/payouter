@@ -28,7 +28,8 @@ public class InvoicePaymentRefundFailedHandler implements PaymentProcessingHandl
     public InvoicePaymentRefundFailedHandler(RefundDao refundDao) {
         this.refundDao = refundDao;
         this.filter = new PathConditionFilter(new PathConditionRule(
-                "invoice_payment_change.payload.invoice_payment_refund_change.payload.invoice_payment_refund_status_changed.status.failed",
+                "invoice_payment_change.payload.invoice_payment_refund_change.payload" +
+                        ".invoice_payment_refund_status_changed.status.failed",
                 new IsNullCondition().not()));
     }
 

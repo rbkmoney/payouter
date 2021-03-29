@@ -131,7 +131,8 @@ public class ShopMetaDaoImpl extends AbstractGenericDao implements ShopMetaDao {
     }
 
     @Override
-    public void updateLastPayoutCreatedAt(String partyId, String shopId, LocalDateTime payoutCreatedAt) throws DaoException {
+    public void updateLastPayoutCreatedAt(String partyId, String shopId, LocalDateTime payoutCreatedAt)
+            throws DaoException {
         Query query = getDslContext()
                 .update(SHOP_META)
                 .set(SHOP_META.LAST_PAYOUT_CREATED_AT, payoutCreatedAt)

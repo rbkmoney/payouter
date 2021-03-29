@@ -145,13 +145,13 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
 
         Long fromId = payoutSearchRequest.isSetFromId() ? payoutSearchRequest.getFromId() : null;
         int size = payoutSearchRequest.isSetSize() ? payoutSearchRequest.getSize() : MAX_SIZE;
-        com.rbkmoney.payouter.domain.enums.PayoutStatus payoutStatus = Optional.ofNullable(payoutSearchCriteria.getStatus())
+        var payoutStatus = Optional.ofNullable(payoutSearchCriteria.getStatus())
                 .map(ps -> com.rbkmoney.payouter.domain.enums.PayoutStatus.valueOf(ps.name().toUpperCase()))
                 .orElse(null);
 
         Optional<TimeRange> timeRangeOptional = Optional.ofNullable(payoutSearchCriteria.getTimeRange());
-        LocalDateTime fromTime = timeRangeOptional.map(tr -> TypeUtil.stringToLocalDateTime(tr.getFromTime())).orElse(null);
-        LocalDateTime toTime = timeRangeOptional.map(tr -> TypeUtil.stringToLocalDateTime(tr.getToTime())).orElse(null);
+        var fromTime = timeRangeOptional.map(tr -> TypeUtil.stringToLocalDateTime(tr.getFromTime())).orElse(null);
+        var toTime = timeRangeOptional.map(tr -> TypeUtil.stringToLocalDateTime(tr.getToTime())).orElse(null);
 
         Optional<AmountRange> amountRangeOptional = Optional.ofNullable(payoutSearchCriteria.getAmountRange());
         Long minAmount = amountRangeOptional.map(AmountRange::getMin).orElse(null);
@@ -176,11 +176,10 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
                 size);
 
         long lastId = payouts.isEmpty() ? 0L : payouts.get(payouts.size() - 1).getId();
-        PayoutSearchResponse payoutSearchResponse = new PayoutSearchResponse(
-                payouts.stream()
-                        .map(payout -> DamselUtil.toDamselPayout(payout, shumwayService.getPostings(payout.getPayoutId()))
-                                .setSummary(DamselUtil.toDamselPayoutSummary(payoutSummaryService.get(payout.getPayoutId()))))
-                        .collect(toList()),
+        PayoutSearchResponse payoutSearchResponse = new PayoutSearchResponse(payouts.stream()
+                .map(payout -> DamselUtil.toDamselPayout(payout, shumwayService.getPostings(payout.getPayoutId()))
+                        .setSummary(DamselUtil.toDamselPayoutSummary(payoutSummaryService.get(payout.getPayoutId()))))
+                .collect(toList()),
                 lastId);
 
         log.info("GetPayoutsInfo count: {}", payouts.size());
@@ -210,7 +209,8 @@ public class PayoutManagementHandler implements PayoutManagementSrv.Iface {
                 .filter(p -> !p.getStatus().equals(com.rbkmoney.payouter.domain.enums.PayoutStatus.UNPAID))
                 .findFirst();
         if (wrongPayout.isPresent()) {
-            throw new InvalidRequest(List.of("Payout " + wrongPayout.get().getPayoutId() + " has wrong status; it should be UNPAID"));
+            throw new InvalidRequest(List.of("Payout " + wrongPayout.get().getPayoutId() +
+                    " has wrong status; it should be UNPAID"));
         }
 
         if (!payouts.isEmpty() && payouts.stream().allMatch(payout -> payout.getType() == PayoutType.bank_account)) {

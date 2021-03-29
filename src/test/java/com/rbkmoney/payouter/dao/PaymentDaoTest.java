@@ -32,7 +32,8 @@ public class PaymentDaoTest extends AbstractIntegrationTest {
 
     @Test
     public void testSaveOnlyNonNullValues() throws DaoException {
-        Payment payment = random(Payment.class, "payoutId", "externalFee", "capturedAt", "terminalId", "domainRevision");
+        Payment payment = random(Payment.class, "payoutId", "externalFee",
+                "capturedAt", "terminalId", "domainRevision");
         paymentDao.save(payment);
         assertEquals(payment, paymentDao.get(payment.getInvoiceId(), payment.getPaymentId()));
     }

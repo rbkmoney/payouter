@@ -12,7 +12,6 @@ import org.quartz.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.NestedRuntimeException;
 import org.springframework.stereotype.Component;
 
@@ -26,7 +25,7 @@ public class GeneratePayoutJob implements Job {
     public static final String PARTY_ID = "party_id";
     public static final String SHOP_ID = "shop_id";
     private final Logger log = LoggerFactory.getLogger(this.getClass());
-    private final WFlow wFlow = new WFlow();
+    private final WFlow flow = new WFlow();
 
     @Autowired
     private PayoutService payoutService;
@@ -45,7 +44,7 @@ public class GeneratePayoutJob implements Job {
         try {
             try {
                 LocalDateTime toTime = toLocalDateTime(trigger.getCurrentCronTime().toInstant());
-                String payoutId = wFlow.createServiceFork(
+                String payoutId = flow.createServiceFork(
                         () -> payoutService.createPayoutByRange(
                                 partyId,
                                 shopId,
@@ -54,20 +53,24 @@ public class GeneratePayoutJob implements Job {
                         )
                 ).call();
 
-                log.info("Payout for shop have been successfully created, payoutId='{}' partyId='{}', shopId='{}', trigger='{}', jobExecutionContext='{}'",
+                log.info("Payout for shop have been successfully created, payoutId='{}' partyId='{}', shopId='{}', " +
+                                "trigger='{}', jobExecutionContext='{}'",
                         payoutId, partyId, shopId, trigger, jobExecutionContext);
             } catch (InsufficientFundsException ex) {
-                log.info("Payout can't be created, reason='{}', partyId='{}', shopId='{}'", ex.getMessage(), partyId, shopId);
+                log.info("Payout can't be created, reason='{}', partyId='{}', shopId='{}'",
+                        ex.getMessage(), partyId, shopId);
             } catch (NotFoundException | InvalidStateException ex) {
                 log.warn("Failed to generate payout, partyId='{}', shopId='{}', trigger='{}', jobExecutionContext='{}'",
                         partyId, shopId, trigger, jobExecutionContext, ex);
             }
         } catch (StorageException | WRuntimeException | NestedRuntimeException ex) {
-            throw new JobExecutionException(String.format("Job execution failed (partyId='%s', shopId='%s', trigger='%s', jobExecutionContext='%s'), retry",
+            throw new JobExecutionException(String.format("Job execution failed (partyId='%s', shopId='%s', " +
+                            "trigger='%s', jobExecutionContext='%s'), retry",
                     partyId, shopId, trigger, jobExecutionContext), ex, true);
         } catch (Exception ex) {
             JobExecutionException jobExecutionException = new JobExecutionException(
-                    String.format("Job execution failed (partyId='%s', shopId='%s', trigger='%s', jobExecutionContext='%s'), stop triggers",
+                    String.format("Job execution failed (partyId='%s', shopId='%s', trigger='%s', " +
+                                    "jobExecutionContext='%s'), stop triggers",
                             partyId, shopId, trigger, jobExecutionContext), ex);
             jobExecutionException.setUnscheduleAllTriggers(true);
             throw jobExecutionException;

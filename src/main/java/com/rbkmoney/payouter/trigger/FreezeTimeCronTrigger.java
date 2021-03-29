@@ -97,8 +97,9 @@ public class FreezeTimeCronTrigger extends CronTriggerImpl {
     public void updateAfterMisfire(Calendar calendar) {
         int instr = getMisfireInstruction();
 
-        if (instr == Trigger.MISFIRE_INSTRUCTION_IGNORE_MISFIRE_POLICY)
+        if (instr == Trigger.MISFIRE_INSTRUCTION_IGNORE_MISFIRE_POLICY) {
             return;
+        }
 
         if (instr == MISFIRE_INSTRUCTION_SMART_POLICY) {
             instr = MISFIRE_INSTRUCTION_FIRE_ONCE_NOW;
@@ -122,7 +123,8 @@ public class FreezeTimeCronTrigger extends CronTriggerImpl {
     @Override
     public void updateWithNewCalendar(Calendar calendar, long misfireThreshold) {
         Instant now = Instant.now();
-        nextFireTime(computePrevFireTime(Optional.ofNullable(getPreviousFireTime()).orElse(new Date()), calendar), calendar);
+        Date cronTime = Optional.ofNullable(getPreviousFireTime()).orElse(new Date());
+        nextFireTime(computePrevFireTime(cronTime, calendar), calendar);
 
         if (getNextFireTime() != null && getNextFireTime().toInstant().isBefore(now)) {
             long diff = Duration.between(getNextFireTime().toInstant(), now).toMillis();
@@ -169,25 +171,29 @@ public class FreezeTimeCronTrigger extends CronTriggerImpl {
     private Date computePrevFireTime(Date cronTime, Calendar calendar) {
         return Optional.ofNullable(cronTime)
                 .map(time -> Date.from(
-                        computeBoundByDuration(cronTime.toInstant(), -1, computeBackwardFreezeTimeDuration(cronTime), calendar)
+                        computeBoundByDuration(cronTime.toInstant(),
+                                -1,
+                                computeBackwardFreezeTimeDuration(cronTime), calendar)
                 )).orElse(null);
     }
 
     private Date computeNextFireTime(Date cronTime, Calendar calendar) {
         return Optional.ofNullable(cronTime)
                 .map(time -> Date.from(
-                        computeBoundByDuration(cronTime.toInstant(), 1, computeForwardFreezeTimeDuration(cronTime), calendar)
+                        computeBoundByDuration(cronTime.toInstant(),
+                                1,
+                                computeForwardFreezeTimeDuration(cronTime), calendar)
                 )).orElse(null);
     }
 
     private Instant computeBoundByDuration(Instant cronTime, long amountToAdd, Duration duration, Calendar calendar) {
-        for (TemporalUnit temporalUnit : Arrays.asList(DAYS, HOURS, MINUTES, SECONDS)) {
+        for (TemporalUnit tempUnit : Arrays.asList(DAYS, HOURS, MINUTES, SECONDS)) {
             cronTime = skipExcludedTimes(cronTime, calendar);
-            long unitCount = duration.getSeconds() / temporalUnit.getDuration().getSeconds();
+            long unitCount = duration.getSeconds() / tempUnit.getDuration().getSeconds();
             for (int unit = 0; unit < unitCount; unit++) {
-                cronTime = skipExcludedTimes(cronTime.plus(amountToAdd, temporalUnit), amountToAdd, temporalUnit, calendar);
+                cronTime = skipExcludedTimes(cronTime.plus(amountToAdd, tempUnit), amountToAdd, tempUnit, calendar);
             }
-            duration = duration.minus(unitCount, temporalUnit);
+            duration = duration.minus(unitCount, tempUnit);
         }
         return cronTime;
     }

@@ -51,7 +51,8 @@ public class AdjustmentDaoImpl extends AbstractGenericDao implements AdjustmentD
     }
 
     @Override
-    public void markAsCaptured(long eventId, String invoiceId, String paymentId, String adjustmentId, LocalDateTime capturedAt) throws DaoException {
+    public void markAsCaptured(long eventId, String invoiceId, String paymentId, String adjustmentId,
+                               LocalDateTime capturedAt) throws DaoException {
         Query query = getDslContext().update(ADJUSTMENT)
                 .set(ADJUSTMENT.STATUS, AdjustmentStatus.CAPTURED)
                 .set(ADJUSTMENT.CAPTURED_AT, capturedAt)
@@ -62,7 +63,8 @@ public class AdjustmentDaoImpl extends AbstractGenericDao implements AdjustmentD
     }
 
     @Override
-    public void markAsCancelled(long eventId, String invoiceId, String paymentId, String adjustmentId) throws DaoException {
+    public void markAsCancelled(long eventId, String invoiceId, String paymentId, String adjustmentId)
+            throws DaoException {
         Query query = getDslContext().update(ADJUSTMENT)
                 .set(ADJUSTMENT.STATUS, AdjustmentStatus.CANCELLED)
                 .where(ADJUSTMENT.PAYMENT_ID.eq(paymentId)

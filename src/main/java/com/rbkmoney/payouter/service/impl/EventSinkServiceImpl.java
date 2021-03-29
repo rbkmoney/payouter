@@ -50,7 +50,8 @@ public class EventSinkServiceImpl implements EventSinkService {
         try {
             return payoutEventDao.getEvents(payoutId, after, limit);
         } catch (DaoException ex) {
-            throw new StorageException(String.format("Failed to get payout event range, payoutId=%s, after=%s, limit=%d", payoutId, after, limit), ex);
+            throw new StorageException(String.format("Failed to get payout event range, " +
+                    "payoutId=%s, after=%s, limit=%d", payoutId, after, limit), ex);
         }
     }
 
@@ -59,29 +60,32 @@ public class EventSinkServiceImpl implements EventSinkService {
         try {
             return payoutEventDao.getEvents(after, limit);
         } catch (DaoException ex) {
-            throw new StorageException(String.format("Failed to get payout event range, after=%s, limit=%d", after, limit), ex);
+            throw new StorageException(String.format("Failed to get payout event range, " +
+                    "after=%s, limit=%d", after, limit), ex);
         }
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public void saveEvent(PayoutEvent payoutEvent) throws StorageException {
-        log.debug("Trying to save payout event, payoutId='{}', eventType='{}'", payoutEvent.getPayoutId(), payoutEvent.getEventType());
+        log.debug("Trying to save payout event, payoutId='{}', eventType='{}'",
+                payoutEvent.getPayoutId(), payoutEvent.getEventType());
         try {
             payoutEvent.setEventCreatedAt(LocalDateTime.now(ZoneOffset.UTC));
             long eventId = payoutEventDao.saveEvent(payoutEvent);
             log.info("Payout event has been successfully saved, payoutId='{}', eventId='{}', eventType='{}'",
                     payoutEvent.getPayoutId(), eventId, payoutEvent.getEventType());
         } catch (DaoException ex) {
-            throw new StorageException(String.format("Failed to save payout event, payoutId=%s", payoutEvent.getPayoutId()), ex);
+            throw new StorageException(
+                    String.format("Failed to save payout event, payoutId=%s", payoutEvent.getPayoutId()), ex);
         }
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
-    public void savePayoutCreatedEvent(Payout payout, List<FinalCashFlowPosting> cashFlowPostings) throws StorageException {
+    public void savePayoutCreatedEvent(Payout payout, List<FinalCashFlowPosting> cashFlowPostings)
+            throws StorageException {
         PayoutEvent payoutEvent = DamselUtil.toPayoutEvent(payout, cashFlowPostings);
-
         saveEvent(payoutEvent);
     }
 
@@ -99,23 +103,23 @@ public class EventSinkServiceImpl implements EventSinkService {
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public void savePayoutCancelledEvent(String payoutId, String details) throws StorageException {
-        PayoutEvent payoutEvent = new PayoutEvent();
-        payoutEvent.setPayoutId(payoutId);
-        payoutEvent.setEventType(PayoutChange._Fields.PAYOUT_STATUS_CHANGED.getFieldName());
-        payoutEvent.setPayoutStatus(com.rbkmoney.damsel.payout_processing.PayoutStatus._Fields.CANCELLED.getFieldName());
-        payoutEvent.setPayoutStatusCancelDetails(details);
+        PayoutEvent event = new PayoutEvent();
+        event.setPayoutId(payoutId);
+        event.setEventType(PayoutChange._Fields.PAYOUT_STATUS_CHANGED.getFieldName());
+        event.setPayoutStatus(com.rbkmoney.damsel.payout_processing.PayoutStatus._Fields.CANCELLED.getFieldName());
+        event.setPayoutStatusCancelDetails(details);
 
-        saveEvent(payoutEvent);
+        saveEvent(event);
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public void savePayoutConfirmedEvent(String payoutId) throws StorageException {
-        PayoutEvent payoutEvent = new PayoutEvent();
-        payoutEvent.setPayoutId(payoutId);
-        payoutEvent.setEventType(PayoutChange._Fields.PAYOUT_STATUS_CHANGED.getFieldName());
-        payoutEvent.setPayoutStatus(com.rbkmoney.damsel.payout_processing.PayoutStatus._Fields.CONFIRMED.getFieldName());
+        PayoutEvent event = new PayoutEvent();
+        event.setPayoutId(payoutId);
+        event.setEventType(PayoutChange._Fields.PAYOUT_STATUS_CHANGED.getFieldName());
+        event.setPayoutStatus(com.rbkmoney.damsel.payout_processing.PayoutStatus._Fields.CONFIRMED.getFieldName());
 
-        saveEvent(payoutEvent);
+        saveEvent(event);
     }
 }

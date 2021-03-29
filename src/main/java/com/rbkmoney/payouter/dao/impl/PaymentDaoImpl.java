@@ -73,7 +73,8 @@ public class PaymentDaoImpl extends AbstractGenericDao implements PaymentDao {
     }
 
     @Override
-    public void markAsCaptured(Long eventId, String invoiceId, String paymentId, LocalDateTime capturedAt) throws DaoException {
+    public void markAsCaptured(Long eventId, String invoiceId, String paymentId, LocalDateTime capturedAt)
+            throws DaoException {
         Query query = getDslContext().update(PAYMENT)
                 .set(PAYMENT.EVENT_ID, eventId)
                 .set(PAYMENT.STATUS, PaymentStatus.CAPTURED)

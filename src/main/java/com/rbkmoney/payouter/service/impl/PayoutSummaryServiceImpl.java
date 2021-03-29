@@ -25,7 +25,8 @@ public class PayoutSummaryServiceImpl implements PayoutSummaryService {
         try {
             return payoutSummaryDao.get(payoutId);
         } catch (DaoException e) {
-            throw new StorageException(String.format("Failed to get cash flow description list for payoutId=%s", payoutId), e);
+            throw new StorageException(
+                    String.format("Failed to get cash flow description list for payoutId=%s", payoutId), e);
         }
     }
 
@@ -37,7 +38,8 @@ public class PayoutSummaryServiceImpl implements PayoutSummaryService {
             payoutSummaryDao.save(payoutSummaries);
             log.info("Payout summaries have been saved, payoutSummaries='{}'", payoutSummaries);
         } catch (DaoException ex) {
-            throw new StorageException(String.format("Failed to save payout summaries, payoutSummaries='%s'", payoutSummaries), ex);
+            throw new StorageException(
+                    String.format("Failed to save payout summaries, payoutSummaries='%s'", payoutSummaries), ex);
         }
     }
 }

@@ -70,7 +70,9 @@ public class PayoutEventDaoTest extends AbstractIntegrationTest {
                 }).collect(toList());
     }
 
-    private void checkPartOfEvents(List<PayoutEvent> expectedPayoutEvents, List<PayoutEvent> partOfActualPayoutEvents, int expectedCount) {
+    private void checkPartOfEvents(List<PayoutEvent> expectedPayoutEvents,
+                                   List<PayoutEvent> partOfActualPayoutEvents,
+                                   int expectedCount) {
         assertEquals(expectedCount, partOfActualPayoutEvents.size());
         assertTrue(expectedPayoutEvents.containsAll(partOfActualPayoutEvents));
     }

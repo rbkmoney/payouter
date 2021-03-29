@@ -30,7 +30,8 @@ public class InvoicePaymentAdjustmentCapturedHandler implements PaymentProcessin
 
     private final Filter filter = new PathConditionFilter(
             new PathConditionRule(
-                    "invoice_payment_change.payload.invoice_payment_adjustment_change.payload.invoice_payment_adjustment_status_changed.status.captured",
+                    "invoice_payment_change.payload.invoice_payment_adjustment_change.payload" +
+                            ".invoice_payment_adjustment_status_changed.status.captured",
                     new IsNullCondition().not()
             )
     );

@@ -45,7 +45,8 @@ public class InvoicePaymentRefundHandler implements PaymentProcessingHandler {
         this.refundDao = refundDao;
         this.paymentDao = paymentDao;
         this.filter = new PathConditionFilter(new PathConditionRule(
-                "invoice_payment_change.payload.invoice_payment_refund_change.payload.invoice_payment_refund_created",
+                "invoice_payment_change.payload.invoice_payment_refund_change.payload" +
+                        ".invoice_payment_refund_created",
                 new IsNullCondition().not()));
     }
 
@@ -70,7 +71,8 @@ public class InvoicePaymentRefundHandler implements PaymentProcessingHandler {
         Payment payment = paymentDao.get(invoiceId, paymentId);
 
         if (payment == null) {
-            throw new NotFoundException(String.format("Payment on refund not found, invoiceId='%s', paymentId='%s', refundId='%s'",
+            throw new NotFoundException(
+                    String.format("Payment on refund not found, invoiceId='%s', paymentId='%s', refundId='%s'",
                     invoiceId, paymentId, invoicePaymentRefund.getId()));
         }
 

@@ -7,8 +7,10 @@ import com.rbkmoney.payouter.exception.StorageException;
 
 public interface SchedulerService {
 
-    void registerJob(String partyId, String shopId, BusinessScheduleRef scheduleRef) throws NotFoundException, ScheduleProcessingException, StorageException;
+    void registerJob(String partyId, String shopId, BusinessScheduleRef scheduleRef)
+            throws NotFoundException, ScheduleProcessingException, StorageException;
 
-    void deregisterJob(String partyId, String shopId) throws NotFoundException, ScheduleProcessingException, StorageException;
+    void deregisterJob(String partyId, String shopId)
+            throws NotFoundException, ScheduleProcessingException, StorageException;
 
 }

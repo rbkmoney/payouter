@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
 @Service
 public class ResidentsReportServiceImpl implements ReportService {
 
-    public final static DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -76,7 +76,11 @@ public class ResidentsReportServiceImpl implements ReportService {
     private int calendarId;
 
     @Autowired
-    public ResidentsReportServiceImpl(ReportDao reportDao, ResidentsMailContentServiceImpl residentsMailContentService, PayoutService payoutService, FreeMarkerConfigurer freeMarkerConfigurer, DominantService dominantService) {
+    public ResidentsReportServiceImpl(ReportDao reportDao,
+                                      ResidentsMailContentServiceImpl residentsMailContentService,
+                                      PayoutService payoutService,
+                                      FreeMarkerConfigurer freeMarkerConfigurer,
+                                      DominantService dominantService) {
         this.reportDao = reportDao;
         this.residentsMailContentService = residentsMailContentService;
         this.payoutService = payoutService;
@@ -89,10 +93,11 @@ public class ResidentsReportServiceImpl implements ReportService {
     public void createNewReportsJob() throws StorageException {
         log.info("Report job for residents starting");
         try {
-            HolidayCalendar holidayCalendar = SchedulerUtil.buildCalendar(dominantService.getCalendar(new CalendarRef(calendarId)));
+            var holidayCalendar = SchedulerUtil.buildCalendar(dominantService.getCalendar(new CalendarRef(calendarId)));
             if (holidayCalendar.isTimeIncluded(Instant.now().toEpochMilli())) {
-                Map<Optional<Integer>, List<Payout>> groupedPayoutsMap = payoutService.getUnpaidPayoutsByAccountType(PayoutAccountType.russian_payout_account)
-                        .stream().collect(Collectors.groupingBy(p -> Optional.ofNullable(p.getPaymentInstitutionId())));
+                var groupedPayoutsMap =
+                        payoutService.getUnpaidPayoutsByAccountType(PayoutAccountType.russian_payout_account).stream()
+                                .collect(Collectors.groupingBy(p -> Optional.ofNullable(p.getPaymentInstitutionId())));
 
                 groupedPayoutsMap.values().forEach(payouts -> {
                     if (!payouts.isEmpty()) {
@@ -123,7 +128,6 @@ public class ResidentsReportServiceImpl implements ReportService {
             payoutsAttributes.add(payoutData);
         }
 
-        LocalDateTime createdAt = LocalDateTime.now(ZoneOffset.UTC);
         String createdAtFormatted = LocalDateTime.now(zoneId).format(dateTimeFormatter);
 
         final Map<String, Object> dataModel = new HashMap<>();
@@ -136,27 +140,33 @@ public class ResidentsReportServiceImpl implements ReportService {
         List<String> payoutIds = payouts.stream().map(p -> p.getPayoutId()).collect(Collectors.toList());
         Report report = new Report();
         report.setName(prefix + "_" + createdAtFormatted + extension);
-        report.setSubject(String.format("Выплаты для резидентов, сгенерированные %s (%d)", createdAtFormatted, payouts.get(0).getPaymentInstitutionId()));
+        report.setSubject(String.format("Выплаты для резидентов, сгенерированные %s (%d)",
+                createdAtFormatted, payouts.get(0).getPaymentInstitutionId()));
         report.setDescription(reportMailContent);
         report.setStatus(ReportStatus.READY);
         report.setContent(reportContent);
         report.setEncoding(encoding);
         report.setPayoutIds(String.join(",", payoutIds));
-        report.setCreatedAt(createdAt);
-        log.info("Report for residents have been successfully generated, reportSubject='{}', payoutsIds='{}'", report.getSubject(), report.getPayoutIds());
+        report.setCreatedAt(LocalDateTime.now(ZoneOffset.UTC));
+        log.info("Report for residents have been successfully generated, reportSubject='{}', payoutsIds='{}'",
+                report.getSubject(), report.getPayoutIds());
 
         return save(report);
     }
 
     @Override
     public long save(Report report) throws StorageException {
-        log.info("Trying to save report for residents, reportSubject='{}', payoutIds='{}'", report.getSubject(), report.getPayoutIds());
+        log.info("Trying to save report for residents, reportSubject='{}', payoutIds='{}'",
+                report.getSubject(), report.getPayoutIds());
         try {
             long reportId = reportDao.save(report);
-            log.info("Report for residents have been successfully saved, reportId='{}', reportSubject='{}', payoutIds='{}'", reportId, report.getSubject(), report.getPayoutIds());
+            log.info("Report for residents have been successfully saved, " +
+                    "reportId='{}', reportSubject='{}', payoutIds='{}'",
+                    reportId, report.getSubject(), report.getPayoutIds());
             return reportId;
         } catch (DaoException ex) {
-            throw new StorageException(String.format("Failed to save report for residents, payoutIds='%s'", report.getPayoutIds()), ex);
+            throw new StorageException(
+                    String.format("Failed to save report for residents, payoutIds='%s'", report.getPayoutIds()), ex);
         }
     }
 

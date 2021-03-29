@@ -17,7 +17,4 @@ public class InvalidStateException extends RuntimeException {
         super(cause);
     }
 
-    public InvalidStateException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
-    }
 }
