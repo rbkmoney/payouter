@@ -72,16 +72,17 @@ public class ShopMetaDaoTest extends AbstractIntegrationTest {
 
         shopMetaDao.save(partyId, shopId);
 
-        ShopMeta shopMeta = shopMetaDao.get(partyId, shopId);
-
+        final ShopMeta shopMeta = shopMetaDao.get(partyId, shopId);
         CountDownLatch latch = new CountDownLatch(1);
         new Thread(() ->
                 transactionTemplate.execute((status) -> {
-                    ShopMeta exclusive = shopMetaDao.getExclusive(partyId, shopId);
+                    final ShopMeta exclusive = shopMetaDao.getExclusive(partyId, shopId);
                     latch.countDown();
                     try {
                         Thread.sleep(sleep);
-                    } catch (InterruptedException e) {}
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                     shopMetaDao.save(partyId, shopId);
                     return exclusive;
                 })

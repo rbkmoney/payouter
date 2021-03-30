@@ -20,7 +20,8 @@ import org.springframework.stereotype.Component;
 public class InvoicePaymentChargebackRejectedHandler implements PaymentProcessingHandler {
 
     private static final Filter PREDICATE_FILTER = new PathConditionFilter(new PathConditionRule(
-            "invoice_payment_change.payload.invoice_payment_chargeback_change.payload.invoice_payment_chargeback_status_changed.status.rejected",
+            "invoice_payment_change.payload.invoice_payment_chargeback_change.payload" +
+                    ".invoice_payment_chargeback_status_changed.status.rejected",
             new IsNullCondition().not()));
 
     private final ChargebackDao chargebackDao;
@@ -33,8 +34,10 @@ public class InvoicePaymentChargebackRejectedHandler implements PaymentProcessin
         InvoicePaymentChange invoicePaymentChange = invoiceChange.getInvoicePaymentChange();
         String paymentId = invoicePaymentChange.getId();
 
-        InvoicePaymentChargebackChange invoicePaymentChargebackChange = invoicePaymentChange.getPayload()
+        InvoicePaymentChargebackChange invoicePaymentChargebackChange = invoicePaymentChange
+                .getPayload()
                 .getInvoicePaymentChargebackChange();
+
         String chargebackId = invoicePaymentChargebackChange.getId();
 
         chargebackDao.markAsRejected(eventId, invoiceId, paymentId, chargebackId);

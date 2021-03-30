@@ -39,7 +39,8 @@ public class InvoicePaymentAdjustmentHandler implements PaymentProcessingHandler
         this.adjustmentDao = adjustmentDao;
         this.paymentDao = paymentDao;
         this.filter = new PathConditionFilter(new PathConditionRule(
-                "invoice_payment_change.payload.invoice_payment_adjustment_change.payload.invoice_payment_adjustment_created",
+                "invoice_payment_change.payload.invoice_payment_adjustment_change.payload" +
+                        ".invoice_payment_adjustment_created",
                 new IsNullCondition().not()));
     }
 
@@ -64,7 +65,8 @@ public class InvoicePaymentAdjustmentHandler implements PaymentProcessingHandler
 
         Payment payment = paymentDao.get(invoiceId, paymentId);
         if (payment == null) {
-            throw new NotFoundException(String.format("Payment on adjustment not found, invoiceId='%s', paymentId='%s', adjustmentId='%s'",
+            throw new NotFoundException(
+                    String.format("Payment on adjustment not found, invoiceId='%s', paymentId='%s', adjustmentId='%s'",
                     invoiceId, paymentId, invoicePaymentAdjustment.getId()));
         }
 

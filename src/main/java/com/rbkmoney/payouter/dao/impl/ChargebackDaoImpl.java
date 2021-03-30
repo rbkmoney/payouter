@@ -49,7 +49,8 @@ public class ChargebackDaoImpl extends AbstractGenericDao implements ChargebackD
     }
 
     @Override
-    public void markAsAccepted(long eventId, String invoiceId, String paymentId, String chargebackId, LocalDateTime succeededAt) throws DaoException {
+    public void markAsAccepted(long eventId, String invoiceId, String paymentId, String chargebackId,
+                               LocalDateTime succeededAt) throws DaoException {
         Query query = getDslContext().update(CHARGEBACK)
                 .set(CHARGEBACK.STATUS, ChargebackStatus.SUCCEEDED)
                 .set(CHARGEBACK.SUCCEEDED_AT, succeededAt)
@@ -60,7 +61,8 @@ public class ChargebackDaoImpl extends AbstractGenericDao implements ChargebackD
     }
 
     @Override
-    public void markAsRejected(long eventId, String invoiceId, String paymentId, String chargebackId) throws DaoException {
+    public void markAsRejected(long eventId, String invoiceId, String paymentId, String chargebackId)
+            throws DaoException {
         Query query = getDslContext().update(CHARGEBACK)
                 .set(CHARGEBACK.STATUS, ChargebackStatus.REJECTED)
                 .where(
@@ -73,7 +75,8 @@ public class ChargebackDaoImpl extends AbstractGenericDao implements ChargebackD
     }
 
     @Override
-    public void markAsCancelled(long eventId, String invoiceId, String paymentId, String chargebackId) throws DaoException {
+    public void markAsCancelled(long eventId, String invoiceId, String paymentId, String chargebackId)
+            throws DaoException {
         Query query = getDslContext().update(CHARGEBACK)
                 .set(CHARGEBACK.STATUS, ChargebackStatus.CANCELLED)
                 .where(

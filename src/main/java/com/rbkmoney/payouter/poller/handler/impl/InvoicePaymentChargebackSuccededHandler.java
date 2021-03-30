@@ -23,7 +23,8 @@ import java.time.LocalDateTime;
 public class InvoicePaymentChargebackSuccededHandler implements PaymentProcessingHandler {
 
     private static final Filter PREDICATE_FILTER = new PathConditionFilter(new PathConditionRule(
-            "invoice_payment_change.payload.invoice_payment_chargeback_change.payload.invoice_payment_chargeback_status_changed.status.accepted",
+            "invoice_payment_change.payload.invoice_payment_chargeback_change.payload" +
+                    ".invoice_payment_chargeback_status_changed.status.accepted",
             new IsNullCondition().not()));
 
     private final ChargebackDao chargebackDao;
@@ -36,8 +37,10 @@ public class InvoicePaymentChargebackSuccededHandler implements PaymentProcessin
         InvoicePaymentChange invoicePaymentChange = invoiceChange.getInvoicePaymentChange();
         String paymentId = invoicePaymentChange.getId();
 
-        InvoicePaymentChargebackChange invoicePaymentChargebackChange = invoicePaymentChange.getPayload()
+        InvoicePaymentChargebackChange invoicePaymentChargebackChange = invoicePaymentChange
+                .getPayload()
                 .getInvoicePaymentChargebackChange();
+
         String chargebackId = invoicePaymentChargebackChange.getId();
 
         LocalDateTime succeededAt = TypeUtil.stringToLocalDateTime(event.getCreatedAt());

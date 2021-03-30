@@ -89,14 +89,15 @@ public class SchedulerUtil {
 
     private static FieldExpression buildDaysOfWeekOnExpression(Set<DayOfWeek> days, WeekDay firstDayOfWeek) {
         Set<Integer> dayValues = days.stream()
-                .map(dayValue -> ConstantsMapper.weekDayMapping(firstDayOfWeek, ConstantsMapper.QUARTZ_WEEK_DAY, dayValue.getValue()))
+                .map(dayValue -> ConstantsMapper.weekDayMapping(
+                        firstDayOfWeek, ConstantsMapper.QUARTZ_WEEK_DAY, dayValue.getValue()))
                 .collect(Collectors.toSet());
         return buildOnExpression(dayValues);
     }
 
     private static FieldExpression buildMonthOnExpression(Set<Month> months) {
         Set<Integer> monthValues = months.stream()
-                .map(monthValue -> monthValue.getValue())
+                .map(Month::getValue)
                 .collect(Collectors.toSet());
         return buildOnExpression(monthValues);
     }
@@ -156,7 +157,7 @@ public class SchedulerUtil {
             case ON:
                 return buildOnExpression(
                         scheduleFragment.getOn().stream()
-                                .map(byteValue -> byteValue.intValue())
+                                .map(Byte::intValue)
                                 .collect(Collectors.toSet())
                 );
             default:
@@ -178,9 +179,8 @@ public class SchedulerUtil {
         for (Map.Entry<Integer, Set<CalendarHoliday>> yearsHolidays : calendar.getHolidays().entrySet()) {
             int year = yearsHolidays.getKey();
             for (CalendarHoliday holiday : yearsHolidays.getValue()) {
-                Date excludedDate = Date.valueOf(LocalDate.of(year, holiday.getMonth().getValue(), (int) holiday.getDay()));
-
-                holidayCalendar.addExcludedDate(excludedDate);
+                LocalDate excludedDate = LocalDate.of(year, holiday.getMonth().getValue(), holiday.getDay());
+                holidayCalendar.addExcludedDate(Date.valueOf(excludedDate));
             }
         }
         return holidayCalendar;

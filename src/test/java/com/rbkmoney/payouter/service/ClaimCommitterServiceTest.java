@@ -49,31 +49,28 @@ public class ClaimCommitterServiceTest {
 
     @Test
     public void testAccept() throws TException {
-            claimCommitterService.accept(partyId, getTestScheduleModificationClaim(partyId, shopId, new BusinessScheduleRef().setId(1)));
-            claimCommitterService.accept(partyId, getTestScheduleModificationClaim(partyId, shopId, null));
+        claimCommitterService.accept(partyId, getTestClaim(partyId, shopId, new BusinessScheduleRef().setId(1)));
+        claimCommitterService.accept(partyId, getTestClaim(partyId, shopId, null));
 
-            verify(dominantService).getBusinessSchedule(eq(businessScheduleRef));
+        verify(dominantService).getBusinessSchedule(eq(businessScheduleRef));
     }
 
     @Test
     public void testCommit() throws TException {
-        claimCommitterService.commit(partyId, getTestScheduleModificationClaim(partyId, shopId, businessScheduleRef));
-        claimCommitterService.commit(partyId, getTestScheduleModificationClaim(partyId, shopId, null));
+        claimCommitterService.commit(partyId, getTestClaim(partyId, shopId, businessScheduleRef));
+        claimCommitterService.commit(partyId, getTestClaim(partyId, shopId, null));
 
         verify(schedulerService).registerJob(eq(partyId), eq(shopId), eq(businessScheduleRef));
         verify(schedulerService).deregisterJob(eq(partyId), eq(shopId));
     }
 
-    private static Claim getTestScheduleModificationClaim(String partyId, String shopId, BusinessScheduleRef businessScheduleRef) {
+    private static Claim getTestClaim(String partyId, String shopId, BusinessScheduleRef businessScheduleRef) {
         Claim claim = new Claim();
         claim.setId(1L);
         claim.setPartyId(partyId);
-        List<ModificationUnit> modificationUnitList = new ArrayList<>();
         ModificationUnit modificationUnit = new ModificationUnit();
         modificationUnit.setModificationId(1L);
-        Modification modification = new Modification();
 
-        PartyModification partyModification = new PartyModification();
         ShopModificationUnit shopModificationUnit = new ShopModificationUnit();
         shopModificationUnit.setId(shopId);
 
@@ -83,10 +80,13 @@ public class ClaimCommitterServiceTest {
         shopModification.setPayoutScheduleModification(scheduleModification);
         shopModificationUnit.setModification(shopModification);
 
+        PartyModification partyModification = new PartyModification();
         partyModification.setShopModification(shopModificationUnit);
+        Modification modification = new Modification();
         modification.setPartyModification(partyModification);
 
         modificationUnit.setModification(modification);
+        List<ModificationUnit> modificationUnitList = new ArrayList<>();
         modificationUnitList.add(modificationUnit);
         claim.setChangeset(modificationUnitList);
         return claim;

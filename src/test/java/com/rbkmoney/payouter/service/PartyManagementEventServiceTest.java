@@ -21,7 +21,7 @@ public class PartyManagementEventServiceTest extends AbstractKafkaTest {
     @MockBean
     private SchedulerService schedulerService;
 
-    private final static int TOTAL_SUCCESS_OPS = 5;
+    private static final int TOTAL_SUCCESS_OPS = 5;
 
     @Test
     public void processStockEventTest() {

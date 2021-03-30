@@ -17,13 +17,13 @@ public class InvoicingKafkaListener {
     private final PaymentProcessingEventService paymentProcessingEventService;
     private final MachineEventParser<EventPayload> parser;
 
-    @KafkaListener(topics = "${kafka.topics.invoice.id}", containerFactory = "kafkaListenerContainerFactory")
+    @KafkaListener(topics = "${kafka.topics.invoice.id}", containerFactory = "invContainerFactory")
     public void handle(SinkEvent sinkEvent, Acknowledgment ack) {
-        log.debug("Reading sinkEvent, sourceId: {}, sequenceId: {}", sinkEvent.getEvent().getSourceId(), sinkEvent.getEvent().getEventId());
-        MachineEvent machineEvent = sinkEvent.getEvent();
-        EventPayload payload = parser.parse(machineEvent);
+        MachineEvent event = sinkEvent.getEvent();
+        log.debug("Reading sinkEvent, sourceId: {}, sequenceId: {}", event.getSourceId(), event.getEventId());
+        EventPayload payload = parser.parse(event);
         if (payload.isSetInvoiceChanges()) {
-            paymentProcessingEventService.processEvent(machineEvent, payload);
+            paymentProcessingEventService.processEvent(event, payload);
         }
         ack.acknowledge();
     }

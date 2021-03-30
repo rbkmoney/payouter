@@ -54,11 +54,13 @@ public class SchedulerServiceImpl implements SchedulerService {
             }
 
             for (ShopMeta shopMeta : activeShops) {
-                JobKey jobKey = buildJobKey(shopMeta.getPartyId(), shopMeta.getShopId(), shopMeta.getCalendarId(), shopMeta.getSchedulerId());
+                JobKey jobKey = buildJobKey(shopMeta.getPartyId(), shopMeta.getShopId(),
+                        shopMeta.getCalendarId(), shopMeta.getSchedulerId());
                 List<? extends Trigger> triggers = scheduler.getTriggersOfJob(jobKey);
                 if (triggers.isEmpty() || !triggers.stream().allMatch(this::isTriggerOnNormalState)) {
                     if (scheduler.checkExists(jobKey)) {
-                        log.warn("Inactive job found, please check it manually. Job will be restored, shopMeta='{}'", shopMeta);
+                        log.warn("Inactive job found, please check it manually. " +
+                                "Job will be restored, shopMeta='{}'", shopMeta);
                     }
                     createJob(
                             shopMeta.getPartyId(),
@@ -79,31 +81,32 @@ public class SchedulerServiceImpl implements SchedulerService {
         try {
             return scheduler.getTriggerState(trigger.getKey()) == Trigger.TriggerState.NORMAL;
         } catch (SchedulerException ex) {
-            throw new ScheduleProcessingException(String.format("Failed to get trigger state, triggerKey='%s'", trigger.getKey()), ex);
+            throw new ScheduleProcessingException(
+                    String.format("Failed to get trigger state, triggerKey='%s'", trigger.getKey()), ex);
         }
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
-    public void registerJob(String partyId, String shopId, BusinessScheduleRef scheduleRef) throws NotFoundException, ScheduleProcessingException, StorageException {
+    public void registerJob(String partyId, String shopId, BusinessScheduleRef scheduleRef)
+            throws NotFoundException, ScheduleProcessingException, StorageException {
         try {
             log.info("Trying to register job, partyId='{}', shopId='{}', scheduleRef='{}'",
                     partyId, shopId, scheduleRef);
 
             Shop shop = partyManagementService.getShop(partyId, shopId);
-            PaymentInstitutionRef paymentInstitutionRef = partyManagementService.getPaymentInstitutionRef(partyId, shop.getContractId());
+            var paymentInstitutionRef = partyManagementService.getPaymentInstitutionRef(partyId, shop.getContractId());
             PaymentInstitution paymentInstitution = dominantService.getPaymentInstitution(paymentInstitutionRef);
             if (!paymentInstitution.isSetCalendar()) {
-                throw new NotFoundException(
-                        String.format("Calendar not found, partyId='%s', shopId='%s', contractId='%s'", partyId, shop.getId(), shop.getContractId())
-                );
+                throw new NotFoundException(String.format("Calendar not found, " +
+                        "partyId='%s', shopId='%s', contractId='%s'", partyId, shop.getId(), shop.getContractId()));
             }
             deregisterJob(partyId, shopId);
             CalendarRef calendarRef = paymentInstitution.getCalendar();
             shopMetaDao.save(partyId, shopId, calendarRef.getId(), scheduleRef.getId());
 
             createJob(partyId, shopId, calendarRef, scheduleRef);
-            log.info("Job have been successfully enabled, partyId='{}', shopId='{}', scheduleRef='{}', calendarRef='{}'",
+            log.info("Job have been successfully enabled, partyId='{}', shopId='{}', schedRef='{}', calendarRef='{}'",
                     partyId, shopId, scheduleRef, calendarRef);
         } catch (DaoException ex) {
             throw new StorageException(
@@ -113,8 +116,10 @@ public class SchedulerServiceImpl implements SchedulerService {
         }
     }
 
-    private void createJob(String partyId, String shopId, CalendarRef calendarRef, BusinessScheduleRef scheduleRef) throws NotFoundException, ScheduleProcessingException, StorageException {
-        log.info("Trying to create job, partyId='{}', shopId='{}', calendarRef='{}', scheduleRef='{}'", partyId, shopId, calendarRef, scheduleRef);
+    private void createJob(String partyId, String shopId, CalendarRef calendarRef, BusinessScheduleRef scheduleRef)
+            throws NotFoundException, ScheduleProcessingException, StorageException {
+        log.info("Trying to create job, partyId='{}', shopId='{}', calendarRef='{}', scheduleRef='{}'",
+                partyId, shopId, calendarRef, scheduleRef);
         try {
             BusinessSchedule schedule = dominantService.getBusinessSchedule(scheduleRef);
             Calendar calendar = dominantService.getCalendar(calendarRef);
@@ -136,7 +141,7 @@ public class SchedulerServiceImpl implements SchedulerService {
             for (int triggerId = 0; triggerId < cronList.size(); triggerId++) {
                 String cron = cronList.get(triggerId);
 
-                FreezeTimeCronScheduleBuilder freezeTimeCronScheduleBuilder = FreezeTimeCronScheduleBuilder.cronSchedule(cron)
+                FreezeTimeCronScheduleBuilder cronScheduleBuilder = FreezeTimeCronScheduleBuilder.cronSchedule(cron)
                         .inTimeZone(TimeZone.getTimeZone(calendar.getTimezone()));
 
                 if (schedule.isSetDelay() || schedule.isSetPolicy()) {
@@ -144,7 +149,7 @@ public class SchedulerServiceImpl implements SchedulerService {
                             .map(PayoutCompilationPolicy::getAssetsFreezeFor)
                             .orElse(schedule.getDelay());
 
-                    freezeTimeCronScheduleBuilder.withYears(timeSpan.getYears())
+                    cronScheduleBuilder.withYears(timeSpan.getYears())
                             .withMonths(timeSpan.getMonths())
                             .withDays(timeSpan.getDays())
                             .withHours(timeSpan.getHours())
@@ -152,20 +157,24 @@ public class SchedulerServiceImpl implements SchedulerService {
                             .withSeconds(timeSpan.getSeconds());
                 }
 
+                var triggerKey = buildTriggerKey(partyId, shopId, calendarRef.getId(), scheduleRef.getId(), triggerId);
                 Trigger trigger = TriggerBuilder.newTrigger()
-                        .withIdentity(buildTriggerKey(partyId, shopId, calendarRef.getId(), scheduleRef.getId(), triggerId))
+                        .withIdentity(triggerKey)
                         .withDescription(schedule.getDescription())
                         .forJob(jobDetail)
-                        .withSchedule(freezeTimeCronScheduleBuilder)
+                        .withSchedule(cronScheduleBuilder)
                         .modifiedByCalendar(calendarId)
                         .build();
                 triggers.add(trigger);
             }
             scheduler.scheduleJob(jobDetail, triggers, true);
-            log.info("Jobs have been successfully created or updated, partyId='{}', shopId='{}', calendarRef='{}', scheduleRef='{}', jobDetail='{}', triggers='{}'", partyId, shopId, calendarRef, scheduleRef, jobDetail, triggers);
+            log.info("Jobs have been successfully created or updated, " +
+                    "partyId='{}', shopId='{}', calendarRef='{}', scheduleRef='{}', jobDetail='{}', triggers='{}'",
+                    partyId, shopId, calendarRef, scheduleRef, jobDetail, triggers);
         } catch (DaoException ex) {
             throw new StorageException(
-                    String.format("failed to create job on storage, partyId='%s', shopId='%s', calendarRef='%s', scheduleRef='%s'",
+                    String.format("failed to create job on storage, " +
+                                    "partyId='%s', shopId='%s', calendarRef='%s', scheduleRef='%s'",
                             partyId, shopId, calendarRef, scheduleRef), ex);
         } catch (NotFoundException | SchedulerException ex) {
             throw new ScheduleProcessingException(
@@ -176,7 +185,8 @@ public class SchedulerServiceImpl implements SchedulerService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
-    public void deregisterJob(String partyId, String shopId) throws NotFoundException, ScheduleProcessingException, StorageException {
+    public void deregisterJob(String partyId, String shopId)
+            throws NotFoundException, ScheduleProcessingException, StorageException {
         try {
             ShopMeta shopMeta = shopMetaDao.get(partyId, shopId);
             if (shopMeta != null) {
@@ -190,18 +200,17 @@ public class SchedulerServiceImpl implements SchedulerService {
 
                     scheduler.unscheduleJobs(triggerKeys);
                     scheduler.deleteJob(jobKey);
-                    log.info("Job have been successfully disabled, partyId='{}', shopId='{}', scheduleId='{}', calendarId='{}'",
-                            partyId, shopId, shopMeta.getSchedulerId(), shopMeta.getCalendarId());
+                    log.info("Job have been successfully disabled, partyId='{}', shopId='{}', " +
+                            "scheduleId='{}', calendarId='{}'", partyId, shopId,
+                            shopMeta.getSchedulerId(), shopMeta.getCalendarId());
                 }
             }
         } catch (DaoException ex) {
             throw new StorageException(
-                    String.format("Failed to disable job on storage, partyId='%s', shopId='%s'",
-                            partyId, shopId), ex);
+                    String.format("Failed to disable job on storage, partyId='%s', shopId='%s'", partyId, shopId), ex);
         } catch (SchedulerException ex) {
             throw new ScheduleProcessingException(
-                    String.format("Failed to disable job, partyId='%s', shopId='%s'",
-                            partyId, shopId), ex);
+                    String.format("Failed to disable job, partyId='%s', shopId='%s'", partyId, shopId), ex);
         }
     }
 

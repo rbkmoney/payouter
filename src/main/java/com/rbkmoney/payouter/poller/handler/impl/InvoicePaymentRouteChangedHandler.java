@@ -52,7 +52,8 @@ public class InvoicePaymentRouteChangedHandler implements PaymentProcessingHandl
         payment.setTerminalId(paymentRoute.getTerminal().getId());
 
         paymentDao.save(payment);
-        log.info("Payment route have been saved, route='{}', invoiceId='{}', paymentId='{}'", paymentRoute, invoiceId, paymentId);
+        log.info("Payment route have been saved, route='{}', invoiceId='{}', paymentId='{}'",
+                paymentRoute, invoiceId, paymentId);
     }
 
     @Override

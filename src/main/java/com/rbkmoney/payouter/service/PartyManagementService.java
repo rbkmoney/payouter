@@ -33,21 +33,27 @@ public interface PartyManagementService {
 
     Contract getContract(String partyId, String contractId, Instant timestamp) throws NotFoundException;
 
-    Contract getContract(String partyId, String contractId, PartyRevisionParam partyRevisionParam) throws NotFoundException;
+    Contract getContract(String partyId, String contractId, PartyRevisionParam partyRevisionParam)
+            throws NotFoundException;
 
     PaymentInstitutionRef getPaymentInstitutionRef(String partyId, String contractId) throws NotFoundException;
 
-    PaymentInstitutionRef getPaymentInstitutionRef(String partyId, String contractId, long partyRevision) throws NotFoundException;
+    PaymentInstitutionRef getPaymentInstitutionRef(String partyId, String contractId, long partyRevision)
+            throws NotFoundException;
 
-    PaymentInstitutionRef getPaymentInstitutionRef(String partyId, String contractId, Instant timestamp) throws NotFoundException;
+    PaymentInstitutionRef getPaymentInstitutionRef(String partyId, String contractId, Instant timestamp)
+            throws NotFoundException;
 
-    PaymentInstitutionRef getPaymentInstitutionRef(String partyId, String contractId, PartyRevisionParam partyRevisionParam) throws NotFoundException;
+    PaymentInstitutionRef getPaymentInstitutionRef(String partyId, String contractId, PartyRevisionParam revisionParam)
+            throws NotFoundException;
 
     Value getMetaData(String partyId, String namespace) throws NotFoundException;
 
-    List<FinalCashFlowPosting> computePayoutCashFlow(String partyId, String shopId, String payoutToolId, Cash amount, Instant timestamp) throws NotFoundException;
+    List<FinalCashFlowPosting> computePayoutCashFlow(String partyId, String shopId, String payoutToolId,
+                                                     Cash amount, Instant timestamp) throws NotFoundException;
 
-    List<FinalCashFlowPosting> computePayoutCashFlow(String partyId, PayoutParams payoutParams) throws NotFoundException;
+    List<FinalCashFlowPosting> computePayoutCashFlow(String partyId, PayoutParams payoutParams)
+            throws NotFoundException;
 
     long getPartyRevision(String partyId) throws NotFoundException;
 

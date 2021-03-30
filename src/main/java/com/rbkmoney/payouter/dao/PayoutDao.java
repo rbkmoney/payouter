@@ -17,9 +17,9 @@ public interface PayoutDao extends GenericDao {
 
     Payout get(String payoutId) throws DaoException;
 
-    Payout getExclusive(String payoutId) throws DaoException;
-
     List<Payout> get(List<String> payoutIds) throws DaoException;
+
+    Payout getExclusive(String payoutId) throws DaoException;
 
     long save(Payout payout) throws DaoException;
 
@@ -27,7 +27,8 @@ public interface PayoutDao extends GenericDao {
 
     PayoutRangeData getRangeData(String payoutId) throws DaoException;
 
-    long saveRangeData(String payoutId, String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime) throws DaoException;
+    long saveRangeData(String payoutId, String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime)
+            throws DaoException;
 
     int includeUnpaid(String payoutId, String partyId, String shopId) throws DaoException;
 

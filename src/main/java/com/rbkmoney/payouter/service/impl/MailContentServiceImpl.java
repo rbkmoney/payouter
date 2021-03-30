@@ -21,25 +21,26 @@ import java.util.Map;
 
 public abstract class MailContentServiceImpl implements MailContentService {
 
-    public static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-    public static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+    private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
     protected final PayoutSummaryDao payoutSummaryDao;
     private final FreeMarkerConfigurer freeMarkerConfigurer;
 
     @Autowired
-    public MailContentServiceImpl(FreeMarkerConfigurer freeMarkerConfigurer,
-                                  PayoutSummaryDao payoutSummaryDao) {
+    public MailContentServiceImpl(
+            FreeMarkerConfigurer freeMarkerConfigurer,
+            PayoutSummaryDao payoutSummaryDao) {
         this.freeMarkerConfigurer = freeMarkerConfigurer;
         this.payoutSummaryDao = payoutSummaryDao;
     }
+
+    protected abstract Map<String, Object> buildReportData(List<Payout> payouts);
 
     @Override
     public String generateContent(List<Payout> payouts) {
         Map<String, Object> data = buildReportData(payouts);
         return processTemplate(data, getTemplateFileName());
     }
-
-    abstract protected Map<String, Object> buildReportData(List<Payout> payouts);
 
     protected String getFormattedDateDescription(LocalDateTime dateTime, ZoneId zoneId) {
         LocalDateTime localizedDate = dateTime.atZone(ZoneOffset.UTC).withZoneSameInstant(zoneId).toLocalDateTime();

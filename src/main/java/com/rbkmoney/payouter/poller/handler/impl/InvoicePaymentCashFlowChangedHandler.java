@@ -52,7 +52,7 @@ public class InvoicePaymentCashFlowChangedHandler implements PaymentProcessingHa
                     invoiceId, paymentId));
         }
 
-        List<FinalCashFlowPosting> finalCashFlow = invoicePaymentChange.getPayload().getInvoicePaymentCashFlowChanged().getCashFlow();
+        var finalCashFlow = invoicePaymentChange.getPayload().getInvoicePaymentCashFlowChanged().getCashFlow();
         Map<CashFlowType, Long> parsedCashFlow = DamselUtil.parseCashFlow(finalCashFlow);
         payment.setAmount(parsedCashFlow.getOrDefault(AMOUNT, 0L));
         payment.setFee(parsedCashFlow.getOrDefault(FEE, 0L));

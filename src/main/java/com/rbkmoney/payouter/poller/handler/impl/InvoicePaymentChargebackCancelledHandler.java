@@ -20,7 +20,8 @@ import org.springframework.stereotype.Component;
 public class InvoicePaymentChargebackCancelledHandler implements PaymentProcessingHandler {
 
     private static final Filter PREDICATE_FILTER = new PathConditionFilter(new PathConditionRule(
-            "invoice_payment_change.payload.invoice_payment_chargeback_change.payload.invoice_payment_chargeback_status_changed.status.cancelled",
+            "invoice_payment_change.payload.invoice_payment_chargeback_change.payload" +
+                    ".invoice_payment_chargeback_status_changed.status.cancelled",
             new IsNullCondition().not()));
 
     private final ChargebackDao chargebackDao;

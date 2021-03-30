@@ -17,7 +17,4 @@ public class InvalidChangesetException extends RuntimeException {
         super(cause);
     }
 
-    public InvalidChangesetException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
-    }
 }

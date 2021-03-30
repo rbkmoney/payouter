@@ -25,8 +25,8 @@ import java.util.stream.Collectors;
 
 public class DamselUtil {
 
-    private final static ObjectMapper objectMapper = new ObjectMapper();
-    private final static JsonProcessor jsonProcessor = new JsonProcessor();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final JsonProcessor JSON_PROCESSOR = new JsonProcessor();
 
     public static Long computeMerchantAmount(List<FinalCashFlowPosting> finalCashFlow) {
         long amountSource = computeAmount(finalCashFlow, FinalCashFlowPosting::getSource);
@@ -43,8 +43,8 @@ public class DamselUtil {
     }
 
     private static boolean isMerchantSettlement(CashFlowAccount cashFlowAccount) {
-        return cashFlowAccount.isSetMerchant() &&
-                cashFlowAccount.getMerchant() == MerchantCashFlowAccount.settlement;
+        return cashFlowAccount.isSetMerchant()
+                && cashFlowAccount.getMerchant() == MerchantCashFlowAccount.settlement;
     }
 
     public static Map<CashFlowType, Long> parseCashFlow(List<FinalCashFlowPosting> finalCashFlow) {
@@ -54,7 +54,7 @@ public class DamselUtil {
     }
 
     public static <T extends TBase> T jsonToTBase(JsonNode jsonNode, Class<T> type) throws IOException {
-        return jsonProcessor.process(jsonNode, new TBaseHandler<>(type));
+        return JSON_PROCESSOR.process(jsonNode, new TBaseHandler<>(type));
     }
 
     public static PayoutCreated toDamselPayoutCreated(PayoutEvent payoutEvent) {
@@ -151,8 +151,9 @@ public class DamselUtil {
         }
     }
 
-    public static com.rbkmoney.damsel.payout_processing.Payout toDamselPayout(Payout payout, List<FinalCashFlowPosting> cashFlowPostings) {
-        return toDamselPayout(toPayoutEvent(payout, cashFlowPostings));
+    public static com.rbkmoney.damsel.payout_processing.Payout toDamselPayout(Payout payout,
+                                                                              List<FinalCashFlowPosting> postings) {
+        return toDamselPayout(toPayoutEvent(payout, postings));
     }
 
     public static com.rbkmoney.damsel.payout_processing.Payout toDamselPayout(PayoutEvent payoutEvent) {
@@ -174,7 +175,7 @@ public class DamselUtil {
     public static List<FinalCashFlowPosting> toDamselPayoutFlow(PayoutEvent payoutEvent) {
         List<FinalCashFlowPosting> finalCashFlowPostings = new ArrayList<>();
         try {
-            for (JsonNode jsonNode : objectMapper.readTree(payoutEvent.getPayoutCashFlow())) {
+            for (JsonNode jsonNode : OBJECT_MAPPER.readTree(payoutEvent.getPayoutCashFlow())) {
                 FinalCashFlowPosting finalCashFlowPosting = jsonToTBase(jsonNode, FinalCashFlowPosting.class);
                 finalCashFlowPostings.add(finalCashFlowPosting);
             }
@@ -201,8 +202,8 @@ public class DamselUtil {
         legalAgreement.setLegalAgreementId(payoutEvent.getPayoutAccountLegalAgreementId());
         legalAgreement.setSignedAt(TypeUtil.temporalToString(payoutEvent.getPayoutAccountLegalAgreementSignedAt()));
 
-        PayoutAccount._Fields payoutAccountType = PayoutAccount._Fields.findByName(payoutEvent.getPayoutAccountType());
-        switch (payoutAccountType) {
+        PayoutAccount._Fields accountType = PayoutAccount._Fields.findByName(payoutEvent.getPayoutAccountType());
+        switch (accountType) {
             case RUSSIAN_PAYOUT_ACCOUNT:
                 return PayoutAccount.russian_payout_account(
                         new RussianPayoutAccount(
@@ -227,7 +228,7 @@ public class DamselUtil {
                         )
                 );
             default:
-                throw new NotFoundException(String.format("Payout account type not found, type = %s", payoutAccountType));
+                throw new NotFoundException(String.format("Payout account type not found, type = %s", accountType));
         }
     }
 
@@ -266,7 +267,8 @@ public class DamselUtil {
         correspondentBankDetails.setBic(payoutEvent.getPayoutInternationalCorrespondentAccountBankBic());
         correspondentBankDetails.setAddress(payoutEvent.getPayoutInternationalCorrespondentAccountBankAddress());
         correspondentBankDetails.setAbaRtn(payoutEvent.getPayoutInternationalCorrespondentAccountBankAbaRtn());
-        correspondentBankDetails.setCountry(TypeUtil.toEnumField(payoutEvent.getPayoutInternationalCorrespondentAccountBankCountryCode(), Residence.class));
+        correspondentBankDetails.setCountry(TypeUtil.toEnumField(
+                payoutEvent.getPayoutInternationalCorrespondentAccountBankCountryCode(), Residence.class));
         correspondentBankAccount.setBank(correspondentBankDetails);
         bankAccount.setCorrespondentAccount(correspondentBankAccount);
 
@@ -274,16 +276,17 @@ public class DamselUtil {
     }
 
     public static PayoutChange toDamselPayoutChange(PayoutEvent payoutEvent) {
-        PayoutChange._Fields payoutChangeType = PayoutChange._Fields.findByName(payoutEvent.getEventType());
-        switch (payoutChangeType) {
+        PayoutChange._Fields changeType = PayoutChange._Fields.findByName(payoutEvent.getEventType());
+        switch (changeType) {
             case PAYOUT_CREATED:
                 return PayoutChange.payout_created(
                         DamselUtil.toDamselPayoutCreated(payoutEvent)
                 );
             case PAYOUT_STATUS_CHANGED:
-                return PayoutChange.payout_status_changed(new PayoutStatusChanged(DamselUtil.toDamselPayoutStatus(payoutEvent)));
+                return PayoutChange.payout_status_changed(
+                        new PayoutStatusChanged(DamselUtil.toDamselPayoutStatus(payoutEvent)));
             default:
-                throw new NotFoundException(String.format("Payout event type not found, eventType = %s", payoutChangeType));
+                throw new NotFoundException(String.format("Payout event type not found, eventType = %s", changeType));
         }
     }
 

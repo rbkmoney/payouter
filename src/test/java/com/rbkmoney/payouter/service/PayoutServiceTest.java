@@ -91,7 +91,7 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
 
     PayoutManagementSrv.Iface client;
 
-    WFlow wFlow = new WFlow();
+    WFlow flow = new WFlow();
 
     String partyId = "owner_id";
 
@@ -125,8 +125,10 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
                     PayoutParams payoutParams = answer.getArgument(2);
                     return Arrays.asList(
                             new FinalCashFlowPosting(
-                                    new FinalCashFlowAccount(CashFlowAccount.merchant(MerchantCashFlowAccount.settlement), 12),
-                                    new FinalCashFlowAccount(CashFlowAccount.merchant(MerchantCashFlowAccount.payout), 13),
+                                    new FinalCashFlowAccount(
+                                            CashFlowAccount.merchant(MerchantCashFlowAccount.settlement), 12),
+                                    new FinalCashFlowAccount(
+                                            CashFlowAccount.merchant(MerchantCashFlowAccount.payout), 13),
                                     payoutParams.getAmount()
                             )
                     );
@@ -497,6 +499,7 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
             } catch (InvalidRequest e) {
                 assertTrue(e.getErrors().get(0).contains("Some of payouts not found: " + payoutIds));
             } catch (TException e) {
+                e.printStackTrace();
             }
         });
 
@@ -506,8 +509,10 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
             try {
                 client.generateReport(new HashSet<>(payoutIds));
             } catch (InvalidRequest e) {
-                assertTrue(e.getErrors().get(0).contains("Payout " + payoutId + " has wrong status; it should be UNPAID"));
+                assertTrue(e.getErrors().get(0).contains(
+                        "Payout " + payoutId + " has wrong status; it should be UNPAID"));
             } catch (TException e) {
+                e.printStackTrace();
             }
         });
     }
@@ -524,7 +529,9 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
 
         Event adjustmentCreated = adjustmentGenerator.createAdjustmentCreated();
         Event adjustmentStatusChanged = adjustmentGenerator.createAdjustmentStatusChanged();
-        MachineEvent machineEvent = new MachineEvent().setSourceId(invoiceId).setCreatedAt(adjustmentCreated.getCreatedAt());
+        MachineEvent machineEvent = new MachineEvent()
+                .setSourceId(invoiceId)
+                .setCreatedAt(adjustmentCreated.getCreatedAt());
 
         paymentProcessingEventService.processEvent(
                 machineEvent,
@@ -548,7 +555,9 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
 
         Event refundCreated = refundGenerator.createRefundCreated();
         Event refundCaptured = refundGenerator.createRefundCaptured();
-        MachineEvent machineEvent = new MachineEvent().setSourceId(invoiceId).setCreatedAt(refundCreated.getCreatedAt());
+        MachineEvent machineEvent = new MachineEvent()
+                .setSourceId(invoiceId)
+                .setCreatedAt(refundCreated.getCreatedAt());
 
         paymentProcessingEventService.processEvent(
                 machineEvent,
@@ -567,7 +576,9 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         Event chargebackCreated = TestData.createChargebackCreated();
         Event chargebackCaptured = TestData.createChargebackCaptured();
 
-        MachineEvent machineEvent = new MachineEvent().setSourceId(invoiceId).setCreatedAt(chargebackCreated.getCreatedAt());
+        MachineEvent machineEvent = new MachineEvent()
+                .setSourceId(invoiceId)
+                .setCreatedAt(chargebackCreated.getCreatedAt());
 
         paymentProcessingEventService.processEvent(
                 machineEvent,
@@ -593,7 +604,9 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         Event invoiceCreated = invoicePaymentGenerator.createInvoiceCreated();
         Event paymentStarted = invoicePaymentGenerator.createInvoicePaymentStarted();
         Event paymentCaptured = invoicePaymentGenerator.createPaymentStatusChanged();
-        MachineEvent machineEvent = new MachineEvent().setSourceId(invoiceId).setCreatedAt(invoiceCreated.getCreatedAt());
+        MachineEvent machineEvent = new MachineEvent()
+                .setSourceId(invoiceId)
+                .setCreatedAt(invoiceCreated.getCreatedAt());
 
         paymentProcessingEventService.processEvent(
                 machineEvent,
@@ -619,12 +632,12 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
     }
 
     private <T> T callService(Callable<T> callable) throws Exception {
-        return wFlow.createServiceFork(
+        return flow.createServiceFork(
                 () -> callable.call()).call();
     }
 
     private void runService(Runnable runnable) throws Exception {
-        wFlow.createServiceFork(
+        flow.createServiceFork(
                 () -> runnable.run()).run();
     }
 
@@ -633,17 +646,17 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
     }
 
     private Event buildScheduleEvent(String partyId, String shopId, BusinessScheduleRef payoutScheduleRef) {
-        ClaimStatusChanged claimStatusChanged = new ClaimStatusChanged();
-        ClaimAccepted claimAccepted = new ClaimAccepted();
-        ClaimEffect claimEffect = new ClaimEffect();
         ShopEffectUnit shopEffectUnit = new ShopEffectUnit();
         shopEffectUnit.setShopId(shopId);
 
         ScheduleChanged scheduleChanged = new ScheduleChanged();
         scheduleChanged.setSchedule(payoutScheduleRef);
         shopEffectUnit.setEffect(ShopEffect.payout_schedule_changed(scheduleChanged));
+        ClaimEffect claimEffect = new ClaimEffect();
         claimEffect.setShopEffect(shopEffectUnit);
+        ClaimAccepted claimAccepted = new ClaimAccepted();
         claimAccepted.setEffects(Arrays.asList(claimEffect));
+        ClaimStatusChanged claimStatusChanged = new ClaimStatusChanged();
         claimStatusChanged.setStatus(ClaimStatus.accepted(claimAccepted));
 
         return new Event(
@@ -750,7 +763,6 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
     }
 
     private Map<String, Contract> buildContracts(String contractId, String payoutToolId) {
-        Map<String, Contract> contracts = new HashMap<>();
         Contract contract = new Contract();
         contract.setId(contractId);
         contract.setContractorId(contractId);
@@ -768,12 +780,12 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
                         PayoutToolInfo.international_bank_account(internationalBankAccount)
                 )
         ));
+        Map<String, Contract> contracts = new HashMap<>();
         contracts.put(contractId, contract);
         return contracts;
     }
 
     private Map<String, Shop> buildShops(String shopId, String contractId, String payoutToolId) {
-        Map<String, Shop> shops = new HashMap<>();
         Shop shop = new Shop();
         shop.setLocation(ShopLocation.url("http://2ch.ru"));
         shop.setContractId(contractId);
@@ -786,6 +798,7 @@ public class PayoutServiceTest extends AbstractIntegrationTest {
         ));
         shop.setBlocking(Blocking.unblocked(new Unblocked()));
         shop.setPayoutToolId(payoutToolId);
+        Map<String, Shop> shops = new HashMap<>();
         shops.put(shopId, shop);
 
         return shops;

@@ -24,7 +24,9 @@ public class ChargebackDaoTest extends AbstractIntegrationTest {
         secChargeback.setId(null);
         chargebackDao.save(secChargeback);
 
-        assertEquals(chargeback, chargebackDao.get(chargeback.getInvoiceId(), chargeback.getPaymentId(), chargeback.getChargebackId()));
+        assertEquals(
+                chargeback,
+                chargebackDao.get(chargeback.getInvoiceId(), chargeback.getPaymentId(), chargeback.getChargebackId()));
     }
 
     @Test
@@ -32,7 +34,9 @@ public class ChargebackDaoTest extends AbstractIntegrationTest {
         Chargeback chargeback = random(Chargeback.class, "reason", "payoutId");
         chargeback.setReasonCategory(ChargebackCategory.fraud);
         chargebackDao.save(chargeback);
-        assertEquals(chargeback, chargebackDao.get(chargeback.getInvoiceId(), chargeback.getPaymentId(), chargeback.getChargebackId()));
+        assertEquals(
+                chargeback,
+                chargebackDao.get(chargeback.getInvoiceId(), chargeback.getPaymentId(), chargeback.getChargebackId()));
     }
 
 }

@@ -32,8 +32,7 @@ public class NonResidentsMailContentServiceImpl extends MailContentServiceImpl {
     public NonResidentsMailContentServiceImpl(
             FreeMarkerConfigurer freeMarkerConfigurer,
             PayoutSummaryDao payoutSummaryDao,
-            PayoutDao payoutDao
-    ) {
+            PayoutDao payoutDao) {
         super(freeMarkerConfigurer, payoutSummaryDao);
         this.payoutDao = payoutDao;
     }
@@ -52,21 +51,19 @@ public class NonResidentsMailContentServiceImpl extends MailContentServiceImpl {
             List<PayoutSummary> payoutSummaries = payoutSummaryDao.get(payout.getPayoutId());
             payoutSummaries.stream()
                     .filter(cfd -> cfd.getCashFlowType() == PayoutSummaryOperationType.payment)
-                    .findFirst().ifPresent(
-                    paymentSummary -> {
+                    .findFirst()
+                    .ifPresent(paymentSummary -> {
                         payoutDescription.put("payment_sum", FormatUtil.getFormattedAmount(paymentSummary.getAmount()));
                         payoutDescription.put("rbk_fee_sum", FormatUtil.getFormattedAmount(paymentSummary.getFee()));
                         payoutDescription.put("payment_count", paymentSummary.getCount());
-                    }
-            );
+                    });
             payoutSummaries.stream()
                     .filter(cfd -> cfd.getCashFlowType() == PayoutSummaryOperationType.refund)
-                    .findFirst().ifPresent(
-                    refundSummary -> {
+                    .findFirst()
+                    .ifPresent(refundSummary -> {
                         payoutDescription.put("refund_sum", FormatUtil.getFormattedAmount(refundSummary.getAmount()));
                         payoutDescription.put("refund_count", refundSummary.getCount());
-                    }
-            );
+                    });
             payoutDescription.put("fee_sum", FormatUtil.getFormattedAmount(payout.getFee()));
             return payoutDescription;
         }).collect(Collectors.toList());

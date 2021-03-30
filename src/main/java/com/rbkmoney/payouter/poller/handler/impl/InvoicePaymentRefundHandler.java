@@ -2,7 +2,10 @@ package com.rbkmoney.payouter.poller.handler.impl;
 
 import com.rbkmoney.damsel.domain.Cash;
 import com.rbkmoney.damsel.domain.InvoicePaymentRefund;
-import com.rbkmoney.damsel.payment_processing.*;
+import com.rbkmoney.damsel.payment_processing.InvoiceChange;
+import com.rbkmoney.damsel.payment_processing.InvoicePaymentChange;
+import com.rbkmoney.damsel.payment_processing.InvoicePaymentRefundChange;
+import com.rbkmoney.damsel.payment_processing.InvoicePaymentRefundCreated;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.geck.filter.Filter;
 import com.rbkmoney.geck.filter.PathConditionFilter;
@@ -15,7 +18,6 @@ import com.rbkmoney.payouter.domain.enums.RefundStatus;
 import com.rbkmoney.payouter.domain.tables.pojos.Payment;
 import com.rbkmoney.payouter.domain.tables.pojos.Refund;
 import com.rbkmoney.payouter.exception.NotFoundException;
-import com.rbkmoney.payouter.poller.handler.Handler;
 import com.rbkmoney.payouter.poller.handler.PaymentProcessingHandler;
 import com.rbkmoney.payouter.util.CashFlowType;
 import com.rbkmoney.payouter.util.DamselUtil;
@@ -45,7 +47,8 @@ public class InvoicePaymentRefundHandler implements PaymentProcessingHandler {
         this.refundDao = refundDao;
         this.paymentDao = paymentDao;
         this.filter = new PathConditionFilter(new PathConditionRule(
-                "invoice_payment_change.payload.invoice_payment_refund_change.payload.invoice_payment_refund_created",
+                "invoice_payment_change.payload.invoice_payment_refund_change.payload" +
+                        ".invoice_payment_refund_created",
                 new IsNullCondition().not()));
     }
 
@@ -57,9 +60,12 @@ public class InvoicePaymentRefundHandler implements PaymentProcessingHandler {
         InvoicePaymentChange invoicePaymentChange = invoiceChange.getInvoicePaymentChange();
         String paymentId = invoicePaymentChange.getId();
 
-        InvoicePaymentRefundChange invoicePaymentRefundChange = invoicePaymentChange.getPayload()
+        InvoicePaymentRefundChange invoicePaymentRefundChange = invoicePaymentChange
+                .getPayload()
                 .getInvoicePaymentRefundChange();
-        InvoicePaymentRefundCreated invoicePaymentRefundCreated = invoicePaymentRefundChange.getPayload()
+
+        InvoicePaymentRefundCreated invoicePaymentRefundCreated = invoicePaymentRefundChange
+                .getPayload()
                 .getInvoicePaymentRefundCreated();
 
         InvoicePaymentRefund invoicePaymentRefund = invoicePaymentRefundCreated.getRefund();
@@ -70,7 +76,8 @@ public class InvoicePaymentRefundHandler implements PaymentProcessingHandler {
         Payment payment = paymentDao.get(invoiceId, paymentId);
 
         if (payment == null) {
-            throw new NotFoundException(String.format("Payment on refund not found, invoiceId='%s', paymentId='%s', refundId='%s'",
+            throw new NotFoundException(
+                    String.format("Payment on refund not found, invoiceId='%s', paymentId='%s', refundId='%s'",
                     invoiceId, paymentId, invoicePaymentRefund.getId()));
         }
 

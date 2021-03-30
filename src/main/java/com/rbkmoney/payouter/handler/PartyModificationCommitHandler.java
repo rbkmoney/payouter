@@ -22,23 +22,27 @@ public class PartyModificationCommitHandler implements CommitHandler<ScheduleMod
 
     @Override
     public void accept(String partyId, String shopId, ScheduleModification scheduleModification) {
-        log.info("Trying to accept payout schedule modification, partyId='{}', scheduleModification='{}'", partyId, scheduleModification);
+        log.info("Trying to accept payout schedule modification, partyId='{}', scheduleModification='{}'",
+                partyId, scheduleModification);
         if (scheduleModification.isSetSchedule()) {
             BusinessScheduleRef schedule = scheduleModification.getSchedule();
             checkSchedule(schedule);
         }
-        log.info("Payout schedule modification have been accepted, partyId='{}', scheduleModification='{}'", partyId, scheduleModification);
+        log.info("Payout schedule modification have been accepted, partyId='{}', scheduleModification='{}'",
+                partyId, scheduleModification);
     }
 
     @Override
     public void commit(String partyId, String shopId, ScheduleModification scheduleModification) {
-        log.info("Trying to commit schedule modification, partyId='{}', scheduleModification='{}'", partyId, scheduleModification);
+        log.info("Trying to commit schedule modification, partyId='{}', scheduleModification='{}'",
+                partyId, scheduleModification);
         if (scheduleModification.isSetSchedule()) {
             schedulerService.registerJob(partyId, shopId, scheduleModification.getSchedule());
         } else {
             schedulerService.deregisterJob(partyId, shopId);
         }
-        log.info("Schedule modification have been committed, partyId='{}', scheduleModification='{}'", partyId, scheduleModification);
+        log.info("Schedule modification have been committed, partyId='{}', scheduleModification='{}'",
+                partyId, scheduleModification);
     }
 
     private void checkSchedule(BusinessScheduleRef schedule) {

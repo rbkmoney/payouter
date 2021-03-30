@@ -24,7 +24,8 @@ import org.springframework.stereotype.Component;
 public class InvoicePaymentChargebackBodyChangedHandler implements PaymentProcessingHandler {
 
     private static final Filter PREDICATE_FILTER = new PathConditionFilter(new PathConditionRule(
-            "invoice_payment_change.payload.invoice_payment_chargeback_change.payload.invoice_payment_chargeback_body_changed",
+            "invoice_payment_change.payload.invoice_payment_chargeback_change.payload" +
+                    ".invoice_payment_chargeback_body_changed",
             new IsNullCondition().not()));
 
     private final ChargebackDao chargebackDao;
@@ -45,7 +46,8 @@ public class InvoicePaymentChargebackBodyChangedHandler implements PaymentProces
 
         Chargeback chargeback = chargebackDao.get(invoiceId, paymentId, chargebackId);
         if (chargeback == null) {
-            throw new NotFoundException(String.format("Invoice chargeback not found, invoiceId='%s', paymentId='%s' chargebackId='%s'",
+            throw new NotFoundException(
+                    String.format("Invoice chargeback not found, invoiceId='%s', paymentId='%s' chargebackId='%s'",
                     invoiceId, paymentId, chargebackId));
         }
 

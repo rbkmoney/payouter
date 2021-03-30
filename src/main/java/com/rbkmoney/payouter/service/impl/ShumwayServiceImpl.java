@@ -51,7 +51,8 @@ public class ShumwayServiceImpl implements ShumwayService {
         try {
             cashFlowPostingDao.save(cashFlowPostings);
             Clock clock = hold(planId, toPostingBatch(batchId, newCashFlowPostings));
-            log.info("Payout has been held, payoutId='{}', cashFlowPostings='{}', clock='{}'", payoutId, newCashFlowPostings, clock);
+            log.info("Payout has been held, payoutId='{}', cashFlowPostings='{}', clock='{}'",
+                    payoutId, newCashFlowPostings, clock);
             return clock;
         } catch (Exception ex) {
             throw new AccounterException(String.format("Failed to hold payout, payoutId='%s'", payoutId), ex);
@@ -75,7 +76,8 @@ public class ShumwayServiceImpl implements ShumwayService {
         try {
             List<CashFlowPosting> cashFlowPostings = cashFlowPostingDao.getByPayoutId(payoutId);
             if (cashFlowPostings.isEmpty()) {
-                throw new NotFoundException(String.format("Cash flow posting for commit not found, payoutId='%s'", payoutId));
+                throw new NotFoundException(
+                        String.format("Cash flow posting for commit not found, payoutId='%s'", payoutId));
             }
 
             commit(toPlanId(payoutId), toPostingBatches(cashFlowPostings));
@@ -102,7 +104,8 @@ public class ShumwayServiceImpl implements ShumwayService {
         try {
             List<CashFlowPosting> cashFlowPostings = cashFlowPostingDao.getByPayoutId(payoutId);
             if (cashFlowPostings.isEmpty()) {
-                throw new NotFoundException(String.format("Cash flow posting for rollback not found, payoutId='%s'", payoutId));
+                throw new NotFoundException(
+                        String.format("Cash flow posting for rollback not found, payoutId='%s'", payoutId));
             }
 
             rollback(toPlanId(payoutId), toPostingBatches(cashFlowPostings));
@@ -114,7 +117,8 @@ public class ShumwayServiceImpl implements ShumwayService {
 
     public void rollback(String postingPlanId, List<PostingBatch> postingBatches) throws TException {
         try {
-            log.debug("Start rollback operation, postingPlanId='{}', postingBatches='{}'", postingPlanId, postingBatches);
+            log.debug("Start rollback operation, postingPlanId='{}', postingBatches='{}'",
+                    postingPlanId, postingBatches);
             retryTemplate.execute(
                     context -> shumwayClient.rollbackPlan(new PostingPlan(postingPlanId, postingBatches))
             );
@@ -129,7 +133,8 @@ public class ShumwayServiceImpl implements ShumwayService {
         try {
             List<CashFlowPosting> cashFlowPostings = cashFlowPostingDao.getByPayoutId(payoutId);
             if (cashFlowPostings.isEmpty()) {
-                throw new NotFoundException(String.format("Cash flow posting for revert not found, payoutId='%s'", payoutId));
+                throw new NotFoundException(
+                        String.format("Cash flow posting for revert not found, payoutId='%s'", payoutId));
             }
 
             doRevert(payoutId, cashFlowPostings);
@@ -143,15 +148,17 @@ public class ShumwayServiceImpl implements ShumwayService {
     public Balance getBalance(Long accountId, Clock clock, String payoutId) {
         String clockLog = clock.isSetLatest() ? "Latest" : Arrays.toString(clock.getVector().getState());
         try {
-            log.debug("Start getBalance operation, payoutId='{}', accountId='{}', clock='{}'", payoutId, accountId, clockLog);
+            log.debug("Start getBalance operation, payoutId='{}', accountId='{}', clock='{}'",
+                    payoutId, accountId, clockLog);
             return retryTemplate.execute(
                     context -> shumwayClient.getBalanceByID(accountId, clock)
             );
         } catch (Exception e) {
-            throw new AccounterException(String.format("Failed to getBalance, payoutId='%s', accountId='%s', clock='%s'", payoutId, accountId, clockLog), e);
-        }
-        finally {
-            log.debug("End getBalance operation, payoutId='{}', accountId='{}', clock='{}'", payoutId, accountId, clockLog);
+            throw new AccounterException(String.format("Failed to getBalance, " +
+                    "payoutId='%s', accountId='%s', clock='%s'", payoutId, accountId, clockLog), e);
+        } finally {
+            log.debug("End getBalance operation, payoutId='{}', accountId='{}', clock='{}'",
+                    payoutId, accountId, clockLog);
         }
     }
 
@@ -168,7 +175,7 @@ public class ShumwayServiceImpl implements ShumwayService {
     private void doRevert(String payoutId, List<CashFlowPosting> cashFlowPostings) throws Exception {
         String revertPlanId = toRevertPlanId(payoutId);
         List<CashFlowPosting> revertCashFlowPostings = cashFlowPostings.stream()
-                .map(cashFlowPosting -> toRevertCashFlowPosting(cashFlowPosting))
+                .map(this::toRevertCashFlowPosting)
                 .collect(Collectors.toList());
 
         try {
@@ -179,14 +186,17 @@ public class ShumwayServiceImpl implements ShumwayService {
         }
     }
 
-    private void processRollbackRevertWhenError(String revertPlanId, List<PostingBatch> postingBatches, Exception parent) throws Exception {
+    private void processRollbackRevertWhenError(String planId, List<PostingBatch> postingBatches, Exception parent)
+            throws Exception {
         try {
-            rollback(revertPlanId, postingBatches);
+            rollback(planId, postingBatches);
         } catch (Exception ex) {
             if (!(ex instanceof InvalidRequest)) {
-                log.error("Inconsistent state of postings in shumway, revertPlanId='{}', postingBatches='{}'", revertPlanId, postingBatches, ex);
+                log.error("Inconsistent state of postings in shumway, revertPlanId='{}', postingBatches='{}'",
+                        planId, postingBatches, ex);
             }
-            Exception rollbackEx = new RuntimeException(String.format("Failed to rollback postings from revert action, revertPlanId='%s', postingBatches='%s'", revertPlanId, postingBatches), ex);
+            var rollbackEx = new RuntimeException(String.format("Failed to rollback postings from revert action, " +
+                    "revertPlanId='%s', postingBatches='%s'", planId, postingBatches), ex);
             rollbackEx.addSuppressed(parent);
             throw rollbackEx;
         }
@@ -218,7 +228,7 @@ public class ShumwayServiceImpl implements ShumwayService {
         return new PostingBatch(
                 batchId,
                 postings.stream()
-                        .map(cashFlowPosting -> toPosting(cashFlowPosting))
+                        .map(this::toPosting)
                         .collect(Collectors.toList())
         );
     }
@@ -241,27 +251,27 @@ public class ShumwayServiceImpl implements ShumwayService {
     }
 
     private FinalCashFlowPosting toFinalCashFlowPosting(CashFlowPosting cashFlowPosting) {
-            FinalCashFlowPosting finalCashFlowPosting = new FinalCashFlowPosting();
-            finalCashFlowPosting.setSource(
-                    new FinalCashFlowAccount(toCashFlowAccount(cashFlowPosting.getFromAccountType()),
-                            cashFlowPosting.getFromAccountId())
-            );
-            finalCashFlowPosting.setDestination(
-                    new FinalCashFlowAccount(toCashFlowAccount(cashFlowPosting.getToAccountType()),
-                            cashFlowPosting.getToAccountId())
-            );
-            finalCashFlowPosting.setVolume(
-                    new Cash(
-                            cashFlowPosting.getAmount(),
-                            new CurrencyRef(cashFlowPosting.getCurrencyCode())
-                    )
-            );
-            finalCashFlowPosting.setDetails(cashFlowPosting.getDescription());
-            return finalCashFlowPosting;
+        FinalCashFlowPosting finalCashFlowPosting = new FinalCashFlowPosting();
+        finalCashFlowPosting.setSource(
+                new FinalCashFlowAccount(toCashFlowAccount(cashFlowPosting.getFromAccountType()),
+                        cashFlowPosting.getFromAccountId())
+        );
+        finalCashFlowPosting.setDestination(
+                new FinalCashFlowAccount(toCashFlowAccount(cashFlowPosting.getToAccountType()),
+                        cashFlowPosting.getToAccountId())
+        );
+        finalCashFlowPosting.setVolume(
+                new Cash(
+                        cashFlowPosting.getAmount(),
+                        new CurrencyRef(cashFlowPosting.getCurrencyCode())
+                )
+        );
+        finalCashFlowPosting.setDetails(cashFlowPosting.getDescription());
+        return finalCashFlowPosting;
     }
 
-    private List<CashFlowPosting> toCashFlowPostings(String payoutId, List<FinalCashFlowPosting> finalCashFlowPostings) {
-        return finalCashFlowPostings.stream()
+    private List<CashFlowPosting> toCashFlowPostings(String payoutId, List<FinalCashFlowPosting> cashFlowPostings) {
+        return cashFlowPostings.stream()
                 .map(finalCashFlowPosting -> {
                     CashFlowPosting cashFlowPosting = new CashFlowPosting();
                     FinalCashFlowAccount source = finalCashFlowPosting.getSource();

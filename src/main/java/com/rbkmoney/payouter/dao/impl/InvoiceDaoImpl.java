@@ -26,7 +26,8 @@ public class InvoiceDaoImpl extends AbstractGenericDao implements InvoiceDao {
     }
 
     @Override
-    public void save(String invoiceId, String partyId, String shopId, String contractId, Long partyRevision, LocalDateTime createdAt) throws DaoException {
+    public void save(String invoiceId, String partyId, String shopId, String contractId, Long partyRevision,
+                     LocalDateTime createdAt) throws DaoException {
         Query query = getDslContext().insertInto(INVOICE)
                 .set(INVOICE.ID, invoiceId)
                 .set(INVOICE.PARTY_ID, partyId)

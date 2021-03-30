@@ -11,7 +11,8 @@ public interface ChargebackDao extends GenericDao {
 
     Chargeback get(String invoiceId, String paymentId, String chargebackId) throws DaoException;
 
-    void markAsAccepted(long eventId, String invoiceId, String paymentId, String chargebackId, LocalDateTime succeededAt) throws DaoException;
+    void markAsAccepted(long eventId, String invoiceId, String paymentId, String chargebackId,
+                        LocalDateTime succeededAt) throws DaoException;
 
     void markAsRejected(long eventId, String invoiceId, String paymentId, String chargebackId) throws DaoException;
 

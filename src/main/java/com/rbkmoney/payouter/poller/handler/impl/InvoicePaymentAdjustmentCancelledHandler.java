@@ -27,7 +27,8 @@ public class InvoicePaymentAdjustmentCancelledHandler implements PaymentProcessi
 
     private final Filter filter = new PathConditionFilter(
             new PathConditionRule(
-                    "invoice_payment_change.payload.invoice_payment_adjustment_change.payload.invoice_payment_adjustment_status_changed.status.cancelled",
+                    "invoice_payment_change.payload.invoice_payment_adjustment_change.payload" +
+                            ".invoice_payment_adjustment_status_changed.status.cancelled",
                     new IsNullCondition().not())
     );
 

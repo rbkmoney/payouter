@@ -15,7 +15,7 @@ import java.util.Collections;
 @RequiredArgsConstructor
 public class ClaimCommitterService implements ClaimCommitterSrv.Iface {
 
-    private final CommitHandler<ScheduleModification> partyModificationCommitHandler;
+    private final CommitHandler<ScheduleModification> pmCommitHandler;
 
     @Override
     public void accept(String partyId, Claim receivedClaim) throws PartyNotFound, InvalidChangeset, TException {
@@ -29,7 +29,7 @@ public class ClaimCommitterService implements ClaimCommitterSrv.Iface {
                     ShopModification shopModification = shopModificationUnit.getModification();
                     if (shopModification.isSetPayoutScheduleModification()) {
                         try {
-                            partyModificationCommitHandler.accept(partyId, shopId, shopModification.getPayoutScheduleModification());
+                            pmCommitHandler.accept(partyId, shopId, shopModification.getPayoutScheduleModification());
                         } catch (InvalidChangesetException ex) {
                             throw new InvalidChangeset(ex.getMessage(), Collections.singletonList(modification));
                         }
@@ -50,7 +50,7 @@ public class ClaimCommitterService implements ClaimCommitterSrv.Iface {
                     String shopId = shopModificationUnit.getId();
                     ShopModification shopModification = shopModificationUnit.getModification();
                     if (shopModification.isSetPayoutScheduleModification()) {
-                        partyModificationCommitHandler.commit(partyId, shopId, shopModification.getPayoutScheduleModification());
+                        pmCommitHandler.commit(partyId, shopId, shopModification.getPayoutScheduleModification());
                     }
                 }
             }

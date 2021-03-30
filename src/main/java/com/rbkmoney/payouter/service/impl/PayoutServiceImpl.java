@@ -72,13 +72,14 @@ public class PayoutServiceImpl implements PayoutService {
         }
 
         String payoutId = generatePayoutId();
-        String payoutToolId = shop.getPayoutToolId();
-        String currencyCode = shop.getAccount().getCurrency().getSymbolicCode();
 
         includeUnpaid(payoutId, partyId, shopId, toTime);
         saveRangeData(payoutId, partyId, shopId, fromTime, toTime);
         long availableAmount = calculateAvailableAmount(payoutId);
         buildAndSavePayoutSummaryData(payoutId);
+
+        String payoutToolId = shop.getPayoutToolId();
+        String currencyCode = shop.getAccount().getCurrency().getSymbolicCode();
 
         return create(
                 payoutId,
@@ -120,32 +121,36 @@ public class PayoutServiceImpl implements PayoutService {
             String shopId,
             String payoutToolId,
             long amount,
-            String currencyCode,
+            String currCode,
             long partyRevision
     ) throws InsufficientFundsException, InvalidStateException, NotFoundException, StorageException {
         try {
-            ShopMeta shopMeta = shopMetaDao.getExclusive(partyId, shopId);
             if (amount <= 0) {
                 throw new InsufficientFundsException("Available amount must be greater than 0");
             }
 
-            Payout payout = buildAndValidatePayout(payoutId, partyId, shopId, payoutToolId, currencyCode, partyRevision);
+            Payout payout = buildAndValidatePayout(payoutId, partyId, shopId, payoutToolId, currCode, partyRevision);
             List<FinalCashFlowPosting> cashFlowPostings = partyManagementService.computePayoutCashFlow(
                     partyId,
                     shopId,
                     payoutToolId,
-                    new Cash(amount, new CurrencyRef(currencyCode)),
+                    new Cash(amount, new CurrencyRef(currCode)),
                     payout.getCreatedAt().toInstant(ZoneOffset.UTC)
             );
 
             Map<CashFlowType, Long> cashFlow = DamselUtil.parseCashFlow(cashFlowPostings);
-            payout.setAmount(cashFlow.getOrDefault(CashFlowType.PAYOUT_AMOUNT, 0L) - cashFlow.getOrDefault(CashFlowType.PAYOUT_FIXED_FEE, 0L));
-            payout.setFee(cashFlow.getOrDefault(CashFlowType.FEE, 0L) + cashFlow.getOrDefault(CashFlowType.PAYOUT_FIXED_FEE, 0L));
+            Long payoutAmount = cashFlow.getOrDefault(CashFlowType.PAYOUT_AMOUNT, 0L);
+            Long payoutFixedFee = cashFlow.getOrDefault(CashFlowType.PAYOUT_FIXED_FEE, 0L);
+            Long fee = cashFlow.getOrDefault(CashFlowType.FEE, 0L);
+            payout.setAmount(payoutAmount - payoutFixedFee);
+            payout.setFee(fee + payoutFixedFee);
             if (payout.getAmount() <= 0) {
                 throw new InsufficientFundsException(
-                        String.format("Negative amount in payout cash flow, amount='%d', fee='%d'", payout.getAmount(), payout.getFee())
+                        String.format("Negative amount in payout cash flow, amount='%d', fee='%d'",
+                                payout.getAmount(), payout.getFee())
                 );
             }
+            ShopMeta shopMeta = shopMetaDao.getExclusive(partyId, shopId);
             payoutDao.save(payout);
             eventSinkService.savePayoutCreatedEvent(payout, cashFlowPostings);
             shopMetaDao.updateLastPayoutCreatedAt(shopMeta.getPartyId(), shopMeta.getShopId(), payout.getCreatedAt());
@@ -154,7 +159,8 @@ public class PayoutServiceImpl implements PayoutService {
             Balance balance = shumwayService.getBalance(payout.getShopAcc(), clock, payoutId);
             if (balance == null || balance.getMinAvailableAmount() < 0) {
                 shumwayService.rollback(payoutId);
-                throw new InsufficientFundsException(String.format("Invalid available amount in shop account, balance='%s'", balance));
+                throw new InsufficientFundsException(
+                        String.format("Invalid available amount in shop account, balance='%s'", balance));
             }
 
             return payoutId;
@@ -175,7 +181,8 @@ public class PayoutServiceImpl implements PayoutService {
                 return;
             } else if (payout.getStatus() != PayoutStatus.UNPAID) {
                 throw new InvalidStateException(
-                        String.format("Invalid status for 'pay' action, payoutId='%s', currentStatus='%s'", payoutId, payout.getStatus())
+                        String.format("Invalid status for 'pay' action, payoutId='%s', currentStatus='%s'",
+                                payoutId, payout.getStatus())
                 );
             }
 
@@ -199,7 +206,8 @@ public class PayoutServiceImpl implements PayoutService {
                 return;
             } else if (payout.getStatus() != PayoutStatus.PAID) {
                 throw new InvalidStateException(
-                        String.format("Invalid status for 'confirm' action, payoutId='%s', currentStatus='%s'", payoutId, payout.getStatus())
+                        String.format("Invalid status for 'confirm' action, payoutId='%s', currentStatus='%s'",
+                                payoutId, payout.getStatus())
                 );
             }
 
@@ -208,7 +216,8 @@ public class PayoutServiceImpl implements PayoutService {
             shumwayService.commit(payoutId);
 
             if (payout.getType() == PayoutType.wallet) {
-                fistfulService.createDeposit(payoutId, payout.getWalletId(), payout.getAmount(), payout.getCurrencyCode());
+                fistfulService.createDeposit(payoutId, payout.getWalletId(),
+                        payout.getAmount(), payout.getCurrencyCode());
             }
             log.info("Payout have been confirmed, payoutId='{}'", payoutId);
         } catch (DaoException ex) {
@@ -240,12 +249,14 @@ public class PayoutServiceImpl implements PayoutService {
                     break;
                 case CONFIRMED:
                     if (payout.getType() == PayoutType.wallet) {
-                        throw new InvalidStateException(String.format("Unable to cancel confirmed payout to wallet, payoutId='%s'", payoutId));
+                        throw new InvalidStateException(String.format("Unable to cancel confirmed payout to wallet, " +
+                                "payoutId='%s'", payoutId));
                     }
                     shumwayService.revert(payoutId);
                     break;
                 default:
-                    throw new InvalidStateException(String.format("Invalid status for 'cancel' action, payoutId='%s', currentStatus='%s'", payoutId, payout.getStatus()));
+                    throw new InvalidStateException(String.format("Invalid status for 'cancel' action, " +
+                            "payoutId='%s', currentStatus='%s'", payoutId, payout.getStatus()));
             }
             log.info("Payout have been cancelled, payoutId='{}'", payoutId);
         } catch (DaoException ex) {
@@ -270,23 +281,28 @@ public class PayoutServiceImpl implements PayoutService {
             log.info("Unpaid payouts has been found, accountType='{}', payouts='{}'", accountType, payouts);
             return payouts;
         } catch (DaoException ex) {
-            throw new StorageException(String.format("Failed to get unpaid payouts by account type, accountType='%s'", accountType), ex);
+            throw new StorageException(
+                    String.format("Failed to get unpaid payouts by account type, accountType='%s'", accountType), ex);
         }
     }
 
     @Override
-    public void includeUnpaid(String payoutId, String partyId, String shopId, LocalDateTime toTime) throws StorageException {
-        log.info("Trying to include operations in payout, payoutId='{}', partyId='{}', shopId='{}', toTime='{}'", payoutId, partyId, shopId, toTime);
+    public void includeUnpaid(String payoutId, String partyId, String shopId, LocalDateTime toTime)
+            throws StorageException {
+        log.info("Trying to include operations in payout, " +
+                "payoutId='{}', partyId='{}', shopId='{}', toTime='{}'", payoutId, partyId, shopId, toTime);
         try {
             int paymentCount = paymentDao.includeUnpaid(payoutId, partyId, shopId, toTime);
             int refundCount = refundDao.includeUnpaid(payoutId, partyId, shopId);
             int adjustmentCount = adjustmentDao.includeUnpaid(payoutId, partyId, shopId, toTime);
             int payoutCount = payoutDao.includeUnpaid(payoutId, partyId, shopId);
             int chargebackCount = chargebackDao.includeUnpaid(payoutId, partyId, shopId);
-            log.info("Operations have been included in payout, payoutId='{}' (paymentCount='{}', refundCount='{}', adjustmentCount='{}', payoutCount='{}', chargebackCount='{}')",
+            log.info("Operations have been included in payout, payoutId='{}' (paymentCount='{}', refundCount='{}', " +
+                            "adjustmentCount='{}', payoutCount='{}', chargebackCount='{}')",
                     payoutId, paymentCount, refundCount, adjustmentCount, payoutCount, chargebackCount);
         } catch (DaoException ex) {
-            throw new StorageException(String.format("Failed to include operations in payout, payoutId='%s'", payoutId), ex);
+            throw new StorageException(
+                    String.format("Failed to include operations in payout, payoutId='%s'", payoutId), ex);
         }
     }
 
@@ -300,10 +316,12 @@ public class PayoutServiceImpl implements PayoutService {
             int adjustmentCount = adjustmentDao.excludeFromPayout(payoutId);
             int payoutCount = payoutDao.excludeFromPayout(payoutId);
             int chargebackCount = chargebackDao.excludeFromPayout(payoutId);
-            log.info("Operations have been excluded from payout, payoutId='{}' (paymentCount='{}', refundCount='{}', adjustmentCount='{}', payoutCount='{}', chargebackCount='{}')",
+            log.info("Operations have been excluded from payout, payoutId='{}' (paymentCount='{}', refundCount='{}', " +
+                            "adjustmentCount='{}', payoutCount='{}', chargebackCount='{}')",
                     payoutId, paymentCount, refundCount, adjustmentCount, payoutCount, chargebackCount);
         } catch (DaoException ex) {
-            throw new StorageException(String.format("Failed to exclude operations from payout, payoutId='%s'", payoutId), ex);
+            throw new StorageException(
+                    String.format("Failed to exclude operations from payout, payoutId='%s'", payoutId), ex);
         }
     }
 
@@ -332,10 +350,13 @@ public class PayoutServiceImpl implements PayoutService {
             Long fromId,
             int size
     ) throws StorageException {
-        return payoutDao.search(payoutStatus, fromTime, toTime, payoutIds, minAmount, maxAmount, currency, payoutType, fromId, size);
+        return payoutDao.search(payoutStatus, fromTime, toTime, payoutIds,
+                minAmount, maxAmount, currency, payoutType, fromId, size);
     }
 
-    private Payout buildAndValidatePayout(String payoutId, String partyId, String shopId, String payoutToolId, String currencyCode, long partyRevision) throws InvalidStateException, NotFoundException {
+    private Payout buildAndValidatePayout(String payoutId, String partyId, String shopId,
+                                          String payoutToolId, String currencyCode, long partyRevision)
+            throws InvalidStateException, NotFoundException {
         Party party = partyManagementService.getParty(partyId, partyRevision);
 
         Payout payout = new Payout();
@@ -369,7 +390,8 @@ public class PayoutServiceImpl implements PayoutService {
                                 .anyMatch(payoutToolValue -> payoutToolValue.getId().equals(payoutToolId))
                 )
                 .findFirst()
-                .orElseThrow(() -> new NotFoundException(String.format("Contract for payout tool not found, partyId='%s', payoutToolId='%s'", partyId, payoutToolId)));
+                .orElseThrow(() -> new NotFoundException(String.format("Contract for payout tool not found, " +
+                        "partyId='%s', payoutToolId='%s'", partyId, payoutToolId)));
 
         payout.setContractId(contract.getId());
         if (!contract.isSetLegalAgreement()) {
@@ -414,7 +436,8 @@ public class PayoutServiceImpl implements PayoutService {
         PayoutTool payoutTool = contract.getPayoutTools().stream()
                 .filter(payoutToolValue -> payoutToolValue.getId().equals(payoutToolId))
                 .findFirst()
-                .orElseThrow(() -> new NotFoundException(String.format("Payout tool not found, partyId='%s', payoutToolId='%s'", partyId, payoutToolId)));
+                .orElseThrow(() -> new NotFoundException(String.format("Payout tool not found, " +
+                        "partyId='%s', payoutToolId='%s'", partyId, payoutToolId)));
 
         if (!shopAccount.getCurrency().equals(payoutTool.getCurrency())) {
             throw new InvalidStateException("Shop account and payout tool currency must be equals");
@@ -488,12 +511,15 @@ public class PayoutServiceImpl implements PayoutService {
         return payout;
     }
 
-    private void saveRangeData(String payoutId, String partyId, String shopId, LocalDateTime fromTime, LocalDateTime toTime) throws StorageException {
+    private void saveRangeData(String payoutId, String partyId, String shopId,
+                               LocalDateTime fromTime, LocalDateTime toTime) throws StorageException {
         try {
-            log.info("Trying to save payout range data, payoutId='{}', partyId='{}', shopId='{}', fromTime='{}', toTime='{}'",
+            log.info("Trying to save payout range data, " +
+                            "payoutId='{}', partyId='{}', shopId='{}', fromTime='{}', toTime='{}'",
                     payoutId, partyId, shopId, fromTime, toTime);
             payoutDao.saveRangeData(payoutId, partyId, shopId, fromTime, toTime);
-            log.info("Payout range data have been saved, payoutId='{}', partyId='{}', shopId='{}', fromTime='{}', toTime='{}'",
+            log.info("Payout range data have been saved, " +
+                            "payoutId='{}', partyId='{}', shopId='{}', fromTime='{}', toTime='{}'",
                     payoutId, partyId, shopId, fromTime, toTime);
         } catch (DaoException ex) {
             throw new StorageException("Failed to save payout range data", ex);
@@ -502,9 +528,9 @@ public class PayoutServiceImpl implements PayoutService {
 
     private long calculateAvailableAmount(String payoutId) {
         try {
-            long availableAmount = payoutDao.getAvailableAmount(payoutId);
-            log.info("Available amount have been calculated, payoutId='{}', availableAmount={}", payoutId, availableAmount);
-            return availableAmount;
+            long amount = payoutDao.getAvailableAmount(payoutId);
+            log.info("Available amount have been calculated, payoutId='{}', availableAmount={}", payoutId, amount);
+            return amount;
         } catch (DaoException ex) {
             throw new StorageException(ex);
         }
@@ -546,7 +572,8 @@ public class PayoutServiceImpl implements PayoutService {
                     payout.getAccountLegalAgreementId(),
                     payout.getAccountLegalAgreementSignedAt().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
             );
-        } else if (payout.getAccountType() == PayoutAccountType.international_payout_account || payout.getType() == PayoutType.wallet) {
+        } else if (payout.getAccountType() == PayoutAccountType.international_payout_account
+                || payout.getType() == PayoutType.wallet) {
             return String.format("Agr %s %s, %s for accepted payments.",
                     payout.getAccountLegalAgreementId(),
                     payout.getAccountLegalAgreementSignedAt().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")),
@@ -554,7 +581,8 @@ public class PayoutServiceImpl implements PayoutService {
             );
         }
 
-        throw new IllegalArgumentException(String.format("Unknown type, type='%s', accountType='%s'", payout.getType(), payout.getAccountType()));
+        throw new IllegalArgumentException(String.format("Unknown type, type='%s', accountType='%s'",
+                payout.getType(), payout.getAccountType()));
     }
 
 }

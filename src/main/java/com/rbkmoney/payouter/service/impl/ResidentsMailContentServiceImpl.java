@@ -32,8 +32,7 @@ public class ResidentsMailContentServiceImpl extends MailContentServiceImpl {
     public ResidentsMailContentServiceImpl(
             FreeMarkerConfigurer freeMarkerConfigurer,
             PayoutSummaryDao payoutSummaryDao,
-            PayoutDao payoutDao
-    ) {
+            PayoutDao payoutDao) {
         super(freeMarkerConfigurer, payoutSummaryDao);
         this.payoutDao = payoutDao;
     }
@@ -41,35 +40,36 @@ public class ResidentsMailContentServiceImpl extends MailContentServiceImpl {
     @Override
     protected Map<String, Object> buildReportData(List<Payout> payouts) {
         Map<String, Object> data = new HashMap<>();
-        List<Payout> sortedPayouts = payouts.stream().sorted((p1, p2) -> p2.getAmount().compareTo(p1.getAmount())).collect(Collectors.toList());
+        List<Payout> sortedPayouts = payouts.stream()
+                .sorted((p1, p2) -> p2.getAmount().compareTo(p1.getAmount()))
+                .collect(Collectors.toList());
         List<Map<String, Object>> payoutDescriptionAttributes = sortedPayouts.stream().map(payout -> {
-            Map<String, Object> payoutDescription = new HashMap<>();
-            payoutDescription.put("name", payout.getDescription());
-            payoutDescription.put("sum", FormatUtil.getFormattedAmount(payout.getAmount()));
-            payoutDescription.put("curr", payout.getCurrencyCode());
-            payoutDescription.put("inn", payout.getInn());
+            Map<String, Object> payoutDesc = new HashMap<>();
+            payoutDesc.put("name", payout.getDescription());
+            payoutDesc.put("sum", FormatUtil.getFormattedAmount(payout.getAmount()));
+            payoutDesc.put("curr", payout.getCurrencyCode());
+            payoutDesc.put("inn", payout.getInn());
             PayoutRangeData payoutRangeData = payoutDao.getRangeData(payout.getPayoutId());
             LocalDateTime toTime = payoutRangeData != null ? payoutRangeData.getToTime() : payout.getCreatedAt();
-            payoutDescription.put("to_date_description", getFormattedDateDescription(toTime, zoneId));
+            payoutDesc.put("to_date_description", getFormattedDateDescription(toTime, zoneId));
             List<PayoutSummary> cashFlowDescriptions = payoutSummaryDao.get(payout.getPayoutId());
             cashFlowDescriptions.stream()
                     .filter(cfd -> cfd.getCashFlowType() == PayoutSummaryOperationType.payment)
-                    .findFirst().ifPresent(
-                    paymentSummary -> {
-                        payoutDescription.put("payment_sum", FormatUtil.getFormattedAmount(paymentSummary.getAmount()));
-                        payoutDescription.put("rbk_fee_sum", FormatUtil.getFormattedAmount(paymentSummary.getFee()));
-                        payoutDescription.put("payment_count", paymentSummary.getCount());
-                    }
-            );
+                    .findFirst()
+                    .ifPresent(paymentSummary -> {
+                        payoutDesc.put("payment_sum", FormatUtil.getFormattedAmount(paymentSummary.getAmount()));
+                        payoutDesc.put("rbk_fee_sum", FormatUtil.getFormattedAmount(paymentSummary.getFee()));
+                        payoutDesc.put("payment_count", paymentSummary.getCount());
+                    });
             cashFlowDescriptions.stream()
                     .filter(cfd -> cfd.getCashFlowType() == PayoutSummaryOperationType.refund)
-                    .findFirst().ifPresent(refundSummary -> {
-                        payoutDescription.put("refund_sum", FormatUtil.getFormattedAmount(refundSummary.getAmount()));
-                        payoutDescription.put("refund_count", refundSummary.getCount());
-                    }
-            );
-            payoutDescription.put("fee_sum", FormatUtil.getFormattedAmount(payout.getFee()));
-            return payoutDescription;
+                    .findFirst()
+                    .ifPresent(refundSummary -> {
+                        payoutDesc.put("refund_sum", FormatUtil.getFormattedAmount(refundSummary.getAmount()));
+                        payoutDesc.put("refund_count", refundSummary.getCount());
+                    });
+            payoutDesc.put("fee_sum", FormatUtil.getFormattedAmount(payout.getFee()));
+            return payoutDesc;
         }).collect(Collectors.toList());
         data.put("payoutDescriptions", payoutDescriptionAttributes);
         return data;
