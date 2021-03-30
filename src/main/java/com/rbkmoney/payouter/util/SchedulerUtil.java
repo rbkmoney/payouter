@@ -97,7 +97,7 @@ public class SchedulerUtil {
 
     private static FieldExpression buildMonthOnExpression(Set<Month> months) {
         Set<Integer> monthValues = months.stream()
-                .map(monthValue -> monthValue.getValue())
+                .map(Month::getValue)
                 .collect(Collectors.toSet());
         return buildOnExpression(monthValues);
     }
@@ -157,7 +157,7 @@ public class SchedulerUtil {
             case ON:
                 return buildOnExpression(
                         scheduleFragment.getOn().stream()
-                                .map(byteValue -> byteValue.intValue())
+                                .map(Byte::intValue)
                                 .collect(Collectors.toSet())
                 );
             default:
@@ -179,7 +179,7 @@ public class SchedulerUtil {
         for (Map.Entry<Integer, Set<CalendarHoliday>> yearsHolidays : calendar.getHolidays().entrySet()) {
             int year = yearsHolidays.getKey();
             for (CalendarHoliday holiday : yearsHolidays.getValue()) {
-                LocalDate excludedDate = LocalDate.of(year, holiday.getMonth().getValue(), (int) holiday.getDay());
+                LocalDate excludedDate = LocalDate.of(year, holiday.getMonth().getValue(), holiday.getDay());
                 holidayCalendar.addExcludedDate(Date.valueOf(excludedDate));
             }
         }

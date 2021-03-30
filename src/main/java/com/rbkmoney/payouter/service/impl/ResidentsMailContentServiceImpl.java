@@ -32,8 +32,7 @@ public class ResidentsMailContentServiceImpl extends MailContentServiceImpl {
     public ResidentsMailContentServiceImpl(
             FreeMarkerConfigurer freeMarkerConfigurer,
             PayoutSummaryDao payoutSummaryDao,
-            PayoutDao payoutDao
-    ) {
+            PayoutDao payoutDao) {
         super(freeMarkerConfigurer, payoutSummaryDao);
         this.payoutDao = payoutDao;
     }

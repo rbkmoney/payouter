@@ -175,7 +175,7 @@ public class ShumwayServiceImpl implements ShumwayService {
     private void doRevert(String payoutId, List<CashFlowPosting> cashFlowPostings) throws Exception {
         String revertPlanId = toRevertPlanId(payoutId);
         List<CashFlowPosting> revertCashFlowPostings = cashFlowPostings.stream()
-                .map(cashFlowPosting -> toRevertCashFlowPosting(cashFlowPosting))
+                .map(this::toRevertCashFlowPosting)
                 .collect(Collectors.toList());
 
         try {
@@ -228,7 +228,7 @@ public class ShumwayServiceImpl implements ShumwayService {
         return new PostingBatch(
                 batchId,
                 postings.stream()
-                        .map(cashFlowPosting -> toPosting(cashFlowPosting))
+                        .map(this::toPosting)
                         .collect(Collectors.toList())
         );
     }

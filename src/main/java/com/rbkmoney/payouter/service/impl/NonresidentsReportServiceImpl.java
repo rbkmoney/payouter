@@ -2,7 +2,6 @@ package com.rbkmoney.payouter.service.impl;
 
 import com.opencsv.CSVWriter;
 import com.rbkmoney.damsel.domain.CalendarRef;
-import com.rbkmoney.payouter.dao.PaymentDao;
 import com.rbkmoney.payouter.dao.ReportDao;
 import com.rbkmoney.payouter.domain.enums.PayoutAccountType;
 import com.rbkmoney.payouter.domain.enums.ReportStatus;
@@ -15,10 +14,9 @@ import com.rbkmoney.payouter.service.PayoutService;
 import com.rbkmoney.payouter.service.ReportService;
 import com.rbkmoney.payouter.util.FormatUtil;
 import com.rbkmoney.payouter.util.SchedulerUtil;
-import org.quartz.impl.calendar.HolidayCalendar;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -33,13 +31,13 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.opencsv.CSVWriter.*;
 
 @Service
+@RequiredArgsConstructor
 public class NonresidentsReportServiceImpl implements ReportService {
 
     private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
@@ -72,8 +70,6 @@ public class NonresidentsReportServiceImpl implements ReportService {
 
     private final ReportDao reportDao;
 
-    private final PaymentDao paymentDao;
-
     private final NonResidentsMailContentServiceImpl nonResidentsMailContentService;
 
     private final PayoutService payoutService;
@@ -97,19 +93,6 @@ public class NonresidentsReportServiceImpl implements ReportService {
 
     @Value("${report.nonresidents.calendar}")
     private int calendarId;
-
-    @Autowired
-    public NonresidentsReportServiceImpl(ReportDao reportDao,
-                                         PaymentDao paymentDao,
-                                         NonResidentsMailContentServiceImpl nonResidentsMailContentService,
-                                         PayoutService payoutService,
-                                         DominantService dominantService) {
-        this.reportDao = reportDao;
-        this.paymentDao = paymentDao;
-        this.nonResidentsMailContentService = nonResidentsMailContentService;
-        this.payoutService = payoutService;
-        this.dominantService = dominantService;
-    }
 
     @Scheduled(cron = "${report.nonresidents.cron}", zone = "${report.nonresidents.timezone}")
     @Transactional(propagation = Propagation.REQUIRED)
@@ -136,7 +119,7 @@ public class NonresidentsReportServiceImpl implements ReportService {
 
     @Override
     public long generateAndSave(List<Payout> payouts) {
-        log.info("Trying to generate and save report for nonresidents, payouts='%s'", payouts);
+        log.info("Trying to generate and save report for nonresidents, payouts='{}'", payouts);
         String reportContent;
         try (StringWriter stringWriter = new StringWriter()) {
             try (CSVWriter csvWriter = new CSVWriter(
@@ -158,10 +141,11 @@ public class NonresidentsReportServiceImpl implements ReportService {
         }
         LocalDateTime createdAt = LocalDateTime.now(ZoneOffset.UTC);
         String createdAtFormatted = LocalDateTime.now(zoneId).format(dateTimeFormatter);
-        List<String> payoutIds = payouts.stream().map(p -> p.getPayoutId()).collect(Collectors.toList());
+        List<String> payoutIds = payouts.stream().map(Payout::getPayoutId).collect(Collectors.toList());
         Report report = new Report();
         report.setName(prefix + "_" + createdAtFormatted + extension);
-        report.setSubject(String.format("Выплаты для нерезидентов, сгенерированные %s (%d)",
+        report.setSubject(
+                String.format("Выплаты для нерезидентов, сгенерированные %s (%d)",
                 createdAtFormatted, payouts.get(0).getPaymentInstitutionId()));
         report.setDescription(nonResidentsMailContentService.generateContent(payouts));
         report.setPayoutIds(String.join(",", payoutIds));
@@ -177,31 +161,29 @@ public class NonresidentsReportServiceImpl implements ReportService {
 
     private List<String[]> buildRows(List<Payout> payouts) {
         return payouts.stream().map(
-                payout -> {
-                    return new String[]{
-                            payout.getPartyId(),
-                            payout.getShopId(),
-                            payout.getAccountLegalName(),
-                            payout.getShopUrl(),
-                            payout.getCreatedAt().format(dateTimeFormatter),
-                            payout.getPayoutId(),
-                            payout.getCurrencyCode(),
-                            FormatUtil.getFormattedAmount(payout.getAmount() + payout.getFee()),
-                            FormatUtil.getFormattedAmount(payout.getFee()),
-                            FormatUtil.getFormattedAmount(payout.getAmount()),
-                            "",
-                            payout.getAccountRegisteredAddress(),
-                            payout.getAccountRegisteredNumber(),
-                            payout.getBankIban(),
-                            payout.getBankBic(),
-                            payout.getBankName(),
-                            payout.getBankAddress(),
-                            payout.getBankLocalCode(),
-                            payout.getAccountLegalAgreementId(),
-                            payout.getAccountLegalAgreementSignedAt().format(dateTimeFormatter),
-                            payout.getPurpose()
+                payout -> new String[]{
+                        payout.getPartyId(),
+                        payout.getShopId(),
+                        payout.getAccountLegalName(),
+                        payout.getShopUrl(),
+                        payout.getCreatedAt().format(dateTimeFormatter),
+                        payout.getPayoutId(),
+                        payout.getCurrencyCode(),
+                        FormatUtil.getFormattedAmount(payout.getAmount() + payout.getFee()),
+                        FormatUtil.getFormattedAmount(payout.getFee()),
+                        FormatUtil.getFormattedAmount(payout.getAmount()),
+                        "",
+                        payout.getAccountRegisteredAddress(),
+                        payout.getAccountRegisteredNumber(),
+                        payout.getBankIban(),
+                        payout.getBankBic(),
+                        payout.getBankName(),
+                        payout.getBankAddress(),
+                        payout.getBankLocalCode(),
+                        payout.getAccountLegalAgreementId(),
+                        payout.getAccountLegalAgreementSignedAt().format(dateTimeFormatter),
+                        payout.getPurpose()
 
-                    };
                 }
         ).collect(Collectors.toList());
     }

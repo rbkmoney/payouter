@@ -8,9 +8,9 @@ import com.rbkmoney.payouter.exception.DaoException;
 import com.rbkmoney.payouter.exception.ReportException;
 import com.rbkmoney.payouter.exception.StorageException;
 import com.rbkmoney.payouter.service.ReportSendService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.thrift.TException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -22,14 +22,14 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class ReportSendServiceImpl implements ReportSendService {
-
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private final ReportDao reportDao;
 
-    private MessageSenderSrv.Iface dudoserClient;
+    private final MessageSenderSrv.Iface dudoserClient;
 
     @Value("${service.dudoser.mail.from}")
     private String mailFrom;
@@ -37,17 +37,12 @@ public class ReportSendServiceImpl implements ReportSendService {
     @Value("#{'${service.dudoser.mail.to}'.split(',')}")
     private List<String> mailTo;
 
-    public ReportSendServiceImpl(ReportDao reportDao, MessageSenderSrv.Iface dudoserClient) {
-        this.reportDao = reportDao;
-        this.dudoserClient = dudoserClient;
-    }
-
     @Override
     @Transactional
     @Scheduled(fixedDelay = 5000)
     public void sendUnsentReports() {
         List<Report> reports = reportDao.getForSend();
-        reports.forEach(report -> sendReport(report));
+        reports.forEach(this::sendReport);
     }
 
     @Override

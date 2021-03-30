@@ -34,8 +34,10 @@ public class InvoicePaymentChargebackRejectedHandler implements PaymentProcessin
         InvoicePaymentChange invoicePaymentChange = invoiceChange.getInvoicePaymentChange();
         String paymentId = invoicePaymentChange.getId();
 
-        InvoicePaymentChargebackChange invoicePaymentChargebackChange = invoicePaymentChange.getPayload()
+        InvoicePaymentChargebackChange invoicePaymentChargebackChange = invoicePaymentChange
+                .getPayload()
                 .getInvoicePaymentChargebackChange();
+
         String chargebackId = invoicePaymentChargebackChange.getId();
 
         chargebackDao.markAsRejected(eventId, invoiceId, paymentId, chargebackId);

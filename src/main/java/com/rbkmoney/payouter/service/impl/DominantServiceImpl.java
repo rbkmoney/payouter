@@ -65,8 +65,9 @@ public class DominantServiceImpl implements DominantService {
     }
 
     @Override
-    public PaymentInstitution getPaymentInstitution(PaymentInstitutionRef paymentInstitutionRef,
-                                                    Reference revisionReference) throws NotFoundException {
+    public PaymentInstitution getPaymentInstitution(
+            PaymentInstitutionRef paymentInstitutionRef,
+            Reference revisionReference) throws NotFoundException {
         log.info("Trying to get payment institution, paymentInstitutionRef='{}', revisionReference='{}'",
                 paymentInstitutionRef, revisionReference);
         try {

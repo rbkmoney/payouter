@@ -27,8 +27,9 @@ public abstract class MailContentServiceImpl implements MailContentService {
     private final FreeMarkerConfigurer freeMarkerConfigurer;
 
     @Autowired
-    public MailContentServiceImpl(FreeMarkerConfigurer freeMarkerConfigurer,
-                                  PayoutSummaryDao payoutSummaryDao) {
+    public MailContentServiceImpl(
+            FreeMarkerConfigurer freeMarkerConfigurer,
+            PayoutSummaryDao payoutSummaryDao) {
         this.freeMarkerConfigurer = freeMarkerConfigurer;
         this.payoutSummaryDao = payoutSummaryDao;
     }

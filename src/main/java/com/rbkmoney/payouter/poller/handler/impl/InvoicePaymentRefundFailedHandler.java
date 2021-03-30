@@ -41,7 +41,8 @@ public class InvoicePaymentRefundFailedHandler implements PaymentProcessingHandl
         InvoicePaymentChange invoicePaymentChange = invoiceChange.getInvoicePaymentChange();
         String paymentId = invoiceChange.getInvoicePaymentChange().getId();
 
-        InvoicePaymentRefundChange invoicePaymentRefundChange = invoicePaymentChange.getPayload()
+        InvoicePaymentRefundChange invoicePaymentRefundChange = invoicePaymentChange
+                .getPayload()
                 .getInvoicePaymentRefundChange();
 
         String refundId = invoicePaymentRefundChange.getId();

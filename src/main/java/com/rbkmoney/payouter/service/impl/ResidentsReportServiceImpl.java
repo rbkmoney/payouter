@@ -16,10 +16,8 @@ import com.rbkmoney.payouter.util.SchedulerUtil;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
-import org.quartz.impl.calendar.HolidayCalendar;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -37,12 +35,12 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class ResidentsReportServiceImpl implements ReportService {
 
     private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private final ReportDao reportDao;
 
@@ -74,19 +72,6 @@ public class ResidentsReportServiceImpl implements ReportService {
 
     @Value("${report.residents.calendar}")
     private int calendarId;
-
-    @Autowired
-    public ResidentsReportServiceImpl(ReportDao reportDao,
-                                      ResidentsMailContentServiceImpl residentsMailContentService,
-                                      PayoutService payoutService,
-                                      FreeMarkerConfigurer freeMarkerConfigurer,
-                                      DominantService dominantService) {
-        this.reportDao = reportDao;
-        this.residentsMailContentService = residentsMailContentService;
-        this.payoutService = payoutService;
-        this.freeMarkerConfigurer = freeMarkerConfigurer;
-        this.dominantService = dominantService;
-    }
 
     @Scheduled(cron = "${report.residents.cron}", zone = "${report.residents.timezone}")
     @Transactional(propagation = Propagation.REQUIRED)
@@ -137,7 +122,7 @@ public class ResidentsReportServiceImpl implements ReportService {
         final String reportContent = processTemplate(dataModel, reportTemplateFileName);
         final String reportMailContent = residentsMailContentService.generateContent(payouts);
 
-        List<String> payoutIds = payouts.stream().map(p -> p.getPayoutId()).collect(Collectors.toList());
+        List<String> payoutIds = payouts.stream().map(Payout::getPayoutId).collect(Collectors.toList());
         Report report = new Report();
         report.setName(prefix + "_" + createdAtFormatted + extension);
         report.setSubject(String.format("Выплаты для резидентов, сгенерированные %s (%d)",

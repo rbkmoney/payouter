@@ -37,8 +37,10 @@ public class InvoicePaymentChargebackSuccededHandler implements PaymentProcessin
         InvoicePaymentChange invoicePaymentChange = invoiceChange.getInvoicePaymentChange();
         String paymentId = invoicePaymentChange.getId();
 
-        InvoicePaymentChargebackChange invoicePaymentChargebackChange = invoicePaymentChange.getPayload()
+        InvoicePaymentChargebackChange invoicePaymentChargebackChange = invoicePaymentChange
+                .getPayload()
                 .getInvoicePaymentChargebackChange();
+
         String chargebackId = invoicePaymentChargebackChange.getId();
 
         LocalDateTime succeededAt = TypeUtil.stringToLocalDateTime(event.getCreatedAt());

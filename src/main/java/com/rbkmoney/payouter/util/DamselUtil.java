@@ -25,8 +25,8 @@ import java.util.stream.Collectors;
 
 public class DamselUtil {
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
-    private static final JsonProcessor jsonProcessor = new JsonProcessor();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final JsonProcessor JSON_PROCESSOR = new JsonProcessor();
 
     public static Long computeMerchantAmount(List<FinalCashFlowPosting> finalCashFlow) {
         long amountSource = computeAmount(finalCashFlow, FinalCashFlowPosting::getSource);
@@ -54,7 +54,7 @@ public class DamselUtil {
     }
 
     public static <T extends TBase> T jsonToTBase(JsonNode jsonNode, Class<T> type) throws IOException {
-        return jsonProcessor.process(jsonNode, new TBaseHandler<>(type));
+        return JSON_PROCESSOR.process(jsonNode, new TBaseHandler<>(type));
     }
 
     public static PayoutCreated toDamselPayoutCreated(PayoutEvent payoutEvent) {
@@ -175,7 +175,7 @@ public class DamselUtil {
     public static List<FinalCashFlowPosting> toDamselPayoutFlow(PayoutEvent payoutEvent) {
         List<FinalCashFlowPosting> finalCashFlowPostings = new ArrayList<>();
         try {
-            for (JsonNode jsonNode : objectMapper.readTree(payoutEvent.getPayoutCashFlow())) {
+            for (JsonNode jsonNode : OBJECT_MAPPER.readTree(payoutEvent.getPayoutCashFlow())) {
                 FinalCashFlowPosting finalCashFlowPosting = jsonToTBase(jsonNode, FinalCashFlowPosting.class);
                 finalCashFlowPostings.add(finalCashFlowPosting);
             }
