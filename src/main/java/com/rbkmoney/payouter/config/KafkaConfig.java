@@ -117,7 +117,6 @@ public class KafkaConfig {
             ConsumerFactory<String, MachineEvent> consumerFactory) {
         var factory = new ConcurrentKafkaListenerContainerFactory<String, MachineEvent>();
         factory.setConsumerFactory(consumerFactory);
-        factory.getContainerProperties().setAckOnError(false);
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
         return factory;
     }

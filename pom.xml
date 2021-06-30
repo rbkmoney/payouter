@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>payouter</artifactId>
-    <version>1.0.44-SNAPSHOT</version>
+    <version>1.0.45-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>payouter</name>
@@ -13,7 +13,7 @@
     <parent>
         <groupId>com.rbkmoney</groupId>
         <artifactId>service-parent-pom</artifactId>
-        <version>1.0.9</version>
+        <version>1.2.7</version>
         <relativePath/>
     </parent>
 
@@ -32,7 +32,7 @@
         <db.name>payouter</db.name>
         <db.url>jdbc:postgresql://localhost:${db.port}/${db.name}</db.url>
         <machinegun-proto.version>1.18-d814d69</machinegun-proto.version>
-        <fistful-proto.version>1.62-509c8d3</fistful-proto.version>
+        <fistful-proto.version>1.128-d331fce</fistful-proto.version>
     </properties>
 
     <dependencies>

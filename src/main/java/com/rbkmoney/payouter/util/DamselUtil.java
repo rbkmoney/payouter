@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
 import com.rbkmoney.damsel.domain.*;
 import com.rbkmoney.damsel.payout_processing.Wallet;
 import com.rbkmoney.damsel.payout_processing.*;
+import com.rbkmoney.fistful.base.Residence;
 import com.rbkmoney.geck.common.util.TypeUtil;
 import com.rbkmoney.geck.serializer.kit.json.JsonHandler;
 import com.rbkmoney.geck.serializer.kit.json.JsonProcessor;
@@ -253,7 +254,7 @@ public class DamselUtil {
         bankDetails.setBic(payoutEvent.getPayoutAccountBankBic());
         bankDetails.setAbaRtn(payoutEvent.getPayoutAccountBankAbaRtn());
         bankDetails.setAddress(payoutEvent.getPayoutAccountBankAddress());
-        bankDetails.setCountry(TypeUtil.toEnumField(payoutEvent.getPayoutAccountBankCountryCode(), Residence.class));
+        bankDetails.setCountry(TypeUtil.toEnumField(payoutEvent.getPayoutAccountBankCountryCode(), CountryCode.class));
         bankAccount.setBank(bankDetails);
 
         //OH SHI—
@@ -268,7 +269,7 @@ public class DamselUtil {
         correspondentBankDetails.setAddress(payoutEvent.getPayoutInternationalCorrespondentAccountBankAddress());
         correspondentBankDetails.setAbaRtn(payoutEvent.getPayoutInternationalCorrespondentAccountBankAbaRtn());
         correspondentBankDetails.setCountry(TypeUtil.toEnumField(
-                payoutEvent.getPayoutInternationalCorrespondentAccountBankCountryCode(), Residence.class));
+                payoutEvent.getPayoutInternationalCorrespondentAccountBankCountryCode(), CountryCode.class));
         correspondentBankAccount.setBank(correspondentBankDetails);
         bankAccount.setCorrespondentAccount(correspondentBankAccount);
 
